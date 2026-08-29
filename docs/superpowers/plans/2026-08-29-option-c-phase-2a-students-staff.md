@@ -1443,7 +1443,17 @@ Carried to Phase 2b:
 
 - Per-row "Print marksheet" action (needs the exams print page's query contract).
 - Extract `SearchField` / `PaneSkeleton` primitives once a third page needs them.
-- Tab counts ignore search/status filters.
-- Export CSV ignores status/search.
+- Export CSV ignores status/search. (Tab counts now follow the status filter so the strip and the toolbar agree; search is still excluded by design — it narrows within a tab.)
 - Favicon (Phase 3).
 - `AddPanel` / `PageHeader` / `Callout` / `record-table` dead-code check (Phase 3).
+
+## Carried to Phase 2b/3 (decisions)
+
+Settled in the final review of 2a. Each is a decision, not an oversight.
+
+- **(a) What went with `/students/[id]`.** The removed detail page carried an in-app per-term `Marksheet`, a year attendance heat-map and recent leave notes. All three were dropped deliberately: 2b's Exams page keeps the print marksheet, and the pane gains its own Marksheet section in 2b (it needs the exams print page's query contract first). The heat-map belongs to the Roll call page's aside (§6), not to a student pane.
+- **(b) Scoping is split on purpose, for now.** The Students *list* and the CSV export are unscoped while the *pane* is scoped by `allowedSectionIds`. This is what 2a shipped; Phase 3 picks one consistent rule (scope all three, or scope none and rely on the pane) rather than half-fixing it here.
+- **(c) "Today" is UTC on the server.** `lastDays`, `recentStudentStrips` and `dashboard/overview.ts` all compute the day boundary in UTC — a pre-existing convention, not new in 2a. Phase 3 decides whether to move the whole app to a Nepal-time (UTC+05:45) day boundary; it has to be one decision across attendance, overview and strips.
+- **(d) The extraction pass opens 2b.** `SearchField`, `PaneSkeleton` and `RegisterPageSkeleton` are duplicated across Students and Staff. Extracting them is the first commit of Phase 2b, once a third page proves the shape.
+- **(e) Two tests come with 2b.** A `getStaffSummary` year-grouping test, and a shared DB fixture helper for the registry suites — both land with 2b's own tests rather than as a bare test-only commit here.
+- **(f) Two known UI duplications.** In Sheet mode the pane offers two close affordances (the Sheet's own dismiss and the pane's Close button), and the editors show both a Cancel and a Close. Both are left as they are until the extraction pass in 2b gives them one owner.

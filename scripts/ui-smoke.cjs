@@ -26,6 +26,8 @@ function loadPlaywright() {
 const ROUTES = [
   "dashboard",
   "dashboard/students",
+  // Fixed ids: these prove the unknown-id redirect, not the pane. Phase 2b
+  // selects the first row instead.
   "dashboard/students?student=1",
   "dashboard/teachers",
   "dashboard/teachers?staff=1",

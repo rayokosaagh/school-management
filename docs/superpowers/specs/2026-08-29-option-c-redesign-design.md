@@ -121,7 +121,7 @@ Every dashboard route renders `PageFrame` (`src/components/ui/page-frame.tsx`):
 |---|---|---|---|
 | `/dashboard` | — | Welcome header, KPI strip, Roll call today, Needs attention, 14-day attendance | — |
 | `/dashboard/students` | sections (+ All) | `DataTable` | `StudentPane` |
-| `/dashboard/teachers` | designation (All / Teaching / Office / Leadership) | `DataTable` | `StaffPane` |
+| `/dashboard/teachers` | designation: one per distinct designation, by count (+ All) | `DataTable` | `StaffPane` |
 | `/dashboard/classes` | academic years | grades × sections table | grade editor |
 | `/dashboard/subjects` | Subjects / Grade offerings | `DataTable` / offerings grid | subject editor |
 | `/dashboard/assignments` | sections | assignment matrix | teacher picker |
@@ -132,7 +132,9 @@ Every dashboard route renders `PageFrame` (`src/components/ui/page-frame.tsx`):
 
 Students and Staff deep-link via `?student=` / `?staff=`; selection is a `router.replace` so the pane is server-rendered.
 
-**Detail routes.** `/dashboard/students/[id]` and `/dashboard/teachers/[id]` are removed. The list page reads `?student=<id>` / `?staff=<id>` to pre-select a row, so existing links and the print page's back-links keep working. The server actions in those folders move to `students/actions.ts` and `teachers/actions.ts` unchanged.
+*Deviation (Phase 2a).* The Staff tabs were specified as fixed buckets (All / Teaching / Office / Leadership). `Staff.designation` is free text in the data model with nothing mapping a designation to a bucket, so the tabs are derived from the data instead: one tab per distinct designation, ordered by how many hold it, with an "Everyone" tab first. A fixed grouping would need a designation → bucket field first.
+
+**Detail routes.** `/dashboard/students/[id]` and `/dashboard/teachers/[id]` no longer render a detail page: each is a bare server component that redirects to the query form (`/dashboard/students?student=<id>`, `/dashboard/teachers?staff=<id>`; a non-numeric id goes to the bare path), so old bookmarks and the print page's back-links keep working. The list page reads `?student=<id>` / `?staff=<id>` to pre-select a row. The server actions in those folders move to `students/actions.ts` and `teachers/actions.ts` unchanged.
 
 **Add forms.** The "Add X" panels at the top of each page are removed; the page's primary action button opens a right `Sheet` containing the existing form component. `AddPanel` is deleted.
 
