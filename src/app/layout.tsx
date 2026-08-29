@@ -8,6 +8,7 @@ import {
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getLetterhead } from "@/lib/registry/school";
+import { NO_FLASH_SCRIPT } from "@/lib/theme/theme";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display-face",
@@ -53,6 +54,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${devanagari.variable} ${mono.variable} h-full`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <ToastProvider>{children}</ToastProvider>
       </body>
