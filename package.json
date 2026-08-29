@@ -9,7 +9,8 @@
     "lint": "eslint",
     "postinstall": "prisma skills sync || exit 0",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "smoke": "node scripts/ui-smoke.cjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
