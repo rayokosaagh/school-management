@@ -7,8 +7,13 @@ import { cn } from "@/lib/utils";
 /// The DOM id of one tab button. A page that wants its panel labelled by the
 /// active tab passes its own `baseId` to `RegisterTabs` and calls this with the
 /// same `baseId` to name the tab.
+///
+/// `tabId` is slugified because it is a data key, not an identifier: staff tabs
+/// are free-text designations ("Vice Principal"), and a raw one would put a
+/// space into an `id` and into the panel's `aria-labelledby`.
 export function registerTabId(baseId: string, tabId: string): string {
-  return `${baseId}-tab-${tabId}`;
+  const slug = tabId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${baseId}-tab-${slug}`;
 }
 
 export type RegisterTab = {

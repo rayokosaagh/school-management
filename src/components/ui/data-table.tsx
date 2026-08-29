@@ -123,16 +123,21 @@ export function DataTable<T>({
     rows[Math.min(Math.max(0, index), rows.length - 1)]?.focus();
   }
 
+  // A selectable table is a grid: rows are selectable widgets and carry
+  // `aria-selected`, which is only valid inside one. A read-only table keeps
+  // the plain table semantics and gets no roles at all.
+  const grid = onSelect != null;
+
   if (total === 0) return <EmptyState {...empty} />;
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
       {/* The table's own container is the scrollport, so `sticky top-0` on the
           header has something to stick to. */}
-      <Table containerClassName="min-h-0 flex-1 overflow-auto">
+      <Table role={grid ? "grid" : undefined} containerClassName="min-h-0 flex-1 overflow-auto">
         <TableHeader className="bg-surface-2 sticky top-0 z-[1]">
           {table.getHeaderGroups().map((hg) => (
-            <TableRow key={hg.id} className="hover:bg-transparent">
+            <TableRow key={hg.id} role={grid ? "row" : undefined} className="hover:bg-transparent">
               {hg.headers.map((header) => {
                 const meta = (header.column.columnDef.meta ?? {}) as ColumnMeta;
                 const sort = header.column.getIsSorted();
@@ -140,6 +145,7 @@ export function DataTable<T>({
                 return (
                   <TableHead
                     key={header.id}
+                    role={grid ? "columnheader" : undefined}
                     aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : undefined}
                     style={meta.width ? { width: meta.width } : undefined}
                     className={cn(
@@ -171,7 +177,7 @@ export function DataTable<T>({
                   </TableHead>
                 );
               })}
-              {rowActions ? <TableHead className="w-24"><span className="sr-only">Actions</span></TableHead> : null}
+              {rowActions ? <TableHead role={grid ? "columnheader" : undefined} className="w-24"><span className="sr-only">Actions</span></TableHead> : null}
             </TableRow>
           ))}
         </TableHeader>
@@ -186,6 +192,7 @@ export function DataTable<T>({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.32, delay: Math.min(i, 12) * 0.02, ease: [0.2, 0.8, 0.2, 1] }}
                 data-row=""
+                role={grid ? "row" : undefined}
                 tabIndex={onSelect ? (i === focusIndex ? 0 : -1) : undefined}
                 aria-selected={onSelect ? selected : undefined}
                 onClick={(e) => {
@@ -216,6 +223,7 @@ export function DataTable<T>({
                   return (
                     <TableCell
                       key={cell.id}
+                      role={grid ? "gridcell" : undefined}
                       className={cn(
                         rowHeight,
                         "px-2.5 py-0 whitespace-nowrap",
@@ -229,7 +237,7 @@ export function DataTable<T>({
                   );
                 })}
                 {rowActions ? (
-                  <TableCell className={cn(rowHeight, "px-2.5 py-0")}>
+                  <TableCell role={grid ? "gridcell" : undefined} className={cn(rowHeight, "px-2.5 py-0")}>
                     <span
                       data-row-actions
                       className={cn(
