@@ -24,7 +24,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
           icon={Info}
           title="No current academic year"
           description="Enrolments belong to a year. Set the current year on the Classes page first."
-          action={<Button render={<Link href="/dashboard/classes" />}>Go to Classes</Button>}
+          action={<Button nativeButton={false} render={<Link href="/dashboard/classes" />}>Go to Classes</Button>}
         />
       </PageFrame>
     );

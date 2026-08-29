@@ -60,7 +60,14 @@ export function StudentPane({
         </>
       }
       initials={initialsOf(summary.fullName)}
-      photo={<StudentPhotoForm studentId={summary.studentId} photoId={summary.photoId} name={summary.fullName} />}
+      photo={
+        summary.photoId ? (
+          // Served from our own route; next/image would add no value for a
+          // one-off private thumbnail. Falls back to the initials tile.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/api/photo/${summary.photoId}`} alt="" className="size-13 shrink-0 rounded-xl object-cover" />
+        ) : undefined
+      }
       actions={
         <>
           <Button size="sm" variant={editing ? "outline" : "default"} onClick={() => setEditing((v) => !v)}>
@@ -78,9 +85,16 @@ export function StudentPane({
       }
     >
       {editing ? (
-        <div className="p-5">
-          <StudentDetail data={detail} sections={sections} academicYearId={academicYearId} onDone={() => setEditing(false)} />
-        </div>
+        // The upload form squeezes the header at 340px, so it lives in edit
+        // mode: the header keeps the photo itself, or the initials tile.
+        <>
+          <DetailPane.Section label="Photo">
+            <StudentPhotoForm studentId={summary.studentId} photoId={summary.photoId} name={summary.fullName} />
+          </DetailPane.Section>
+          <div className="p-5">
+            <StudentDetail data={detail} sections={sections} academicYearId={academicYearId} onDone={() => setEditing(false)} />
+          </div>
+        </>
       ) : (
         <>
           <DetailPane.Section label="Record">
