@@ -3,6 +3,11 @@ export type ThemePreference = Theme | "system";
 
 export const THEME_KEY = "theme";
 
+/// Fired on `window` after the class changes, so every control that shows the
+/// theme (the top-bar toggle, the account menu) can follow one source of truth
+/// no matter which of them made the change.
+export const THEME_EVENT = "themechange";
+
 /// Explicit light/dark wins; anything else (missing, "system", garbage) follows
 /// the operating system.
 export function resolveTheme(stored: string | null, systemDark: boolean): Theme {
@@ -17,6 +22,7 @@ export const NO_FLASH_SCRIPT = `(function(){try{var s=localStorage.getItem("${TH
 /// Browser only. Sets the class the CSS keys off and remembers the choice.
 export function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
+  window.dispatchEvent(new Event(THEME_EVENT));
   try {
     localStorage.setItem(THEME_KEY, theme);
   } catch {

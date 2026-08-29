@@ -1,28 +1,20 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
-import { applyTheme, currentTheme, type Theme } from "@/lib/theme/theme";
+import { applyTheme } from "@/lib/theme/theme";
+import { useTheme } from "@/lib/theme/use-theme";
 import { cn } from "@/lib/utils";
 
 /// Reads the class the no-flash script already set, so the icon matches the
-/// page from the first client render.
+/// page from the first client render — and follows the account menu's "Switch
+/// theme" too, since both go through `applyTheme`.
 export function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setTheme(currentTheme()), []);
-
-  const dark = theme === "dark";
-  function toggle() {
-    const next: Theme = dark ? "light" : "dark";
-    applyTheme(next);
-    setTheme(next);
-  }
+  const dark = useTheme() === "dark";
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={() => applyTheme(dark ? "light" : "dark")}
       aria-pressed={dark}
       aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
       className={cn(
