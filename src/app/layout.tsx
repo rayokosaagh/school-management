@@ -1,11 +1,23 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Geist,
+  Geist_Mono,
+  Noto_Sans_Devanagari,
+} from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { getLetterhead } from "@/lib/registry/school";
 
-const sans = Plus_Jakarta_Sans({
-  variable: "--font-ui-sans",
+const display = Bricolage_Grotesque({
+  variable: "--font-display-face",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
+});
+
+const body = Geist({
+  variable: "--font-body-face",
   subsets: ["latin"],
   display: "swap",
 });
@@ -13,13 +25,13 @@ const sans = Plus_Jakarta_Sans({
 // Nepali names and BS dates appear throughout; without a Devanagari face they
 // fall back to whatever the operating system happens to have installed.
 const devanagari = Noto_Sans_Devanagari({
-  variable: "--font-ui-devanagari",
+  variable: "--font-devanagari-face",
   subsets: ["devanagari"],
   display: "swap",
 });
 
 const mono = Geist_Mono({
-  variable: "--font-ui-mono",
+  variable: "--font-mono-face",
   subsets: ["latin"],
   display: "swap",
 });
@@ -38,7 +50,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${devanagari.variable} ${mono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${display.variable} ${body.variable} ${devanagari.variable} ${mono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col">
         <ToastProvider>{children}</ToastProvider>
