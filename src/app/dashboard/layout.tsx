@@ -11,6 +11,9 @@ import { ROLE_LABEL, capabilityFor } from "@/lib/auth/roles";
 import { IconRail } from "./_components/icon-rail";
 import { TopBar } from "./_components/top-bar";
 import { NAV_GROUPS, SETTINGS } from "./_components/nav-model";
+import { getSchoolOverview } from "@/lib/dashboard/overview";
+import { dueItems } from "@/lib/dashboard/alerts";
+import { AlertsPopover } from "./_components/alerts-popover";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [session, years, currentYear, school] = await Promise.all([
@@ -35,6 +38,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const now = new Date();
 
+  const overview = currentYear ? await getSchoolOverview(currentYear.id, now) : null;
+  const alerts = overview ? dueItems(overview) : [];
+
   return (
     <div className="bg-page grid h-screen grid-cols-1 grid-rows-[var(--topbar)_1fr] shell:grid-cols-[var(--rail)_1fr]">
       <TopBar
@@ -51,6 +57,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         username={username}
         roleLabel={actor ? ROLE_LABEL[actor.role] : "Signed in"}
         allowed={allowed}
+        alerts={<AlertsPopover items={alerts} />}
       />
       <IconRail allowed={allowed} />
       {/* relative: form controls render absolutely-positioned hidden inputs, which
