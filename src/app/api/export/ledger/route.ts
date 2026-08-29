@@ -1,4 +1,7 @@
 import { auth } from "@/lib/auth/auth";
+import { currentActor } from "@/lib/auth/guard";
+import { granted, loadGrants } from "@/lib/auth/permissions";
+import { capabilityFor } from "@/lib/auth/roles";
 import { csvResponse, safeText, toCsv, type Cell } from "@/lib/export/csv";
 import { AssessmentError, getLedger } from "@/lib/assessment/exams";
 
@@ -7,6 +10,15 @@ import { AssessmentError, getLedger } from "@/lib/assessment/exams";
 export async function GET(request: Request) {
   const session = await auth();
   if (!session?.user?.id) return new Response("Unauthorized", { status: 401 });
+
+  // The CSV is the same records the page shows, so it is gated by the same
+  // capability as the page — an `auth()` session alone is not enough.
+  // (Section scoping of the rows themselves is Phase 3.)
+  const actor = await currentActor();
+  const cap = capabilityFor("/dashboard/exams");
+  if (!actor || (cap && !granted(await loadGrants(), actor.role, cap))) {
+    return new Response("Forbidden", { status: 403 });
+  }
 
   const url = new URL(request.url);
   const examTermId = Number(url.searchParams.get("exam"));
