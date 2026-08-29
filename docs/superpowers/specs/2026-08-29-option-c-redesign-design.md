@@ -245,4 +245,4 @@ Each step leaves the app working and tests green.
 ## 13. Decisions verified 2026-08-29
 
 - The base-nova registry ships `command`, `sheet`, `dropdown-menu`, `table`, `skeleton` (Section 7.1) — no fallback needed.
-- `@tanstack/react-table` 9.2.4 declares `react: ">=18"`, so it is compatible with React 19.2 / Next 16 and is the dependency for `data-table.tsx`. No in-house table state.
+- `@tanstack/react-table` **v8** (`^8`) is the dependency for `data-table.tsx` — it supports React 19 and exposes the `useReactTable`/`getCoreRowModel` API used in the plan. 9.x was tried first and rejected during implementation: it replaces that API with `useTable` + feature modules. No in-house table state.
