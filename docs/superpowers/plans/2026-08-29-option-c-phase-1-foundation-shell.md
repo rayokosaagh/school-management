@@ -778,10 +778,6 @@ export function visibleGroups(allowed: string[]): NavGroup[] {
   return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => allowed.includes(i.id)) }))
     .filter((g) => g.items.length > 0);
 }
-
-export function itemById(id: string): NavItem | undefined {
-  return ALL.find((i) => i.id === id);
-}
 ```
 
 - [ ] **Step 4: Run to verify it passes**
