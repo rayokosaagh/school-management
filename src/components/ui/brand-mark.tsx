@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-/// The school's initial on the brand gradient. Used in the top bar and on the
-/// auth pages so the same mark greets people before and after sign-in.
+/// The school's initial on the brand gradient. Used in the top bar; the auth
+/// pages adopt it in Phase 3.
 export function BrandMark({
   name,
   size = "md",

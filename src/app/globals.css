@@ -245,6 +245,18 @@
 @media print {
   html.dark { color-scheme: light; }
   html.dark, html.dark * { --page: #fff; --surface: #fff; --ink: #000; --ink-2: #222; --ink-3: #444; --line: #bbb; }
+  /* The status and brand tints are dark-mode values everywhere else; on paper
+     they print as near-black blocks. Back to the :root light values. */
+  html.dark, html.dark * {
+    --ok-tint: oklch(0.96 0.03 165);
+    --warn-tint: oklch(0.96 0.04 80);
+    --bad-tint: oklch(0.95 0.03 15);
+    --brand: oklch(0.45 0.21 276);
+    --brand-deep: oklch(0.34 0.16 278);
+    --brand-tint: oklch(0.96 0.02 276);
+    --brand-tint-2: oklch(0.92 0.04 276);
+    --brand-text: oklch(0.40 0.18 277);
+  }
 }
 
 /* ---------------------------------------------------------------------------

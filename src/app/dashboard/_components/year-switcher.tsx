@@ -65,7 +65,7 @@ export function YearSwitcher({
       <div
         ref={card}
         className={[
-          "border-line hover:bg-page flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5",
+          "hover:bg-page flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5",
           "focus-within:ring-ring focus-within:ring-2",
           pending ? "opacity-60" : "",
         ].join(" ")}
