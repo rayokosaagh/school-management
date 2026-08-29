@@ -4,11 +4,20 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.ComponentProps<"table"> & {
+  /** Classes for the scroll container around the table. Give it its own
+   *  overflow and a definite height to make it the scrollport a
+   *  `sticky top-0` header sticks to. */
+  containerClassName?: string
+}) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className={cn("relative w-full overflow-x-auto", containerClassName)}
     >
       <table
         data-slot="table"
