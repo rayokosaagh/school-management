@@ -3,7 +3,7 @@
 import { PhotoField } from "@/components/ui/photo-field";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
-import { type PhotoState, saveStudentPhoto } from "../actions";
+import { saveStudentPhoto, type PhotoState } from "../actions";
 
 const EMPTY: PhotoState = {};
 

@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@/lib/auth/auth";
 import { requireCapability } from "@/lib/auth/guard";
+import { PhotoError, clearStudentPhoto, setStudentPhoto } from "@/lib/registry/photos";
 import { Prisma } from "@/generated/prisma/client";
 import type { Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
 import { parseBsInput } from "@/lib/date/bs";
@@ -240,4 +242,34 @@ export async function removeGuardian(
 
   revalidatePath(PATH);
   return { success: "Guardian removed." };
+}
+
+export type PhotoState = { error?: string; success?: string };
+
+/// The photo lives with the rest of the student's record now that the profile
+/// is a pane on this page rather than its own route.
+export async function saveStudentPhoto(
+  _prev: PhotoState,
+  formData: FormData,
+): Promise<PhotoState> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "You are not signed in." };
+
+  const studentId = numericField(formData, "studentId");
+  if (studentId === null) return { error: "Pick a student." };
+
+  try {
+    if (formData.get("removePhoto") === "1") {
+      await clearStudentPhoto(studentId);
+      revalidatePath(PATH);
+      return { success: "Photo removed." };
+    }
+    await setStudentPhoto(studentId, formData.get("photo"));
+  } catch (e) {
+    if (e instanceof PhotoError) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  return { success: "Photo saved." };
 }

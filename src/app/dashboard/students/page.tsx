@@ -1,42 +1,47 @@
-import { GraduationCap, Info, UserPlus } from "lucide-react";
-import { Callout, PageHeader } from "@/components/ui/page-shell";
-import { AddPanel } from "@/components/ui/add-panel";
+import { Info } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageFrame } from "@/components/ui/page-frame";
+import { requirePage } from "@/lib/auth/guard";
 import { formatBs, toBsInput } from "@/lib/date/bs";
+import { recentStudentStrips } from "@/lib/attendance/attendance";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { listSections } from "@/lib/registry/structure";
-import {
-  listEnrolledStudents,
-  suggestAdmissionNo,
-} from "@/lib/registry/students";
-import { AddStudentForm } from "./_components/student-form";
-import type { StudentRow } from "./_components/students-view";
-import { StudentsBySection } from "./_components/students-by-section";
+import { getStudentSummary, listEnrolledStudents, suggestAdmissionNo } from "@/lib/registry/students";
+import { StudentsWorkspace, type StudentRow } from "./_components/students-workspace";
 
-import { requirePage } from "@/lib/auth/guard";
-
-export default async function StudentsPage() {
+export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ student?: string }> }) {
   // Redirects unless the stored permission matrix allows this section.
   await requirePage("/dashboard/students");
 
   const currentYear = await getCurrentAcademicYear();
-
   if (!currentYear) {
     return (
-      <div className="mx-auto max-w-6xl space-y-8">
-        <PageHeader icon={GraduationCap} tint="violet" title="Students" />
-        <Callout icon={Info} tint="amber">
-          Set a current academic year on the Classes page first — enrollments
-          belong to a year.
-        </Callout>
-      </div>
+      <PageFrame eyebrow="People" title="Students">
+        <EmptyState
+          icon={Info}
+          title="No current academic year"
+          description="Enrolments belong to a year. Set the current year on the Classes page first."
+          action={<Button render={<Link href="/dashboard/classes" />}>Go to Classes</Button>}
+        />
+      </PageFrame>
     );
   }
 
-  const [sections, enrollments, suggestedAdmissionNo] = await Promise.all([
+  const { student } = await searchParams;
+  const selectedId = student && /^\d+$/.test(student) ? Number(student) : null;
+  const now = new Date();
+
+  const [sections, enrollments, suggested, strips, summary] = await Promise.all([
     listSections(currentYear.id),
     listEnrolledStudents({ academicYearId: currentYear.id }),
     suggestAdmissionNo(),
+    recentStudentStrips(currentYear.id, now, 14),
+    selectedId == null ? Promise.resolve(null) : getStudentSummary(selectedId, currentYear.id, now),
   ]);
+
+  const empty14: StudentRow["strip"] = Array.from({ length: 14 }, () => "none");
 
   // Dates are converted server-side so the client never re-derives them.
   const rows: StudentRow[] = enrollments.map((e) => {
@@ -57,53 +62,26 @@ export default async function StudentsPage() {
       admittedOnBs: toBsInput(e.student.admittedOn),
       sectionId: e.sectionId,
       guardians: e.student.guardians.map((g) => ({
-        id: g.id,
-        relation: g.relation,
-        fullName: g.fullName,
-        phone: g.phone,
-        occupation: g.occupation,
-        isPrimary: g.isPrimary,
+        id: g.id, relation: g.relation, fullName: g.fullName, phone: g.phone, occupation: g.occupation, isPrimary: g.isPrimary,
       })),
       rollNo: e.rollNo,
       gradeName: e.section.grade.name,
       sectionLabel: `${e.section.grade.name} ${e.section.name}`,
       dobLabel: formatBs(e.student.dob, "YYYY-MM-DD"),
       guardianLabel: primary ? `${primary.fullName} ${primary.phone}` : "",
+      strip: strips.get(e.student.id) ?? empty14,
     };
   });
 
-  const active = rows.filter((r) => r.status === "ACTIVE").length;
-
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <PageHeader
-        icon={GraduationCap}
-        tint="violet"
-        title="Students"
-        meta={[`${rows.length} enrolled in ${currentYear.nameBS}`, `${active} active`]}
-      />
-
-      {sections.length === 0 ? (
-        <Callout icon={Info} tint="amber">
-          Add a grade and a section on the Classes page before admitting students.
-        </Callout>
-      ) : (
-        <AddPanel
-          icon={UserPlus}
-          tint="green"
-          title="Admit a student"
-          description="Dates are entered in Bikram Sambat and stored as Gregorian."
-          cta="New student"
-        >
-          <AddStudentForm
-            sections={sections}
-            academicYearId={currentYear.id}
-            suggestedAdmissionNo={suggestedAdmissionNo}
-          />
-        </AddPanel>
-      )}
-
-      <StudentsBySection rows={rows} sections={sections} academicYearId={currentYear.id} />
-    </div>
+    <StudentsWorkspace
+      rows={rows}
+      sections={sections}
+      academicYearId={currentYear.id}
+      yearLabel={currentYear.nameBS}
+      suggestedAdmissionNo={suggested}
+      selectedId={selectedId}
+      summary={summary}
+    />
   );
 }
