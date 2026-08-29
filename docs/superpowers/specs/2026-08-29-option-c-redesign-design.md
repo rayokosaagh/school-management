@@ -130,6 +130,8 @@ Every dashboard route renders `PageFrame` (`src/components/ui/page-frame.tsx`):
 | `/dashboard/exams/print` | — | marksheets (unchanged) | — |
 | `/dashboard/settings` | School / Accounts / Permissions | forms | — |
 
+Students and Staff deep-link via `?student=` / `?staff=`; selection is a `router.replace` so the pane is server-rendered.
+
 **Detail routes.** `/dashboard/students/[id]` and `/dashboard/teachers/[id]` are removed. The list page reads `?student=<id>` / `?staff=<id>` to pre-select a row, so existing links and the print page's back-links keep working. The server actions in those folders move to `students/actions.ts` and `teachers/actions.ts` unchanged.
 
 **Add forms.** The "Add X" panels at the top of each page are removed; the page's primary action button opens a right `Sheet` containing the existing form component. `AddPanel` is deleted.

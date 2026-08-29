@@ -1422,3 +1422,28 @@ Claude-Session: https://claude.ai/code/session_01CyAwoVTj6wrc5RQFdV5PCz"
 ## Handled in Phase 2b (not gaps)
 
 Classes, Subjects, Teaching, Roll call, Exams, Settings pages; Overview welcome + KPI strip; per-row "Print marksheet" action (needs the exams print page's query contract).
+
+## Phase 2a outcome
+
+Commit range: `7042cd4..HEAD` (this wrap-up commit — `7042cd4` was the plan's own commit; the range covers Tasks 1–5).
+
+Patterns settled in review, to carry forward as the house style for later pages:
+
+- `useOptimistic` keeps the selected row in sync with the URL instead of local `useState`.
+- Anchor-rendered `Button`s pass `nativeButton={false}` so they render as `<a>` without a nested `<button>`.
+- The status filter is seeded from the deep-linked row, so following a `?student=`/`?staff=` link lands on the tab that actually contains the row.
+- An unknown `?student=`/`?staff=` id gets a server-side redirect rather than a client-side empty pane.
+- The Students pane is scoped by `allowedSectionIds` so a teacher can't select a row outside their own sections via the URL.
+- Photo upload lives in edit mode, not in the read-only pane.
+- Loading skeletons use `role="status"` for the register tables and panes.
+- Status maps (badge colour/label per enum value) are shared, not redefined per page.
+- A blocked destructive action (`ConfirmSubmit`) is rendered `disabled` with an explanatory `title`, not just annotated while still armable.
+
+Carried to Phase 2b:
+
+- Per-row "Print marksheet" action (needs the exams print page's query contract).
+- Extract `SearchField` / `PaneSkeleton` primitives once a third page needs them.
+- Tab counts ignore search/status filters.
+- Export CSV ignores status/search.
+- Favicon (Phase 3).
+- `AddPanel` / `PageHeader` / `Callout` / `record-table` dead-code check (Phase 3).

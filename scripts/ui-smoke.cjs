@@ -26,7 +26,9 @@ function loadPlaywright() {
 const ROUTES = [
   "dashboard",
   "dashboard/students",
+  "dashboard/students?student=1",
   "dashboard/teachers",
+  "dashboard/teachers?staff=1",
   "dashboard/classes",
   "dashboard/subjects",
   "dashboard/assignments",
@@ -59,7 +61,7 @@ const OUT = path.join(__dirname, "..", "artifacts", "smoke");
       for (const route of ROUTES) {
         await page.goto(`http://localhost:3000/${route}`, { waitUntil: "networkidle" });
         await page.waitForTimeout(300);
-        const name = `${route.replace(/\//g, "_")}-${width}-${theme}.png`;
+        const name = `${route.replace(/\//g, "_").replace(/[?=]/g, "-")}-${width}-${theme}.png`;
         await page.screenshot({ path: path.join(OUT, name), fullPage: width !== 390 });
         console.log("shot", name);
       }
