@@ -6,7 +6,7 @@
 
 **Architecture:** Tokens are re-pointed underneath the existing shadcn variable names so current components restyle without edits. The old sidebar is replaced by `TopBar` + `IconRail` inside a CSS-grid layout. New primitives are added alongside the old ones; nothing old is deleted in this phase (that is Phase 3), so each task leaves `tsc`, `vitest`, and `next build` green.
 
-**Tech Stack:** Next.js 16.3 App Router, React 19.2, Tailwind 4 (`@theme inline`), shadcn base-nova on `@base-ui/react`, `@tanstack/react-table` 9, `motion/react`, `lucide-react`, Vitest 4, Playwright (via Edge) for smoke screenshots.
+**Tech Stack:** Next.js 16.3 App Router, React 19.2, Tailwind 4 (`@theme inline`), shadcn base-nova on `@base-ui/react`, `@tanstack/react-table` 8 (v9 rejected — API differs), `motion/react`, `lucide-react`, Vitest 4, Playwright (via Edge) for smoke screenshots.
 
 **Spec:** `docs/superpowers/specs/2026-08-29-option-c-redesign-design.md` — this plan implements spec §3 (foundation), §4 (shell), §5 (responsive), §7.1–7.2 (primitives), §11 smoke script, and spec §12 steps 1–3.
 
@@ -629,7 +629,7 @@ Expected: "Checking registry… Installing dependencies… Created N files". If 
 
 - [ ] **Step 2: Install TanStack Table**
 
-Run: `npm install @tanstack/react-table@^9 2>&1 | tail -3`
+Run: `npm install @tanstack/react-table@^8 2>&1 | tail -3` (v9 rejected — API differs)
 Expected: added 1–2 packages.
 
 - [ ] **Step 3: Confirm the generated trigger API**
