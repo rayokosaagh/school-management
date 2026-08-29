@@ -8,13 +8,6 @@ export function describeStrip(days: DayStatus[]): string {
   return `Last ${days.length} days: ${n("present")} present, ${n("absent")} absent, ${n("late")} late, ${n("none")} not taken`;
 }
 
-const TONE: Record<DayStatus, string> = {
-  present: "bg-ok",
-  absent: "bg-bad",
-  late: "bg-warn",
-  none: "bg-line",
-};
-
 /// One bar per day, oldest first. Colour carries the detail; the label carries
 /// it for everyone else.
 export function AttendanceStrip({
@@ -32,13 +25,23 @@ export function AttendanceStrip({
     <span
       role="img"
       aria-label={describeStrip(days) + (percent == null ? "" : `, ${percent}% present`)}
-      className={cn("inline-flex items-center gap-0.5", className)}
+      className={cn("inline-flex items-end gap-0.5", className)}
     >
       {days.map((d, i) => (
         <i
           key={i}
           aria-hidden="true"
-          className={cn("rounded-[2px] opacity-85", TONE[d], size === "sm" ? "h-3.5 w-1.5" : "h-5.5 w-full flex-1")}
+          className={cn(
+            "rounded-[2px]",
+            size === "sm" ? "h-3.5 w-1.5" : "h-5.5 w-full flex-1",
+            d === "present" && "bg-ok opacity-85",
+            // Absent: hollow — reads as a gap even without colour.
+            d === "absent" && "border-bad border-2 bg-transparent",
+            // Late: half-height bar.
+            d === "late" && "bg-warn self-end opacity-85 [height:50%]",
+            // Not taken: faint dotted outline.
+            d === "none" && "border-line border border-dashed bg-transparent",
+          )}
         />
       ))}
       {percent == null ? null : (
