@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { AttendanceStatus } from "@/generated/prisma/enums";
 import { adToBs, bsMonthLength, bsToAd } from "@/lib/date/bs";
+import { lastDays, stripFromCalendar } from "./strip";
+import type { DayStatus } from "@/components/ui/attendance-strip";
 
 export class AttendanceError extends Error {}
 
@@ -283,4 +285,27 @@ export async function studentCalendar(studentId: number, from: Date, to: Date) {
     status: r.status,
     note: r.note,
   }));
+}
+
+/// Per-student strips for a table: the last `count` days ending at `end`,
+/// built from one query over the year's sessions in that window.
+export async function recentStudentStrips(
+  academicYearId: number,
+  end: Date,
+  count: number,
+): Promise<Map<number, DayStatus[]>> {
+  const days = lastDays(end, count);
+  const records = await prisma.attendanceRecord.findMany({
+    where: { session: { academicYearId, date: { in: days } } },
+    select: { studentId: true, status: true, session: { select: { date: true } } },
+  });
+  const byStudent = new Map<number, { date: Date; status: string }[]>();
+  for (const r of records) {
+    const list = byStudent.get(r.studentId) ?? [];
+    list.push({ date: r.session.date, status: r.status });
+    byStudent.set(r.studentId, list);
+  }
+  const strips = new Map<number, DayStatus[]>();
+  for (const [studentId, list] of byStudent) strips.set(studentId, stripFromCalendar(list, days));
+  return strips;
 }

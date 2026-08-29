@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import type { Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
 import { composeFullName, type NameParts } from "./names";
+import { studentCalendar } from "@/lib/attendance/attendance";
+import { attendancePercent, lastDays, stripFromCalendar } from "@/lib/attendance/strip";
+import { getStudentMarksheets } from "@/lib/assessment/exams";
+import { formatBs, toBsInput } from "@/lib/date/bs";
+import type { DayStatus } from "@/components/ui/attendance-strip";
 
 export type GuardianInput = {
   relation: GuardianRelation;
@@ -263,4 +268,81 @@ export async function deleteGuardian(id: number) {
   const count = await prisma.guardian.count({ where: { studentId: guardian.studentId } });
   if (count <= 1) throw new Error("A student must have at least one guardian.");
   return prisma.guardian.delete({ where: { id } });
+}
+
+export type StudentSummary = {
+  studentId: number;
+  admissionNo: string;
+  fullName: string;
+  fullNameNp: string | null;
+  photoId: number | null;
+  gender: string;
+  status: string;
+  address: string | null;
+  dobBs: string;
+  dobAd: string;
+  admittedOnBs: string;
+  enrollment: { sectionId: number; sectionLabel: string; rollNo: number } | null;
+  guardians: { id: number; relation: string; fullName: string; phone: string; occupation: string | null; isPrimary: boolean }[];
+  attendance: { percent: number | null; recorded: number; days: DayStatus[] };
+  exams: { termId: number; name: string; isPublished: boolean; percent: number | null; gpa: number | null }[];
+  history: { year: string; sectionLabel: string; rollNo: number; enrolledOnBs: string }[];
+};
+
+/// Everything the detail pane shows for one student, in one call. Attendance
+/// is over the given academic year; exams come from the current-year ledgers.
+export async function getStudentSummary(
+  studentId: number,
+  academicYearId: number,
+  today: Date,
+): Promise<StudentSummary | null> {
+  const student = await getStudent(studentId);
+  if (!student) return null;
+
+  const current = student.enrollments.find((e) => e.academicYearId === academicYearId) ?? null;
+  const year = current?.academicYear ?? null;
+
+  const [records, sheets] = await Promise.all([
+    year ? studentCalendar(studentId, year.startsOn, year.endsOn) : Promise.resolve([]),
+    getStudentMarksheets(studentId),
+  ]);
+
+  const days = lastDays(today, 14);
+  const label = (e: { section: { name: string; grade: { name: string } } }) => `${e.section.grade.name} ${e.section.name}`;
+
+  return {
+    studentId: student.id,
+    admissionNo: student.admissionNo,
+    fullName: student.fullName,
+    fullNameNp: student.fullNameNp,
+    photoId: student.photoId,
+    gender: student.gender,
+    status: student.status,
+    address: student.address,
+    dobBs: toBsInput(student.dob),
+    dobAd: student.dob.toISOString().slice(0, 10),
+    admittedOnBs: toBsInput(student.admittedOn),
+    enrollment: current ? { sectionId: current.sectionId, sectionLabel: label(current), rollNo: current.rollNo } : null,
+    guardians: student.guardians.map((g) => ({
+      id: g.id, relation: g.relation, fullName: g.fullName, phone: g.phone, occupation: g.occupation, isPrimary: g.isPrimary,
+    })),
+    attendance: {
+      percent: attendancePercent(records),
+      recorded: records.length,
+      days: stripFromCalendar(records, days),
+    },
+    exams: (sheets?.sheets ?? []).map((s) => ({
+      termId: s.term.id,
+      name: s.term.name,
+      isPublished: s.term.isPublished,
+      percent: s.result.overall.percent,
+      gpa: s.result.overall.gpa,
+    })),
+    history: student.enrollments.map((e) => ({
+      year: e.academicYear.nameBS,
+      sectionLabel: label(e),
+      rollNo: e.rollNo,
+      enrolledOnBs: formatBs(e.enrolledOn, "YYYY-MM-DD"),
+    })),
+  };
 }

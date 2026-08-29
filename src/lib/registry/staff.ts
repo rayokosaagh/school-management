@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { composeFullName, type NameParts } from "./names";
+import { toBsInput } from "@/lib/date/bs";
 
 export type StaffInput = NameParts & {
   fullNameNp?: string | null;
@@ -104,4 +105,58 @@ export function getStaffDetail(id: number) {
       _count: { select: { attendanceKept: true } },
     },
   });
+}
+
+export type StaffSummary = {
+  staffId: number;
+  fullName: string;
+  fullNameNp: string | null;
+  photoId: number | null;
+  phone: string;
+  designation: string;
+  joinedOnBs: string;
+  isActive: boolean;
+  account: { username: string; email: string | null } | null;
+  sectionsLed: { id: number; label: string; year: string }[];
+  load: { year: string; items: { section: string; subject: string }[] }[];
+  rollCallsTaken: number;
+};
+
+/// The staff detail pane in one call; teaching load is grouped by year with
+/// the given academic year first.
+export async function getStaffSummary(staffId: number, academicYearId: number): Promise<StaffSummary | null> {
+  const staff = await getStaffDetail(staffId);
+  if (!staff) return null;
+
+  const byYear = new Map<string, { section: string; subject: string }[]>();
+  const years: { id: number; nameBS: string }[] = [];
+  for (const a of staff.assignments) {
+    const y = a.section.academicYear;
+    if (!byYear.has(y.nameBS)) {
+      byYear.set(y.nameBS, []);
+      years.push({ id: y.id, nameBS: y.nameBS });
+    }
+    byYear.get(y.nameBS)!.push({
+      section: `${a.section.grade.name} ${a.section.name}`,
+      subject: a.subjectOffering.subject.name,
+    });
+  }
+  years.sort((a, b) => (a.id === academicYearId ? -1 : b.id === academicYearId ? 1 : b.nameBS.localeCompare(a.nameBS)));
+
+  return {
+    staffId: staff.id,
+    fullName: staff.fullName,
+    fullNameNp: staff.fullNameNp,
+    photoId: staff.photoId,
+    phone: staff.phone,
+    designation: staff.designation,
+    joinedOnBs: toBsInput(staff.joinedOn),
+    isActive: staff.isActive,
+    account: staff.user ? { username: staff.user.username, email: staff.user.email ?? null } : null,
+    sectionsLed: staff.sectionsLed.map((s) => ({
+      id: s.id, label: `${s.grade.name} ${s.name}`, year: s.academicYear.nameBS,
+    })),
+    load: years.map((y) => ({ year: y.nameBS, items: byYear.get(y.nameBS) ?? [] })),
+    rollCallsTaken: staff._count.attendanceKept,
+  };
 }
