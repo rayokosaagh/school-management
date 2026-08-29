@@ -65,19 +65,41 @@ export function DataTable<T>({
     savePrefs(id, next);
   }
 
+  // Only columns that may be hidden should honour a stale `prefs.hidden`
+  // entry — a column later marked `enableHiding: false` must stay visible
+  // even if localStorage still lists it (the columns menu already filters
+  // by `getCanHide()`, so there would be no way back otherwise).
+  const hideableIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const c of columns) {
+      if (c.enableHiding === false) continue;
+      const colId = c.id ?? ("accessorKey" in c ? String(c.accessorKey) : undefined);
+      if (colId) ids.add(colId);
+    }
+    return ids;
+  }, [columns]);
+
   const columnVisibility = useMemo<VisibilityState>(
-    () => Object.fromEntries(prefs.hidden.map((h) => [h, false])),
-    [prefs.hidden],
+    () => Object.fromEntries(prefs.hidden.filter((h) => hideableIds.has(h)).map((h) => [h, false])),
+    [prefs.hidden, hideableIds],
   );
+
+  // Clamp at render (no effect, per react-hooks/set-state-in-effect): if a
+  // parent shrinks `rows` while the user is on a later page, `pageIndex`
+  // would otherwise slice past the end and TanStack renders zero rows even
+  // though `total > 0`.
+  const total = rows.length;
+  const pageCount = Math.max(1, Math.ceil(total / prefs.pageSize));
+  const safeIndex = Math.min(pageIndex, pageCount - 1);
 
   const table = useReactTable({
     data: rows,
     columns,
     getRowId: (row) => getRowId(row),
-    state: { sorting, columnVisibility, pagination: { pageIndex, pageSize: prefs.pageSize } },
+    state: { sorting, columnVisibility, pagination: { pageIndex: safeIndex, pageSize: prefs.pageSize } },
     onSortingChange: setSorting,
     onPaginationChange: (updater) => {
-      const next = typeof updater === "function" ? updater({ pageIndex, pageSize: prefs.pageSize }) : updater;
+      const next = typeof updater === "function" ? updater({ pageIndex: safeIndex, pageSize: prefs.pageSize }) : updater;
       setPageIndex(next.pageIndex);
     },
     getCoreRowModel: getCoreRowModel(),
@@ -86,9 +108,8 @@ export function DataTable<T>({
   });
 
   const pageRows = table.getRowModel().rows;
-  const total = rows.length;
-  const from = total === 0 ? 0 : pageIndex * prefs.pageSize + 1;
-  const to = Math.min(total, (pageIndex + 1) * prefs.pageSize);
+  const from = total === 0 ? 0 : safeIndex * prefs.pageSize + 1;
+  const to = Math.min(total, (safeIndex + 1) * prefs.pageSize);
   const rowHeight = prefs.density === "compact" ? "h-[var(--row-compact)]" : "h-[var(--row)]";
 
   if (total === 0) return <EmptyState {...empty} />;
@@ -260,7 +281,7 @@ export function DataTable<T>({
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <span className="font-mono tabular-nums">{pageIndex + 1} / {Math.max(1, table.getPageCount())}</span>
+          <span className="font-mono tabular-nums">{safeIndex + 1} / {pageCount}</span>
           <button
             type="button"
             aria-label="Next page"
