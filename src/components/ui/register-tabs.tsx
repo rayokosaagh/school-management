@@ -4,6 +4,13 @@ import { motion, useReducedMotion } from "motion/react";
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 
+/// The DOM id of one tab button. A page that wants its panel labelled by the
+/// active tab passes its own `baseId` to `RegisterTabs` and calls this with the
+/// same `baseId` to name the tab.
+export function registerTabId(baseId: string, tabId: string): string {
+  return `${baseId}-tab-${tabId}`;
+}
+
 export type RegisterTab = {
   id: string;
   /// Short code shown in the badge: "KA", "1A", "ALL".
@@ -21,16 +28,24 @@ export function RegisterTabs({
   value,
   onChange,
   ariaLabel,
+  baseId: baseIdProp,
+  panelId,
   className,
 }: {
   tabs: RegisterTab[];
   value: string;
   onChange: (id: string) => void;
   ariaLabel: string;
+  /** Namespace for the tab ids. Pass one (and the same one to `registerTabId`)
+   *  when the panel needs `aria-labelledby` pointing at the active tab. */
+  baseId?: string;
+  /** The id of the `PageFrame.Body` this strip drives, if there is one. */
+  panelId?: string;
   className?: string;
 }) {
   const reduce = useReducedMotion();
-  const layoutId = useId();
+  const generatedId = useId();
+  const baseId = baseIdProp ?? generatedId;
 
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const i = tabs.findIndex((t) => t.id === value);
@@ -52,7 +67,9 @@ export function RegisterTabs({
               key={tab.id}
               type="button"
               role="tab"
+              id={registerTabId(baseId, tab.id)}
               aria-selected={selected}
+              aria-controls={panelId}
               tabIndex={selected ? 0 : -1}
               onClick={() => onChange(tab.id)}
               className={cn(
@@ -63,7 +80,7 @@ export function RegisterTabs({
             >
               {selected ? (
                 <motion.span
-                  layoutId={reduce ? undefined : layoutId}
+                  layoutId={reduce ? undefined : baseId}
                   aria-hidden="true"
                   className="bg-brand absolute inset-x-[-1px] top-[-1px] h-[3px] rounded-t-lg"
                 />

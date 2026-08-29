@@ -2,7 +2,12 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
+
+/// Mirrors the `split` breakpoint declared in `globals.css`. Kept here so the
+/// JS branch below and the CSS grid track cannot drift apart.
+const SPLIT_QUERY = "(min-width: 74rem)";
 
 /// The one page skeleton every dashboard route renders. Owns padding, the
 /// split-view grid, and the Sheet fallback for the aside below `split`.
@@ -22,7 +27,7 @@ export function PageFrame({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-h-full flex-col", className)}>
+    <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-3">
         <div className="min-w-0">
           <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
@@ -66,38 +71,68 @@ function Split({
   onAsideClose?: () => void;
 }) {
   const reduce = useReducedMotion();
+  // One branch or the other, never both: `aside` is a single node, and
+  // rendering it twice would duplicate its ids, its form controls and its
+  // focus targets in the DOM.
+  const wide = useMediaQuery(SPLIT_QUERY);
+
   return (
-    <div className={cn("grid min-h-0 flex-1 gap-4", aside && "split:grid-cols-[1fr_340px]")}>
+    <div className={cn("grid min-h-0 flex-1 gap-4", aside && wide && "grid-cols-[1fr_340px]")}>
       <div className="flex min-h-0 min-w-0 flex-col">{children}</div>
-      {aside ? (
-        <>
-          <motion.aside
-            key="aside"
-            initial={reduce ? false : { opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-            aria-label={asideTitle}
-            className="bg-surface border-line split:flex hidden min-h-0 flex-col overflow-y-auto rounded-[10px] border"
-          >
+      {aside && wide ? (
+        <motion.aside
+          key="aside"
+          initial={reduce ? false : { opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
+          aria-label={asideTitle}
+          className="bg-surface border-line flex min-h-0 flex-col overflow-y-auto rounded-[10px] border"
+        >
+          {aside}
+        </motion.aside>
+      ) : null}
+      {aside && !wide ? (
+        <Sheet open={!!asideOpen} onOpenChange={(open) => { if (!open) onAsideClose?.(); }}>
+          <SheetContent side="right" className="w-full max-w-md overflow-y-auto p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>{asideTitle ?? "Details"}</SheetTitle>
+              <SheetDescription>Details for the selected row.</SheetDescription>
+            </SheetHeader>
             {aside}
-          </motion.aside>
-          <Sheet open={!!asideOpen} onOpenChange={(open) => { if (!open) onAsideClose?.(); }}>
-            <SheetContent side="right" className="split:hidden w-full max-w-md overflow-y-auto p-0">
-              <SheetHeader className="sr-only">
-                <SheetTitle>{asideTitle ?? "Details"}</SheetTitle>
-                <SheetDescription>Details for the selected row.</SheetDescription>
-              </SheetHeader>
-              {aside}
-            </SheetContent>
-          </Sheet>
-        </>
+          </SheetContent>
+        </Sheet>
       ) : null}
     </div>
   );
 }
 
-function Body({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("bg-surface border-line min-h-0 flex-1 overflow-auto rounded-[10px] border", className)}>{children}</div>;
+/// The panel a page's content sits in. It does not scroll itself — whatever it
+/// holds owns its own scroll region (`DataTable` scrolls its table container),
+/// so a sticky table header has a scrollport to stick to.
+///
+/// Pass `labelledBy` (with the tab's id, from `registerTabId`) to make the
+/// panel the tabpanel for a `RegisterTabs` strip.
+function Body({
+  children,
+  className,
+  id,
+  labelledBy,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+  labelledBy?: string;
+}) {
+  return (
+    <div
+      id={id}
+      role={labelledBy ? "tabpanel" : undefined}
+      aria-labelledby={labelledBy}
+      className={cn("bg-surface border-line flex min-h-0 flex-1 flex-col overflow-hidden rounded-[10px] border", className)}
+    >
+      {children}
+    </div>
+  );
 }
 
 PageFrame.Tabs = Tabs;
