@@ -23,10 +23,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     getLetterhead(),
   ]);
   const username = session?.user?.username || "Account";
+  const now = new Date();
 
   // Worked out against the stored matrix rather than the token, so a permission
   // change shows in the navigation without waiting for a fresh sign-in.
-  const [actor, grants] = await Promise.all([currentActor(), loadGrants()]);
+  // The overview only needs `currentYear`, so it runs alongside rather than
+  // adding a third round trip after these.
+  const [actor, grants, overview] = await Promise.all([
+    currentActor(),
+    loadGrants(),
+    currentYear ? getSchoolOverview(currentYear.id, now) : null,
+  ]);
   const allowed = actor
     ? [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS]
         .filter((item) => {
@@ -36,13 +43,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .map((item) => item.id)
     : [];
 
-  const now = new Date();
-
-  const overview = currentYear ? await getSchoolOverview(currentYear.id, now) : null;
-  const alerts = overview ? dueItems(overview) : [];
+  // An alert is a shortcut into a page, so it is worth no more than the
+  // permission to open that page: drop the ones this account cannot follow.
+  const alerts = (overview ? dueItems(overview) : []).filter((item) => {
+    const capability = capabilityFor(item.href);
+    return capability === null || (actor !== null && granted(grants, actor.role, capability));
+  });
 
   return (
-    <div className="bg-page grid h-screen grid-cols-1 grid-rows-[var(--topbar)_1fr] shell:grid-cols-[var(--rail)_1fr]">
+    <div className="bg-page grid h-[100dvh] grid-cols-1 grid-rows-[var(--topbar)_1fr] shell:grid-cols-[var(--rail)_1fr]">
       <TopBar
         school={{ name: school.name, address: school.address ?? null }}
         today={formatBs(now, "YYYY MMMM DD, dddd")}

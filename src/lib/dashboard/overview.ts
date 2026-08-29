@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { sectionsMissingAttendance } from "@/lib/attendance/attendance";
 
@@ -39,10 +40,12 @@ export function recentDays(end: Date, count: number): Date[] {
   return days;
 }
 
-export async function getSchoolOverview(academicYearId: number, today: Date) {
-  const day = new Date(
-    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()),
-  );
+/// Keyed on the UTC-midnight timestamp rather than the `Date` the caller
+/// happens to hold: `cache()` compares arguments by identity, and the layout
+/// and the page each build their own `new Date()`. With the day as a number
+/// both hit the same entry, so one request runs these queries once.
+const loadOverview = cache(async (academicYearId: number, dayMs: number) => {
+  const day = new Date(dayMs);
   const days = recentDays(day, 14);
 
   const [
@@ -141,6 +144,15 @@ export async function getSchoolOverview(academicYearId: number, today: Date) {
       days,
     ),
   };
+});
+
+/// Everything the shell and the Overview page need to say what the school
+/// should do today. De-duplicated per request — see `loadOverview`.
+export function getSchoolOverview(academicYearId: number, today: Date) {
+  return loadOverview(
+    academicYearId,
+    Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()),
+  );
 }
 
 export type SchoolOverview = Awaited<ReturnType<typeof getSchoolOverview>>;
