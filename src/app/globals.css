@@ -1,0 +1,296 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ui-sans), var(--font-ui-devanagari), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ui-mono), ui-monospace, monospace;
+  --font-heading: var(--font-ui-sans), var(--font-ui-devanagari), ui-sans-serif, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+/* ---------------------------------------------------------------------------
+   Dashboard surface tokens. The base theme is achromatic; these add the tinted
+   accents the school UI uses for section icons, action buttons and callouts,
+   defined once per theme so components never reach for a raw colour.
+   --------------------------------------------------------------------------- */
+
+:root {
+  --page: oklch(0.977 0.004 259);
+  --surface: oklch(1 0 0);
+  --surface-ring: oklch(0.932 0.007 259);
+  --surface-shadow: 0 1px 2px oklch(0.2 0.03 259 / 5%), 0 1px 3px oklch(0.2 0.03 259 / 6%);
+
+  --action: oklch(0.53 0.21 264);
+  --action-foreground: oklch(0.99 0 0);
+
+  --tint-violet: oklch(0.94 0.04 292);
+  --tint-violet-fg: oklch(0.52 0.22 292);
+  --tint-blue: oklch(0.94 0.035 259);
+  --tint-blue-fg: oklch(0.52 0.2 259);
+  --tint-green: oklch(0.94 0.05 160);
+  --tint-green-fg: oklch(0.52 0.13 160);
+  --tint-amber: oklch(0.95 0.05 85);
+  --tint-amber-fg: oklch(0.55 0.13 70);
+  --tint-rose: oklch(0.95 0.03 20);
+  --tint-rose-fg: oklch(0.55 0.22 27);
+
+  --rail: oklch(0.975 0.004 259);
+}
+
+.dark {
+  --page: oklch(0.16 0.008 259);
+  --surface: oklch(0.215 0.008 259);
+  --surface-ring: oklch(1 0 0 / 8%);
+  --surface-shadow: 0 1px 2px oklch(0 0 0 / 30%);
+
+  --action: oklch(0.62 0.19 264);
+  --action-foreground: oklch(0.99 0 0);
+
+  --tint-violet: oklch(0.32 0.07 292);
+  --tint-violet-fg: oklch(0.8 0.13 292);
+  --tint-blue: oklch(0.32 0.07 259);
+  --tint-blue-fg: oklch(0.8 0.12 259);
+  --tint-green: oklch(0.3 0.06 160);
+  --tint-green-fg: oklch(0.8 0.12 160);
+  --tint-amber: oklch(0.32 0.06 85);
+  --tint-amber-fg: oklch(0.84 0.12 85);
+  --tint-rose: oklch(0.32 0.07 20);
+  --tint-rose-fg: oklch(0.8 0.13 20);
+
+  --rail: oklch(0.24 0.008 259);
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-ring: var(--surface-ring);
+  --color-action: var(--action);
+  --color-action-foreground: var(--action-foreground);
+  --color-tint-violet: var(--tint-violet);
+  --color-tint-violet-fg: var(--tint-violet-fg);
+  --color-tint-blue: var(--tint-blue);
+  --color-tint-blue-fg: var(--tint-blue-fg);
+  --color-tint-green: var(--tint-green);
+  --color-tint-green-fg: var(--tint-green-fg);
+  --color-tint-amber: var(--tint-amber);
+  --color-tint-amber-fg: var(--tint-amber-fg);
+  --color-tint-rose: var(--tint-rose);
+  --color-tint-rose-fg: var(--tint-rose-fg);
+  --color-rail: var(--rail);
+}
+
+@utility card-surface {
+  background: var(--surface);
+  border-radius: 1rem;
+  box-shadow: var(--surface-shadow);
+  outline: 1px solid var(--surface-ring);
+  outline-offset: -1px;
+}
+
+/* ---------------------------------------------------------------------------
+   Printed marksheets. The screen shows the same markup so what is checked is
+   what comes out of the printer; @media print strips the app around it.
+   --------------------------------------------------------------------------- */
+
+.sheet {
+  background: var(--surface);
+  color: #000;
+  border: 1px solid var(--surface-ring);
+  border-radius: 0.75rem;
+  padding: 2rem;
+}
+
+.sheet-head { text-align: center; border-bottom: 2px solid currentColor; padding-bottom: 0.75rem; }
+.sheet-head h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+.sheet-head .np { font-size: 1.05rem; }
+.sheet-head .meta { font-size: 0.8rem; opacity: 0.75; margin-top: 0.15rem; }
+.sheet-head h2 { font-size: 1rem; font-weight: 600; margin-top: 0.6rem; }
+
+.sheet-facts,
+.sheet-summary {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 640px) {
+  .sheet-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sheet-summary { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+.sheet-facts dt,
+.sheet-summary dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; }
+.sheet-facts dd,
+.sheet-summary dd { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.sheet-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.sheet-table th,
+.sheet-table td {
+  border: 1px solid currentColor;
+  padding: 0.35rem 0.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-table th { font-weight: 600; }
+.sheet-table .left { text-align: left; font-variant-numeric: normal; }
+.sheet-table .small { font-size: 0.75rem; }
+
+.draft-note { margin-top: 0.75rem; font-size: 0.8rem; font-weight: 600; }
+
+.sheet-signs {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  font-size: 0.8rem;
+}
+.sheet-signs span { border-top: 1px solid currentColor; padding-top: 0.35rem; min-width: 8rem; text-align: center; }
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+
+  /* Hide the shell: sidebar, header, controls. Only the sheets print. */
+  body * { visibility: hidden; }
+  .print-root, .print-root * { visibility: visible; }
+  .print-root {
+    position: absolute;
+    inset: 0;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .no-print { display: none !important; }
+
+  .sheet {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: #fff;
+    /* One marksheet per sheet of paper. */
+    break-after: page;
+    break-inside: avoid;
+  }
+  .sheet:last-child { break-after: auto; }
+
+  /* Grades and remarks must survive a black-and-white printer. */
+  .sheet-table, .sheet-table th, .sheet-table td { border-color: #000; }
+}

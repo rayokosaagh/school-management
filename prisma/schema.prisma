@@ -1,0 +1,357 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// What an account may do. Enforced in every server action, not just in the
+/// navigation — the actions are public HTTP endpoints.
+enum Role {
+  ADMIN
+  OFFICE
+  TEACHER
+}
+
+/// One row per role-capability the school has changed from the built-in default.
+/// Absence means "use the default", so a fresh install needs no seeding and an
+/// added capability starts from sensible ground rather than denied-for-everyone.
+model RolePermission {
+  id         Int     @id @default(autoincrement())
+  role       Role
+  capability String
+  granted    Boolean
+
+  @@unique([role, capability])
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  username String @unique
+  role Role @default(OFFICE)
+  // Optional so the column can be added to a table that already has rows, and
+  // so accounts created before email existed keep working. Postgres permits
+  // many NULLs under a unique index, so those rows do not collide.
+  // Always stored lowercased — see normalizeEmail() in src/lib/auth/identity.ts.
+  email String? @unique
+  passwordHash String
+  createdAt DateTime @default(now())
+
+  staff Staff?
+}
+
+// ---------------------------------------------------------------------------
+// Registry — the spine attendance and assessment will read through.
+// Dates are stored Gregorian and rendered as Bikram Sambat; see src/lib/date/bs.ts.
+// ---------------------------------------------------------------------------
+
+/// Baisakh–Chaitra. Only one row may have isCurrent set; enforced in the service layer.
+model AcademicYear {
+  id        Int      @id @default(autoincrement())
+  nameBS    String   @unique
+  startsOn  DateTime @db.Date
+  endsOn    DateTime @db.Date
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  sections    Section[]
+  offerings   SubjectOffering[]
+  enrollments Enrollment[]
+  attendance  AttendanceSession[]
+  examTerms   ExamTerm[]
+}
+
+/// A year group: "Class 5". `order` drives sorting and year-end promotion.
+model Grade {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  order Int    @unique
+
+  sections  Section[]
+  offerings SubjectOffering[]
+}
+
+model Section {
+  id             Int    @id @default(autoincrement())
+  name           String
+  gradeId        Int
+  academicYearId Int
+  classTeacherId Int?
+
+  grade        Grade               @relation(fields: [gradeId], references: [id])
+  academicYear AcademicYear        @relation(fields: [academicYearId], references: [id])
+  classTeacher Staff?              @relation(fields: [classTeacherId], references: [id])
+  enrollments  Enrollment[]
+  assignments  TeacherAssignment[]
+  attendance   AttendanceSession[]
+
+  @@unique([gradeId, academicYearId, name])
+}
+
+model Subject {
+  id   Int    @id @default(autoincrement())
+  name String
+  code String @unique
+
+  offerings SubjectOffering[]
+}
+
+/// One subject as taught to one grade in one year, with its mark scheme.
+model SubjectOffering {
+  id                 Int     @id @default(autoincrement())
+  subjectId          Int
+  gradeId            Int
+  academicYearId     Int
+  hasPractical       Boolean @default(false)
+  fullMarksTheory    Int
+  passMarksTheory    Int
+  fullMarksPractical Int?
+  passMarksPractical Int?
+
+  subject      Subject             @relation(fields: [subjectId], references: [id])
+  grade        Grade               @relation(fields: [gradeId], references: [id])
+  academicYear AcademicYear        @relation(fields: [academicYearId], references: [id])
+  assignments  TeacherAssignment[]
+  marks        Mark[]
+
+  @@unique([subjectId, gradeId, academicYearId])
+}
+
+model Staff {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @unique
+  photoId     Int?     @unique
+  firstName   String   @default("")
+  middleName  String?
+  lastName    String   @default("")
+  /// Derived from the name parts on write, so sorting and search stay simple.
+  fullName    String
+  fullNameNp  String?
+  phone       String
+  designation String
+  joinedOn    DateTime @db.Date
+  isActive    Boolean  @default(true)
+
+  user           User?               @relation(fields: [userId], references: [id])
+  photo          Photo?              @relation(fields: [photoId], references: [id])
+  assignments    TeacherAssignment[]
+  sectionsLed    Section[]
+  attendanceKept AttendanceSession[]
+}
+
+/// Scopes which section-subject pairs a teacher may enter marks for later.
+model TeacherAssignment {
+  id                Int @id @default(autoincrement())
+  staffId           Int
+  sectionId         Int
+  subjectOfferingId Int
+
+  staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  section         Section         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subjectOffering SubjectOffering @relation(fields: [subjectOfferingId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, sectionId, subjectOfferingId])
+}
+
+model Student {
+  id          Int           @id @default(autoincrement())
+  admissionNo String        @unique
+  photoId     Int?          @unique
+  firstName   String        @default("")
+  middleName  String?
+  lastName    String        @default("")
+  /// Derived from the name parts on write, so sorting and search stay simple.
+  fullName    String
+  fullNameNp  String?
+  dob         DateTime      @db.Date
+  gender      Gender
+  address     String?
+  admittedOn  DateTime      @db.Date
+  status      StudentStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+
+  photo       Photo?             @relation(fields: [photoId], references: [id])
+  guardians   Guardian[]
+  enrollments Enrollment[]
+  attendance  AttendanceRecord[]
+  marks       Mark[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+/// Students are marked LEFT rather than deleted, so their history survives.
+enum StudentStatus {
+  ACTIVE
+  LEFT
+  GRADUATED
+}
+
+model Guardian {
+  id         Int              @id @default(autoincrement())
+  studentId  Int
+  relation   GuardianRelation
+  fullName   String
+  phone      String
+  occupation String?
+  isPrimary  Boolean          @default(false)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+enum GuardianRelation {
+  FATHER
+  MOTHER
+  GUARDIAN
+}
+
+/// A student's place in one section for one year. Roll numbers are unique
+/// within a section and year, never globally.
+model Enrollment {
+  id             Int      @id @default(autoincrement())
+  studentId      Int
+  sectionId      Int
+  academicYearId Int
+  rollNo         Int
+  enrolledOn     DateTime @db.Date
+
+  student      Student      @relation(fields: [studentId], references: [id])
+  section      Section      @relation(fields: [sectionId], references: [id])
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@unique([studentId, academicYearId])
+  @@unique([sectionId, academicYearId, rollNo])
+}
+
+// ---------------------------------------------------------------------------
+// Attendance — taken once a day per section, not per period.
+// ---------------------------------------------------------------------------
+
+/// One roll call. Existence of a session is what distinguishes "everyone was
+/// present" from "nobody took attendance that day".
+model AttendanceSession {
+  id             Int      @id @default(autoincrement())
+  sectionId      Int
+  academicYearId Int
+  date           DateTime @db.Date
+  takenById      Int?
+  takenAt        DateTime @default(now())
+
+  section      Section            @relation(fields: [sectionId], references: [id])
+  academicYear AcademicYear       @relation(fields: [academicYearId], references: [id])
+  takenBy      Staff?             @relation(fields: [takenById], references: [id])
+  records      AttendanceRecord[]
+
+  @@unique([sectionId, date])
+}
+
+model AttendanceRecord {
+  id        Int              @id @default(autoincrement())
+  sessionId Int
+  studentId Int
+  status    AttendanceStatus
+  note      String?
+
+  session AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student Student           @relation(fields: [studentId], references: [id])
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  LEAVE
+}
+
+/// Passport-style photo for a student or staff member. Stored in the database
+/// because this is a single-school deployment of a few hundred people; move to
+/// object storage if that ever stops being true.
+model Photo {
+  id        Int      @id @default(autoincrement())
+  data      Bytes
+  mimeType  String
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+
+  student Student?
+  staff   Staff?
+  school  SchoolProfile?
+}
+
+/// The school's own details, for letterheads on printed documents. A single
+/// row: this is one school's system, not a directory of them.
+model SchoolProfile {
+  id        Int      @id @default(1)
+  name      String
+  nameNp    String?
+  address   String?
+  phone     String?
+  email     String?
+  logoId    Int?     @unique
+  updatedAt DateTime @updatedAt
+
+  logo Photo? @relation(fields: [logoId], references: [id])
+}
+
+// ---------------------------------------------------------------------------
+// Assessment — terminal exams and the marks recorded against them.
+// ---------------------------------------------------------------------------
+
+/// A terminal exam: First Terminal, Second Terminal, Final, and so on. `order`
+/// puts them in sequence within the year; `isPublished` gates whether results
+/// are treated as final.
+model ExamTerm {
+  id             Int       @id @default(autoincrement())
+  academicYearId Int
+  name           String
+  order          Int
+  startsOn       DateTime? @db.Date
+  endsOn         DateTime? @db.Date
+  isPublished    Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  marks        Mark[]
+
+  @@unique([academicYearId, name])
+  @@unique([academicYearId, order])
+}
+
+/// One student's result in one subject for one exam. Theory and practical are
+/// stored separately because they are passed separately, and null means the
+/// mark has not been entered yet — which is not the same as zero.
+model Mark {
+  id                Int      @id @default(autoincrement())
+  examTermId        Int
+  studentId         Int
+  subjectOfferingId Int
+  theory            Int?
+  practical         Int?
+  /// Absent from the exam. Kept apart from a zero, which is a sat-and-failed.
+  isAbsent          Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+
+  examTerm        ExamTerm        @relation(fields: [examTermId], references: [id], onDelete: Cascade)
+  student         Student         @relation(fields: [studentId], references: [id])
+  subjectOffering SubjectOffering @relation(fields: [subjectOfferingId], references: [id])
+
+  @@unique([examTermId, studentId, subjectOfferingId])
+  @@index([studentId])
+  @@index([subjectOfferingId])
+}

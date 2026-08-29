@@ -1,0 +1,136 @@
+import { redirect } from "next/navigation";
+import { Building2, KeyRound, ShieldCheck, Users } from "lucide-react";
+import { auth } from "@/lib/auth/auth";
+import { prisma } from "@/lib/prisma";
+import { PageHeader, SectionCard } from "@/components/ui/page-shell";
+import { getSchool } from "@/lib/registry/school";
+import { listAccounts } from "@/lib/auth/registration";
+import { listStaff } from "@/lib/registry/staff";
+import { EmailForm } from "./_components/email-form";
+import { SchoolForm } from "./_components/school-form";
+import { Accounts } from "./_components/accounts";
+import { PermissionMatrix } from "./_components/permission-matrix";
+import { loadGrants, granted } from "@/lib/auth/permissions";
+import {
+  CAPABILITIES,
+  CAPABILITY_LABEL,
+  CAPABILITY_NOTE,
+  canByDefault,
+} from "@/lib/auth/roles";
+
+import { requirePage } from "@/lib/auth/guard";
+
+export default async function SettingsPage() {
+  // Redirects unless the stored permission matrix allows this section.
+  await requirePage("/dashboard/settings");
+
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  // The session carries id and username, but not email — the JWT is issued at
+  // sign-in and would go stale the moment the address changes. Read it fresh.
+  const [user, school, accounts] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: Number(session.user.id) },
+      select: { username: true, email: true, createdAt: true },
+    }),
+    getSchool(),
+    listAccounts(),
+  ]);
+  const staff = await listStaff();
+  const grants = await loadGrants();
+
+  // Each cell also carries whether it differs from the built-in default, so the
+  // matrix can mark what the school has changed.
+  const matrix = CAPABILITIES.map((capability) => ({
+    key: capability,
+    label: CAPABILITY_LABEL[capability],
+    note: CAPABILITY_NOTE[capability],
+    roles: Object.fromEntries(
+      (["OFFICE", "TEACHER"] as const).map((role) => {
+        const allowed = granted(grants, role, capability);
+        return [role, { allowed, changed: allowed !== canByDefault(role, capability) }];
+      }),
+    ),
+  }));
+  const anyChanged = matrix.some((row) =>
+    Object.values(row.roles).some((cell) => cell.changed),
+  );
+
+  if (!user) redirect("/login");
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-8">
+      <PageHeader icon={Building2} tint="blue" title="Settings" />
+
+      <SectionCard
+        icon={Building2}
+        tint="violet"
+        title="School details"
+        description="Used on the dashboard header and every printed marksheet."
+      >
+        <SchoolForm school={school} />
+      </SectionCard>
+
+      <SectionCard
+        icon={KeyRound}
+        tint="green"
+        title="Your account"
+        description="How you sign in."
+      >
+        <dl className="mb-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+          <dt className="text-muted-foreground">Username</dt>
+          <dd className="font-medium">{user.username}</dd>
+          <dt className="text-muted-foreground">Member since</dt>
+          <dd className="font-medium">
+            {user.createdAt.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </dd>
+        </dl>
+
+        <EmailForm currentEmail={user.email} />
+      </SectionCard>
+
+      <SectionCard
+        icon={Users}
+        tint="amber"
+        title="Who can sign in"
+        description="Public sign-up is closed. What each of them can reach is set below."
+      >
+        <Accounts
+          accounts={accounts.map((a) => ({
+            id: a.id,
+            username: a.username,
+            email: a.email,
+            role: a.role,
+            createdLabel: a.createdAt.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            }),
+            staffId: a.staff?.id ?? null,
+            staffName: a.staff?.fullName ?? null,
+          }))}
+          staff={staff.map((s) => ({
+            id: s.id,
+            fullName: s.fullName,
+            taken: s.userId !== null,
+          }))}
+          currentUserId={Number(session.user.id)}
+        />
+      </SectionCard>
+
+      <SectionCard
+        icon={ShieldCheck}
+        tint="blue"
+        title="What each role can do"
+        description="Tick a box to allow that role into a section. Takes effect on their next page load."
+      >
+        <PermissionMatrix capabilities={matrix} anyChanged={anyChanged} />
+      </SectionCard>
+    </div>
+  );
+}
