@@ -1,6 +1,8 @@
+import type { DayStatus } from "@/lib/attendance/strip";
 import { cn } from "@/lib/utils";
 
-export type DayStatus = "present" | "absent" | "late" | "none";
+/// Re-exported so components that only draw a strip keep importing it here.
+export type { DayStatus };
 
 export function describeStrip(days: DayStatus[]): string {
   if (days.length === 0) return "No attendance recorded";

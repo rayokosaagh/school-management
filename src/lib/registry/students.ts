@@ -5,7 +5,7 @@ import { studentCalendar } from "@/lib/attendance/attendance";
 import { attendancePercent, lastDays, stripFromCalendar } from "@/lib/attendance/strip";
 import { getStudentMarksheets } from "@/lib/assessment/exams";
 import { formatBs, toBsInput } from "@/lib/date/bs";
-import type { DayStatus } from "@/components/ui/attendance-strip";
+import type { DayStatus } from "@/lib/attendance/strip";
 
 export type GuardianInput = {
   relation: GuardianRelation;

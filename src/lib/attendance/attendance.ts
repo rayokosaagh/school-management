@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { AttendanceStatus } from "@/generated/prisma/enums";
 import { adToBs, bsMonthLength, bsToAd } from "@/lib/date/bs";
-import { lastDays, stripFromCalendar } from "./strip";
-import type { DayStatus } from "@/components/ui/attendance-strip";
+import { lastDays, stripFromCalendar, type DayStatus } from "./strip";
 
 export class AttendanceError extends Error {}
 

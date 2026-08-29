@@ -1,6 +1,12 @@
-import type { DayStatus } from "@/components/ui/attendance-strip";
+import type { AttendanceStatus } from "@/generated/prisma/enums";
 
-const STATUS_TO_DAY: Record<string, DayStatus> = {
+/// How one day reads in a strip. Defined here, next to the code that derives
+/// it, rather than in the component that draws it.
+export type DayStatus = "present" | "absent" | "late" | "none";
+
+/// Total over the enum, so a new AttendanceStatus is a type error here rather
+/// than a silent "none" in every strip.
+const STATUS_TO_DAY: Record<AttendanceStatus, DayStatus> = {
   PRESENT: "present",
   LATE: "late",
   ABSENT: "absent",
@@ -14,7 +20,7 @@ function dayKey(date: Date) {
 /// One entry per requested day, oldest first. Days the student has no record
 /// for read as "none" — the section may not have taken roll that day.
 export function stripFromCalendar(records: { date: Date; status: string }[], days: Date[]): DayStatus[] {
-  const byDay = new Map(records.map((r) => [dayKey(r.date), STATUS_TO_DAY[r.status] ?? "none"]));
+  const byDay = new Map(records.map((r) => [dayKey(r.date), STATUS_TO_DAY[r.status as AttendanceStatus]]));
   return days.map((day) => byDay.get(dayKey(day)) ?? "none");
 }
 
