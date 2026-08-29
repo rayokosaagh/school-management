@@ -15,6 +15,7 @@ import { FieldSelect } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { StatusDot } from "@/components/ui/status-dot";
 import { useToastedActionState } from "@/components/ui/toast";
+import { sectionCode } from "@/lib/register-codes";
 import type { StudentSummary } from "@/lib/registry/students";
 import { removeStudent, type ActionState } from "../actions";
 import { StudentPane, StudentPaneSkeleton, STATUS_LABEL, STATUS_TONE } from "./student-pane";
@@ -22,7 +23,6 @@ import type { StudentDetailData } from "./student-detail";
 import { AddStudentForm } from "./student-form";
 
 export type StudentRow = StudentDetailData & {
-  gradeName: string;
   rollNo: number;
   sectionLabel: string;
   dobLabel: string;
@@ -33,13 +33,6 @@ export type StudentRow = StudentDetailData & {
 type Section = { id: number; name: string; grade: { name: string } };
 
 const ALL = "all";
-
-/// "Kindergarten A" → "KA", "Class 10 B" → "10B", "Senior Kindergarten A" → "SKA".
-function sectionCode(gradeName: string, sectionName: string) {
-  const num = gradeName.match(/\d+/)?.[0];
-  const letters = num ? "" : gradeName.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("");
-  return `${num ?? letters}${sectionName.toUpperCase()}`;
-}
 
 const EMPTY: ActionState = {};
 
@@ -61,6 +54,7 @@ export function StudentsWorkspace({
   suggestedAdmissionNo,
   selectedId,
   summary,
+  notice,
 }: {
   rows: StudentRow[];
   sections: Section[];
@@ -71,6 +65,9 @@ export function StudentsWorkspace({
   selectedId: number | null;
   /** The server-rendered summary for `selectedId`, or null while it is not loaded. */
   summary: StudentSummary | null;
+  /** A one-line message about the last navigation, or null. Cleared by the
+   *  next `router.replace` — both `select` and `clearSelection` do one. */
+  notice: string | null;
 }) {
   const router = useRouter();
   const [, startNavigation] = useTransition();
@@ -91,27 +88,35 @@ export function StudentsWorkspace({
   // instead of stranding it on the last row.
   const [optimisticId, setOptimisticId] = useOptimistic(selectedId);
 
+  // The tab counts are taken after the status filter and before the search, so
+  // the number on a tab is what switching to it would show — the toolbar count
+  // agrees with the tab. Search stays out: it is meant to narrow within a tab,
+  // not to renumber the strip on every keystroke.
+  const inStatus = useMemo(
+    () => rows.filter((r) => status === "" || r.status === status),
+    [rows, status],
+  );
+
   const tabs = useMemo<RegisterTab[]>(() => {
     const counts = new Map<number, number>();
-    for (const r of rows) counts.set(r.sectionId, (counts.get(r.sectionId) ?? 0) + 1);
+    for (const r of inStatus) counts.set(r.sectionId, (counts.get(r.sectionId) ?? 0) + 1);
     return [
-      { id: ALL, code: "ALL", label: "All sections", count: rows.length },
+      { id: ALL, code: "ALL", label: "All sections", count: inStatus.length },
       ...sections.map((s) => {
         const n = counts.get(s.id) ?? 0;
         return { id: String(s.id), code: sectionCode(s.grade.name, s.name), label: `${s.grade.name} ${s.name}`, count: n, empty: n === 0 };
       }),
     ];
-  }, [rows, sections]);
+  }, [inStatus, sections]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
+    return inStatus.filter((r) => {
       if (tab !== ALL && String(r.sectionId) !== tab) return false;
-      if (status !== "" && r.status !== status) return false;
       if (q && !`${r.fullName} ${r.fullNameNp ?? ""} ${r.admissionNo} ${r.guardianLabel}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [rows, tab, status, query]);
+  }, [inStatus, tab, query]);
 
   const selectedRow = optimisticId == null ? null : (rows.find((r) => r.studentId === optimisticId) ?? null);
   const summaryMatches = summary != null && summary.studentId === optimisticId;
@@ -200,6 +205,10 @@ export function StudentsWorkspace({
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} {visible.length === 1 ? "student" : "students"}{selectedRow ? " · 1 selected" : ""}</span>
       </PageFrame.Toolbar>
+
+      {notice ? (
+        <p role="status" className="text-warn bg-warn-tint border-warn/30 mb-3 rounded-lg border px-3 py-2 text-sm">{notice}</p>
+      ) : null}
 
       <PageFrame.Split
         aside={

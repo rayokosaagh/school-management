@@ -56,7 +56,9 @@ export function StudentPane({
       subtitle={
         <>
           {summary.fullNameNp ? <span className="font-devanagari text-ink-2">{summary.fullNameNp} · </span> : null}
-          {summary.enrollment ? <>{summary.enrollment.sectionLabel} · Roll <span className="font-mono">{summary.enrollment.rollNo}</span></> : "Not enrolled this year"}
+          {/* The page redirects when there is no current-year enrolment, so the
+              pane never opens without one. */}
+          {summary.enrollment ? <>{summary.enrollment.sectionLabel} · Roll <span className="font-mono">{summary.enrollment.rollNo}</span></> : null}
         </>
       }
       initials={initialsOf(summary.fullName)}

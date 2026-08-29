@@ -12,7 +12,7 @@ import { listSections } from "@/lib/registry/structure";
 import { getStudentSummary, listEnrolledStudents, suggestAdmissionNo } from "@/lib/registry/students";
 import { StudentsWorkspace, type StudentRow } from "./_components/students-workspace";
 
-export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ student?: string }> }) {
+export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ student?: string; denied?: string }> }) {
   // Redirects unless the stored permission matrix allows this section.
   const actor = await requirePage("/dashboard/students");
 
@@ -30,7 +30,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
     );
   }
 
-  const { student } = await searchParams;
+  const { student, denied } = await searchParams;
   const selectedId = student && /^\d+$/.test(student) ? Number(student) : null;
   const now = new Date();
 
@@ -43,15 +43,17 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
     selectedId == null ? Promise.resolve<number[] | "all">("all") : allowedSectionIds(actor),
   ]);
 
-  // An id that names nobody — unknown, just deleted, or a section this actor
-  // may not see — would open a pane with no row behind it. Clear the query
-  // string instead, which is also what a delete leaves behind. The list itself
-  // is not scoped: only the pane is.
+  // An id that names nobody — unknown, just deleted, or not enrolled in the
+  // current year — would open a pane with no row behind it, since the table
+  // lists this year's enrolments. Clear the query string instead, which is
+  // also what a delete leaves behind. The list itself is not scoped: only the
+  // pane is, and a row outside this actor's sections says so rather than
+  // clearing silently, so the click does not read as a dead row.
   if (selectedId != null) {
-    const inScope =
-      allowed === "all" ||
-      (summary?.enrollment != null && allowed.includes(summary.enrollment.sectionId));
-    if (summary == null || !inScope) redirect("/dashboard/students");
+    const enrollment = summary?.enrollment ?? null;
+    if (summary == null || enrollment == null) redirect("/dashboard/students");
+    const inScope = allowed === "all" || allowed.includes(enrollment.sectionId);
+    if (!inScope) redirect("/dashboard/students?denied=1");
   }
 
   const empty14: StudentRow["strip"] = Array.from({ length: 14 }, () => "none");
@@ -78,7 +80,6 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
         id: g.id, relation: g.relation, fullName: g.fullName, phone: g.phone, occupation: g.occupation, isPrimary: g.isPrimary,
       })),
       rollNo: e.rollNo,
-      gradeName: e.section.grade.name,
       sectionLabel: `${e.section.grade.name} ${e.section.name}`,
       dobLabel: formatBs(e.student.dob, "YYYY-MM-DD"),
       guardianLabel: primary ? `${primary.fullName} ${primary.phone}` : "",
@@ -95,6 +96,7 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
       suggestedAdmissionNo={suggested}
       selectedId={selectedId}
       summary={summary}
+      notice={denied ? "You can only open students in your own sections." : null}
     />
   );
 }
