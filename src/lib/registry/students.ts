@@ -335,8 +335,8 @@ export async function getStudentSummary(
       termId: s.term.id,
       name: s.term.name,
       isPublished: s.term.isPublished,
-      percent: s.result.overall.percent,
-      gpa: s.result.overall.gpa,
+      percent: s.result.overall.percent == null ? null : Math.round(s.result.overall.percent),
+      gpa: s.result.overall.gpa == null ? null : Math.round(s.result.overall.gpa * 100) / 100,
     })),
     history: student.enrollments.map((e) => ({
       year: e.academicYear.nameBS,

@@ -44,7 +44,7 @@ function RowActions({ row }: { row: StaffRow }) {
       </form>
       <form action={remove} className="inline">
         <input type="hidden" name="staffId" value={row.id} />
-        <ConfirmSubmit icon size="xs" pending={removing} title={blocked ? "Remove class-teacher and subject assignments first" : `Delete ${row.fullName}`} />
+        <ConfirmSubmit icon size="xs" pending={removing} disabled={blocked} title={blocked ? "Remove class-teacher and subject assignments first" : `Delete ${row.fullName}`} />
       </form>
     </>
   );

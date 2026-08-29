@@ -15,6 +15,7 @@ export function ConfirmSubmit({
   size = "sm",
   icon = false,
   title,
+  disabled = false,
 }: {
   label?: string;
   confirmLabel?: string;
@@ -25,6 +26,10 @@ export function ConfirmSubmit({
   /// bin. Arming still shows words — a destructive click is never a bare icon.
   icon?: boolean;
   title?: string;
+  /// When true, the unarmed button is disabled (with `title` as its tooltip)
+  /// and cannot be armed — for actions blocked server-side, so the user sees
+  /// why before they try.
+  disabled?: boolean;
 }) {
   const [armed, setArmed] = useState(false);
 
@@ -52,6 +57,7 @@ export function ConfirmSubmit({
           onClick={() => setArmed(true)}
           aria-label={title ?? label}
           title={title ?? label}
+          disabled={disabled}
           className="text-muted-foreground hover:text-destructive"
         >
           <Trash2 />
@@ -59,7 +65,14 @@ export function ConfirmSubmit({
       );
     }
     return (
-      <Button type="button" variant="destructive" size={size} onClick={() => setArmed(true)}>
+      <Button
+        type="button"
+        variant="destructive"
+        size={size}
+        onClick={() => setArmed(true)}
+        disabled={disabled}
+        title={disabled ? title : undefined}
+      >
         {label}
       </Button>
     );
