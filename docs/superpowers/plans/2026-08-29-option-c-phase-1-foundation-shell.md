@@ -2533,3 +2533,25 @@ Claude-Session: https://claude.ai/code/session_01CyAwoVTj6wrc5RQFdV5PCz"
 
 - Spec §6 page migrations, `?student=` deep link, `[id]` route removal → Phase 2 plan.
 - Spec §8.1 global search (top-bar centre slot is reserved), §8.3 skeletons/`error.tsx`/`not-found.tsx`, §7.3–7.4 rebasing and deletions, legacy token removal, `getStudentSummary`/`getStaffSummary` → Phase 3 plan (search/skeletons) and Phase 2 (summaries, with the pages that need them).
+
+---
+
+## Phase 1 outcome (2026-08-29)
+
+Shipped on branch `redesign/option-c`, commits `0b2e64b..ae4194f`. 219/219 tests with `DB_TESTS=1`, `next build` green, smoke screenshots in `artifacts/smoke/`.
+
+**Contracts Phase 2 pages must follow**
+- `<main>` is the outer scroller. `PageFrame` is `h-full`; `PageFrame.Body` is a flex column with `overflow-hidden` and **no scroll fallback** — a body that is not a `DataTable` must provide its own scroll region (`overflow-auto`) or it will be clipped.
+- `DataTable` owns its scroll region (`Table containerClassName`); its footer stays pinned only inside `PageFrame.Body`.
+- `PageFrame.Split` renders the inline aside **or** the Sheet (`useMediaQuery("(min-width: 74rem)")`), never both; `asideOpen`/`onAsideClose` drive only the Sheet.
+- Tabs ↔ panel a11y: pass `baseId` and `panelId` to `RegisterTabs`, and `id`/`labelledBy={registerTabId(baseId, activeTabId)}` to `PageFrame.Body`.
+- Theme: always change it through `applyTheme()`; read it with `useTheme()`.
+- `getSchoolOverview` is `cache()`d per request keyed on the UTC-midnight date.
+
+**Carried into Phase 2/3 (from the final review)**
+- AttendanceStrip is colour-only for sighted users — add a per-bar glyph/letter when strips land in table rows (plan gap, spec §10).
+- DataTable hides its density/columns/page-size controls when empty; consider keeping them when a filter empties the table.
+- First-frame render uses default prefs before `localStorage` prefs apply.
+- Delete `tabs.tsx` (redundant with `RegisterTabs`) and the other unused shadcn files with the Phase 3 dead-code pass; `--color-rail` goes with the legacy tokens.
+- `TopBar` prop surface (10 props) — group into `school`/`year`/`user` when the Phase 3 search slot is added.
+- Auth pages adopt `BrandMark` in Phase 3.
