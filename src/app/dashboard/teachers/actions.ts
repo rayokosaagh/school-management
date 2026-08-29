@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireCapability } from "@/lib/auth/guard";
+import { ForbiddenError, requireCapability } from "@/lib/auth/guard";
+import { PhotoError, clearStaffPhoto, setStaffPhoto } from "@/lib/registry/photos";
 import { parseBsInput } from "@/lib/date/bs";
 import { NAME_MESSAGES, readNameParts, validateName } from "@/lib/registry/names";
 import {
@@ -129,4 +130,38 @@ export async function removeStaff(
 
   revalidatePath(PATH);
   return { success: "Staff record deleted." };
+}
+
+export type PhotoState = { error?: string; success?: string };
+
+export async function saveStaffPhoto(
+  _prev: PhotoState,
+  formData: FormData,
+): Promise<PhotoState> {
+  // Same capability as every other write on this page — a signed-in reader
+  // must not be able to change a staff member's photo.
+  try {
+    await requireSession();
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+
+  const staffId = numericField(formData, "staffId");
+  if (staffId === null) return { error: "Pick a staff member." };
+
+  try {
+    if (formData.get("removePhoto") === "1") {
+      await clearStaffPhoto(staffId);
+      revalidatePath(PATH);
+      return { success: "Photo removed." };
+    }
+    await setStaffPhoto(staffId, formData.get("photo"));
+  } catch (e) {
+    if (e instanceof PhotoError) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  return { success: "Photo saved." };
 }

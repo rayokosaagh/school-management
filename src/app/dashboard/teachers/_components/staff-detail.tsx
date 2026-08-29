@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { ExternalLink, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,14 +55,6 @@ export function StaffDetail({ row, onDone }: { row: StaffRow; onDone: () => void
 
   return (
     <div className="space-y-5">
-      <Link
-        href={`/dashboard/teachers/${row.id}`}
-        className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
-      >
-        <ExternalLink className="size-3.5" />
-        Open full profile
-      </Link>
-
       <form key={signature} action={editAction} className="space-y-4">
         <input type="hidden" name="staffId" value={row.id} />
         <div className="grid gap-4 sm:grid-cols-2">
@@ -124,82 +114,3 @@ export function StaffDetail({ row, onDone }: { row: StaffRow; onDone: () => void
     </div>
   );
 }
-
-/// Shortcuts on each row: the profile, the editor, and the one status change
-/// that gets used often enough to not be worth opening a panel for.
-export function TeacherRowActions({ row, open }: { row: StaffRow; open: () => void }) {
-  const [, toggleAction, toggling] = useToastedActionState(toggleStaffActive, EMPTY);
-  const [, deleteAction, deleting] = useToastedActionState(removeStaff, EMPTY);
-  // Deleting is refused server-side while they lead a section or hold a
-  // subject; marking them as left is the reversible route.
-  const blocked = row.sectionsLed > 0 || row.assignments > 0;
-
-  return (
-    <>
-      <Button
-        render={<Link href={`/dashboard/teachers/${row.id}`} />}
-        nativeButton={false}
-        variant="ghost"
-        size="icon-sm"
-        aria-label={`Open ${row.fullName}'s profile`}
-        title="Open profile"
-      >
-        <ExternalLink />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        onClick={open}
-        aria-label={`Edit ${row.fullName}`}
-        title="Edit"
-      >
-        <Pencil />
-      </Button>
-      <form action={toggleAction} className="contents">
-        <input type="hidden" name="staffId" value={row.id} />
-        <input type="hidden" name="isActive" value={row.isActive ? "false" : "true"} />
-        <Button
-          type="submit"
-          variant="ghost"
-          size="icon-sm"
-          disabled={toggling}
-          aria-label={row.isActive ? `Mark ${row.fullName} as left` : `Mark ${row.fullName} active`}
-          title={row.isActive ? "Mark as left" : "Mark active"}
-        >
-          {row.isActive ? <UserX /> : <UserCheck />}
-        </Button>
-      </form>
-      {blocked ? (
-        // Shown disabled rather than hidden: a missing button reads as a bug,
-        // and the reason is what the user actually needs.
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          disabled
-          aria-label={`${row.fullName} cannot be deleted`}
-          title={`Cannot delete — ${[
-            row.sectionsLed > 0 ? `class teacher of ${row.sectionsLed} section${row.sectionsLed === 1 ? "" : "s"}` : null,
-            row.assignments > 0 ? `teaches ${row.assignments} subject${row.assignments === 1 ? "" : "s"}` : null,
-          ]
-            .filter(Boolean)
-            .join(" and ")}. Mark them as left instead.`}
-        >
-          <Trash2 />
-        </Button>
-      ) : (
-        <form action={deleteAction} className="contents">
-          <input type="hidden" name="staffId" value={row.id} />
-          <ConfirmSubmit
-            icon
-            pending={deleting}
-            title={`Delete ${row.fullName}`}
-            confirmLabel="Delete?"
-          />
-        </form>
-      )}
-    </>
-  );
-}
-
