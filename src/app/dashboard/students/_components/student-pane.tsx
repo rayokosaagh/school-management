@@ -13,8 +13,9 @@ import { StudentPhotoForm } from "./photo-form";
 
 const RELATION: Record<string, string> = { FATHER: "Father", MOTHER: "Mother", GUARDIAN: "Guardian" };
 const GENDER: Record<string, string> = { MALE: "Male", FEMALE: "Female", OTHER: "Other" };
-const STATUS_TONE: Record<string, "ok" | "neutral" | "warn"> = { ACTIVE: "ok", LEFT: "neutral", GRADUATED: "warn" };
-const STATUS_LABEL: Record<string, string> = { ACTIVE: "Active", LEFT: "Left", GRADUATED: "Graduated" };
+/// Shared with the table so a status reads the same in both places.
+export const STATUS_TONE: Record<string, "ok" | "neutral" | "warn"> = { ACTIVE: "ok", LEFT: "neutral", GRADUATED: "warn" };
+export const STATUS_LABEL: Record<string, string> = { ACTIVE: "Active", LEFT: "Left", GRADUATED: "Graduated" };
 
 function initialsOf(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
@@ -22,7 +23,7 @@ function initialsOf(name: string) {
 
 export function StudentPaneSkeleton() {
   return (
-    <div className="space-y-4 p-5" aria-busy="true" aria-label="Loading student">
+    <div className="space-y-4 p-5" role="status" aria-busy="true" aria-label="Loading student">
       <div className="flex gap-3"><Skeleton className="size-13 rounded-xl" /><div className="flex-1 space-y-2"><Skeleton className="h-5 w-2/3" /><Skeleton className="h-3.5 w-1/2" /></div></div>
       <Skeleton className="h-8 w-40" />
       {[0, 1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
@@ -67,7 +68,7 @@ export function StudentPane({
             {editing ? "Cancel" : "Edit"}
           </Button>
           {primary ? (
-            <Button size="sm" variant="outline" render={<a href={`tel:${primary.phone}`} />}>
+            <Button size="sm" variant="outline" nativeButton={false} render={<a href={`tel:${primary.phone}`} />}>
               <Phone data-icon="inline-start" aria-hidden="true" />
               Call guardian
             </Button>

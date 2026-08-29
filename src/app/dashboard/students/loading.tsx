@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StudentsLoading() {
   return (
-    <div className="flex h-full flex-col" aria-busy="true" aria-label="Loading students">
+    <div className="flex h-full flex-col" role="status" aria-busy="true" aria-label="Loading students">
       <div className="flex items-end justify-between pb-3">
         <div className="space-y-1.5"><Skeleton className="h-3 w-14" /><Skeleton className="h-7 w-48" /></div>
         <div className="flex gap-2"><Skeleton className="h-8 w-28" /><Skeleton className="h-8 w-36" /></div>

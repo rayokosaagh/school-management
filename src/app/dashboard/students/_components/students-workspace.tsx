@@ -3,8 +3,8 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, GraduationCap, Plus, Search, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState, useTransition } from "react";
-import { AttendanceStrip, type DayStatus } from "@/components/ui/attendance-strip";
+import { useId, useMemo, useOptimistic, useState, useTransition } from "react";
+import { AttendanceStrip, stripPercent, type DayStatus } from "@/components/ui/attendance-strip";
 import { Button } from "@/components/ui/button";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
@@ -17,7 +17,7 @@ import { StatusDot } from "@/components/ui/status-dot";
 import { useToastedActionState } from "@/components/ui/toast";
 import type { StudentSummary } from "@/lib/registry/students";
 import { removeStudent, type ActionState } from "../actions";
-import { StudentPane, StudentPaneSkeleton } from "./student-pane";
+import { StudentPane, StudentPaneSkeleton, STATUS_LABEL, STATUS_TONE } from "./student-pane";
 import type { StudentDetailData } from "./student-detail";
 import { AddStudentForm } from "./student-form";
 
@@ -32,8 +32,6 @@ export type StudentRow = StudentDetailData & {
 
 type Section = { id: number; name: string; grade: { name: string } };
 
-const STATUS_LABEL: Record<string, string> = { ACTIVE: "Active", LEFT: "Left", GRADUATED: "Graduated" };
-const STATUS_TONE: Record<string, "ok" | "neutral" | "warn"> = { ACTIVE: "ok", LEFT: "neutral", GRADUATED: "warn" };
 const ALL = "all";
 
 /// "Kindergarten A" → "KA", "Class 10 B" → "10B", "Senior Kindergarten A" → "SKA".
@@ -41,12 +39,6 @@ function sectionCode(gradeName: string, sectionName: string) {
   const num = gradeName.match(/\d+/)?.[0];
   const letters = num ? "" : gradeName.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("");
   return `${num ?? letters}${sectionName.toUpperCase()}`;
-}
-
-function attendanceRate(strip: DayStatus[]) {
-  const taken = strip.filter((d) => d !== "none");
-  if (taken.length === 0) return null;
-  return Math.round((taken.filter((d) => d === "present" || d === "late").length / taken.length) * 100);
 }
 
 const EMPTY: ActionState = {};
@@ -85,12 +77,19 @@ export function StudentsWorkspace({
   const baseId = useId();
   const panelId = `${baseId}-panel`;
 
-  const initialTab = selectedId != null ? (rows.find((r) => r.studentId === selectedId)?.sectionId ?? ALL) : (sections[0]?.id ?? ALL);
+  // A deep link lands on the linked student's own section and status, so the
+  // pane never opens over a table that has filtered its row away.
+  const linked = selectedId == null ? undefined : rows.find((r) => r.studentId === selectedId);
+  const initialTab = selectedId != null ? (linked?.sectionId ?? ALL) : (sections[0]?.id ?? ALL);
   const [tab, setTab] = useState<string>(String(initialTab));
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("ACTIVE");
-  const [optimisticId, setOptimisticId] = useState<number | null>(selectedId);
+  const [status, setStatus] = useState(linked?.status ?? "ACTIVE");
   const [addOpen, setAddOpen] = useState(false);
+
+  // The URL owns the selection; this only runs ahead of it for the length of
+  // the navigation, so arriving at a bare /dashboard/students clears the pane
+  // instead of stranding it on the last row.
+  const [optimisticId, setOptimisticId] = useOptimistic(selectedId);
 
   const tabs = useMemo<RegisterTab[]>(() => {
     const counts = new Map<number, number>();
@@ -118,12 +117,17 @@ export function StudentsWorkspace({
   const summaryMatches = summary != null && summary.studentId === optimisticId;
 
   function select(row: StudentRow) {
-    setOptimisticId(row.studentId);
-    startNavigation(() => router.replace(`?student=${row.studentId}`, { scroll: false }));
+    if (row.studentId === optimisticId) return;
+    startNavigation(() => {
+      setOptimisticId(row.studentId);
+      router.replace(`?student=${row.studentId}`, { scroll: false });
+    });
   }
   function clearSelection() {
-    setOptimisticId(null);
-    startNavigation(() => router.replace("?", { scroll: false }));
+    startNavigation(() => {
+      setOptimisticId(null);
+      router.replace("?", { scroll: false });
+    });
   }
 
   const columns = useMemo<ColumnDef<StudentRow, unknown>[]>(
@@ -145,7 +149,7 @@ export function StudentsWorkspace({
         const g = row.original.guardians.find((x) => x.isPrimary) ?? row.original.guardians[0];
         return g ? <>{g.fullName} <span className="text-ink-3">· {g.relation[0]}{g.relation.slice(1).toLowerCase()}</span></> : <span className="text-ink-3">—</span>;
       } },
-      { id: "strip", header: "Last 14 days", enableSorting: false, cell: ({ row }) => <AttendanceStrip days={row.original.strip} percent={attendanceRate(row.original.strip)} /> },
+      { id: "strip", header: "Last 14 days", enableSorting: false, cell: ({ row }) => <AttendanceStrip days={row.original.strip} percent={stripPercent(row.original.strip)} /> },
       { id: "status", accessorKey: "status", header: "Status", cell: ({ getValue }) => { const s = String(getValue()); return <StatusDot tone={STATUS_TONE[s] ?? "neutral"}>{STATUS_LABEL[s] ?? s}</StatusDot>; } },
     ],
     [],
@@ -161,7 +165,7 @@ export function StudentsWorkspace({
       meta={`${rows.length} enrolled · ${yearLabel}`}
       actions={
         <>
-          <Button variant="outline" render={<a href={exportHref} download />}>
+          <Button variant="outline" nativeButton={false} render={<a href={exportHref} download />}>
             <Download data-icon="inline-start" aria-hidden="true" />
             Export CSV
           </Button>
@@ -188,13 +192,13 @@ export function StudentsWorkspace({
       </PageFrame.Tabs>
 
       <PageFrame.Toolbar>
-        <label className="border-line bg-surface text-ink-3 flex h-8 min-w-[220px] items-center gap-2 rounded-lg border px-2.5">
+        <label className="border-line bg-surface text-ink-3 flex h-8 min-w-[220px] shrink-0 items-center gap-2 rounded-lg border px-2.5">
           <Search className="size-3.5" aria-hidden="true" />
           <Input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={`Search ${currentTabLabel}`} aria-label={`Search ${currentTabLabel}`} className="h-7 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0" />
         </label>
-        <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "")} options={[{ value: "ACTIVE", label: "Status: Active" }, { value: "LEFT", label: "Status: Left" }, { value: "GRADUATED", label: "Status: Graduated" }, { value: "", label: "Status: Any" }]} className="h-8" />
+        <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "")} options={[{ value: "ACTIVE", label: "Status: Active" }, { value: "LEFT", label: "Status: Left" }, { value: "GRADUATED", label: "Status: Graduated" }, { value: "", label: "Status: Any" }]} className="h-8 w-44 shrink-0" />
         <span className="flex-1" />
-        <span className="text-ink-3 text-[12.5px]">{visible.length} {visible.length === 1 ? "student" : "students"}{selectedRow ? " · 1 selected" : ""}</span>
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} {visible.length === 1 ? "student" : "students"}{selectedRow ? " · 1 selected" : ""}</span>
       </PageFrame.Toolbar>
 
       <PageFrame.Split

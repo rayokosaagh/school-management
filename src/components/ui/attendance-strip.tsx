@@ -8,8 +8,18 @@ export function describeStrip(days: DayStatus[]): string {
   return `Last ${days.length} days: ${n("present")} present, ${n("absent")} absent, ${n("late")} late, ${n("none")} not taken`;
 }
 
-/// One bar per day, oldest first. Colour carries the detail; the label carries
-/// it for everyone else.
+/// Share of taken days that were attended — late still counts as attending,
+/// and days with no roll call are not held against anyone. `null` when the
+/// strip holds no taken day at all.
+export function stripPercent(days: DayStatus[]): number | null {
+  const taken = days.filter((d) => d !== "none");
+  if (taken.length === 0) return null;
+  return Math.round((taken.filter((d) => d === "present" || d === "late").length / taken.length) * 100);
+}
+
+/// One bar per day, oldest first. Each status is encoded by shape as well as
+/// colour, so the strip still reads without hue; the `aria-label` carries the
+/// same detail in words for assistive tech.
 export function AttendanceStrip({
   days,
   percent,
@@ -37,8 +47,9 @@ export function AttendanceStrip({
             d === "present" && "bg-ok opacity-85",
             // Absent: hollow — reads as a gap even without colour.
             d === "absent" && "border-bad border-2 bg-transparent",
-            // Late: half-height bar.
-            d === "late" && "bg-warn self-end opacity-85 [height:50%]",
+            // Late: explicit half-height bar, sitting on the baseline.
+            d === "late" && "bg-warn opacity-85",
+            d === "late" && (size === "sm" ? "h-1.75 w-1.5" : "h-2.75 w-full flex-1"),
             // Not taken: faint dotted outline.
             d === "none" && "border-line border border-dashed bg-transparent",
           )}

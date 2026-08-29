@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth/auth";
-import { requireCapability } from "@/lib/auth/guard";
+import { ForbiddenError, requireCapability } from "@/lib/auth/guard";
 import { PhotoError, clearStudentPhoto, setStudentPhoto } from "@/lib/registry/photos";
 import { Prisma } from "@/generated/prisma/client";
 import type { Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
@@ -252,8 +251,14 @@ export async function saveStudentPhoto(
   _prev: PhotoState,
   formData: FormData,
 ): Promise<PhotoState> {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "You are not signed in." };
+  // Same capability as every other write on this page — a signed-in reader
+  // must not be able to change a student's photo.
+  try {
+    await requireSession();
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
 
   const studentId = numericField(formData, "studentId");
   if (studentId === null) return { error: "Pick a student." };
