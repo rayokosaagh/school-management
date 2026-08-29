@@ -27,7 +27,6 @@ export type StaffRow = {
   phone: string;
   designation: string;
   joinedOnBs: string;
-  joinedLabel: string;
   isActive: boolean;
   sectionsLed: number;
   assignments: number;

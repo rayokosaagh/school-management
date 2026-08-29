@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requirePage } from "@/lib/auth/guard";
-import { formatBs, toBsInput } from "@/lib/date/bs";
+import { toBsInput } from "@/lib/date/bs";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { getStaffSummary, listStaff } from "@/lib/registry/staff";
 import { StaffWorkspace } from "./_components/staff-workspace";
@@ -33,7 +33,6 @@ export default async function TeachersPage({ searchParams }: { searchParams: Pro
     phone: p.phone,
     designation: p.designation,
     joinedOnBs: toBsInput(p.joinedOn),
-    joinedLabel: formatBs(p.joinedOn, "YYYY-MM-DD"),
     isActive: p.isActive,
     sectionsLed: p._count.sectionsLed,
     assignments: p._count.assignments,

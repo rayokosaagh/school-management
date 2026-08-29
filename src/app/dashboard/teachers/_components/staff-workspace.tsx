@@ -13,6 +13,7 @@ import { RegisterTabs, registerTabId, type RegisterTab } from "@/components/ui/r
 import { FieldSelect } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToastedActionState } from "@/components/ui/toast";
+import { designationCode } from "@/lib/register-codes";
 import type { StaffSummary } from "@/lib/registry/staff";
 import { removeStaff, toggleStaffActive, type ActionState } from "../actions";
 import { StaffPane, StaffPaneSkeleton, StaffStatus } from "./staff-pane";
@@ -21,11 +22,6 @@ import { AddStaffForm } from "./teachers-forms";
 
 const ALL = "all";
 const EMPTY: ActionState = {};
-
-/// "Vice Principal" → "VP", "Teacher" → "T".
-function designationCode(d: string) {
-  return d.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).join("").slice(0, 3) || "?";
-}
 
 function RowActions({ row }: { row: StaffRow }) {
   const [, toggle, toggling] = useToastedActionState(toggleStaffActive, EMPTY);
@@ -80,23 +76,31 @@ export function StaffWorkspace({
   // instead of stranding it on the last row.
   const [optimisticId, setOptimisticId] = useOptimistic(selectedId);
 
+  // The tab counts are taken after the status filter and before the search, so
+  // the number on a tab is what switching to it would show — the toolbar count
+  // agrees with the tab. Search stays out: it narrows within a tab.
+  const inStatus = useMemo(
+    () => rows.filter((r) => (status === "active" ? r.isActive : status === "inactive" ? !r.isActive : true)),
+    [rows, status],
+  );
+
+  // Designation is free text in the data model, so the buckets are whatever
+  // the school actually types, ordered by how many hold each.
   const tabs = useMemo<RegisterTab[]>(() => {
     const counts = new Map<string, number>();
-    for (const r of rows) { const d = r.designation.trim() || "Unspecified"; counts.set(d, (counts.get(d) ?? 0) + 1); }
+    for (const r of inStatus) { const d = r.designation.trim() || "Unspecified"; counts.set(d, (counts.get(d) ?? 0) + 1); }
     const groups = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-    return [{ id: ALL, code: "ALL", label: "Everyone", count: rows.length }, ...groups.map(([d, n]) => ({ id: d, code: designationCode(d), label: d, count: n }))];
-  }, [rows]);
+    return [{ id: ALL, code: "ALL", label: "Everyone", count: inStatus.length }, ...groups.map(([d, n]) => ({ id: d, code: designationCode(d), label: d, count: n }))];
+  }, [inStatus]);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter((r) => {
+    return inStatus.filter((r) => {
       if (tab !== ALL && (r.designation.trim() || "Unspecified") !== tab) return false;
-      if (status === "active" && !r.isActive) return false;
-      if (status === "inactive" && r.isActive) return false;
       if (q && !`${r.fullName} ${r.fullNameNp ?? ""} ${r.phone} ${r.designation}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [rows, tab, status, query]);
+  }, [inStatus, tab, query]);
 
   const selectedRow = optimisticId == null ? null : (rows.find((r) => r.id === optimisticId) ?? null);
   const summaryMatches = summary != null && summary.staffId === optimisticId;
@@ -122,7 +126,11 @@ export function StaffWorkspace({
       ) },
       { id: "designation", accessorKey: "designation", header: "Designation" },
       { id: "phone", accessorKey: "phone", header: "Phone", meta: { mono: true } satisfies ColumnMeta },
-      { id: "load", accessorFn: (r) => r.sectionsLed * 100 + r.assignments, header: "Load", cell: ({ row }) => (
+      // Sorted on sections first, subjects as the tie-break — an explicit
+      // comparator rather than folding the pair into one number.
+      { id: "load", accessorFn: (r) => [r.sectionsLed, r.assignments], header: "Load",
+        sortingFn: (a, b) => a.original.sectionsLed - b.original.sectionsLed || a.original.assignments - b.original.assignments,
+        cell: ({ row }) => (
         <span className="text-ink-2">{row.original.sectionsLed} {row.original.sectionsLed === 1 ? "section" : "sections"} · {row.original.assignments} {row.original.assignments === 1 ? "subject" : "subjects"}</span>
       ) },
       { id: "joined", accessorKey: "joinedOnBs", header: "Joined (BS)", meta: { mono: true } satisfies ColumnMeta },
