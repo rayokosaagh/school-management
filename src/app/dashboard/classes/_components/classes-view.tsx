@@ -4,20 +4,20 @@ import { useState } from "react";
 
 import { useToastedActionState } from "@/components/ui/toast";
 import { ROLL_ORDER_LABEL, type RollOrder } from "@/lib/registry/roll-order";
-import { ArrowDown, ArrowDownAZ, ArrowUp, ListOrdered } from "lucide-react";
+import { ArrowDown, ArrowDownAZ, ArrowUp, ListOrdered, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldSelect } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { RecordTable, StatusPill } from "@/components/ui/record-table";
+import { DeleteYearDialog } from "./delete-year-dialog";
 import {
   type ActionState,
   editAcademicYear,
   editGrade,
   editSection,
   makeYearCurrent,
-  removeAcademicYear,
   removeGrade,
   removeSection,
   renumberSectionRolls,
@@ -62,7 +62,7 @@ export type SectionRow = {
 function YearDetail({ row, onDone }: { row: YearRow; onDone: () => void }) {
   const [editState, editAction, saving] = useToastedActionState(editAcademicYear, EMPTY);
   const [curState, curAction] = useToastedActionState(makeYearCurrent, EMPTY);
-  const [delState, delAction, deleting] = useToastedActionState(removeAcademicYear, EMPTY);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <div className="space-y-5">
@@ -94,19 +94,32 @@ function YearDetail({ row, onDone }: { row: YearRow; onDone: () => void }) {
             </Button>
           </form>
         )}
-        <form action={delAction}>
-          <input type="hidden" name="academicYearId" value={row.id} />
-          <ConfirmSubmit label="Delete year" confirmLabel="Delete?" pending={deleting} />
-        </form>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => setDeleteOpen(true)}
+        >
+          <Trash2 data-icon="inline-start" aria-hidden="true" />
+          Delete year…
+        </Button>
         <Button type="button" variant="ghost" onClick={onDone}>
           Close
         </Button>
       </div>
       <Status state={curState} />
-      <Status state={delState} />
       <p className="text-muted-foreground text-xs">
-        Blocked while the year holds sections, offerings or enrolments.
+        Deleting removes everything recorded in the year — sections,
+        enrolments, attendance and marks.
       </p>
+      <DeleteYearDialog
+        year={row}
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onDeleted={() => {
+          setDeleteOpen(false);
+          onDone();
+        }}
+      />
     </div>
   );
 }

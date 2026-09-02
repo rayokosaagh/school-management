@@ -26,6 +26,13 @@ import { ROLL_ORDER_LABEL, isRollOrder } from "@/lib/registry/roll-order";
 import { canReorderRolls } from "@/lib/auth/scope";
 import { currentActor } from "@/lib/auth/guard";
 import { numericField } from "@/lib/form";
+import {
+  deleteYearWithData,
+  summariseYear,
+  YearTeardownError,
+  type YearCounts,
+  type YearSummary,
+} from "@/lib/registry/year-teardown";
 
 export type ActionState = { error?: string; success?: string };
 
@@ -177,7 +184,10 @@ export async function removeAcademicYear(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireSession();
+  // Destroying a year of records is a different order of act from adding a
+  // section, so this stays admin-only even though the rest of the file is
+  // manage:registry.
+  await requireCapability("manage:settings");
   const id = numericField(formData, "academicYearId");
   if (id === null) return { error: "Pick a year." };
 
@@ -363,4 +373,45 @@ export async function reorderSectionRolls(
         ? "Nobody is enrolled in that section."
         : `Roll numbers reissued 1 to ${count}, ${ROLL_ORDER_LABEL[order].toLowerCase()}.`,
   };
+}
+
+/// Feeds the delete-year dialog its per-table counts, so the operator sees
+/// exactly what will be destroyed before deciding. Admin-only: this is not
+/// the manage:registry surface the rest of the file lives behind.
+export async function summariseYearAction(
+  id: number,
+): Promise<{ summary?: YearSummary; error?: string }> {
+  await requireCapability("manage:settings");
+  try {
+    return { summary: await summariseYear(id) };
+  } catch (e) {
+    if (e instanceof YearTeardownError) return { error: e.message };
+    throw e;
+  }
+}
+
+/// Destroys a year and everything recorded in it. Admin-only, same as above.
+export async function deleteYearAction(input: {
+  id: number;
+  createRestorePoint: boolean;
+  typedName: string;
+}): Promise<{ counts?: YearCounts; restorePointId?: number | null; error?: string }> {
+  const actor = await requireCapability("manage:settings");
+  try {
+    const summary = await summariseYear(input.id);
+    // The typed name is re-checked here, not only in the browser: this action
+    // is a public POST endpoint and the dialog's guard does not protect it.
+    if (summary.taught && input.typedName.trim() !== summary.year.nameBS) {
+      return { error: `Type ${summary.year.nameBS} exactly to confirm.` };
+    }
+    const result = await deleteYearWithData(input.id, {
+      createRestorePoint: input.createRestorePoint,
+      actorUserId: actor.userId ?? null,
+    });
+    revalidatePath("/dashboard", "layout");
+    return result;
+  } catch (e) {
+    if (e instanceof YearTeardownError) return { error: e.message };
+    throw e;
+  }
 }

@@ -66,3 +66,18 @@ describe("rollover route", () => {
     expect(canByDefault("TEACHER", "manage:registry")).toBe(false);
   });
 });
+
+describe("year teardown", () => {
+  it("keeps the classes page itself open to manage:registry", () => {
+    // The page route stays office-reachable; only the delete-year actions
+    // inside it are pinned to manage:settings, checked explicitly in
+    // classes/actions.ts rather than via capabilityFor.
+    expect(capabilityFor("/dashboard/classes")).toBe("manage:registry");
+  });
+
+  it("is admin-only by default, closed to office and teachers", () => {
+    expect(canByDefault("ADMIN", "manage:settings")).toBe(true);
+    expect(canByDefault("OFFICE", "manage:settings")).toBe(false);
+    expect(canByDefault("TEACHER", "manage:settings")).toBe(false);
+  });
+});
