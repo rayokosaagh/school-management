@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CalendarCheck,
+  CalendarPlus,
   CalendarRange,
   ClipboardCheck,
   ClipboardList,
@@ -32,6 +33,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "subjects", label: "Subjects", href: "/dashboard/subjects", icon: NotebookPen },
       { id: "assignments", label: "Teaching", href: "/dashboard/assignments", icon: ClipboardList },
       { id: "timetable", label: "Timetable", href: "/dashboard/timetable", icon: CalendarRange },
+      { id: "rollover", label: "Next year", href: "/dashboard/rollover", icon: CalendarPlus },
     ],
   },
   {

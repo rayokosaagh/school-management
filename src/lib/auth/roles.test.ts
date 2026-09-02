@@ -54,3 +54,15 @@ describe("capabilityFor", () => {
     expect(new Set(CAPABILITIES).size).toBe(CAPABILITIES.length);
   });
 });
+
+describe("rollover route", () => {
+  it("needs the registry capability", () => {
+    expect(capabilityFor("/dashboard/rollover")).toBe("manage:registry");
+  });
+
+  it("is open to admin and office, closed to teachers", () => {
+    expect(canByDefault("ADMIN", "manage:registry")).toBe(true);
+    expect(canByDefault("OFFICE", "manage:registry")).toBe(true);
+    expect(canByDefault("TEACHER", "manage:registry")).toBe(false);
+  });
+});

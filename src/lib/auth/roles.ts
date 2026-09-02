@@ -107,6 +107,7 @@ export const ROUTE_CAPABILITY: { prefix: string; capability: Capability }[] = [
   { prefix: "/dashboard/assignments", capability: "manage:registry" },
   { prefix: "/dashboard/timetable", capability: "manage:timetable" },
   { prefix: "/dashboard/teachers", capability: "manage:registry" },
+  { prefix: "/dashboard/rollover", capability: "manage:registry" },
   { prefix: "/dashboard/students", capability: "view:records" },
   { prefix: "/dashboard/honours", capability: "view:records" },
   { prefix: "/dashboard/attendance", capability: "take:attendance" },

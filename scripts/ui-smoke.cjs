@@ -35,6 +35,7 @@ const ROUTES = [
   "dashboard/subjects",
   "dashboard/assignments",
   "dashboard/timetable",
+  "dashboard/rollover",
   "dashboard/attendance",
   "dashboard/exams",
   "dashboard/honours",
