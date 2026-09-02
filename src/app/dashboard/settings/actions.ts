@@ -5,6 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth/auth";
 import { ForbiddenError, requireCapability } from "@/lib/auth/guard";
+import { WeightsError, saveWeights } from "@/lib/honours/weights";
 import { isValidEmail, normalizeEmail } from "@/lib/auth/identity";
 import { saveSchool } from "@/lib/registry/school";
 import type { Role } from "@/generated/prisma/enums";
@@ -286,4 +287,41 @@ export async function restoreDefaultPermissions(
   await resetGrants();
   revalidatePath("/dashboard", "layout");
   return { success: "Permissions restored to their defaults." };
+}
+
+export type WeightsState = { error?: string; success?: string };
+
+/// Reads four whole numbers; the service checks they sum to 100.
+export async function updateHonoursWeights(
+  _prev: WeightsState,
+  formData: FormData,
+): Promise<WeightsState> {
+  try {
+    await requireCapability("manage:settings");
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+
+  const read = (name: string) => {
+    const raw = String(formData.get(name) ?? "").trim();
+    return raw === "" ? Number.NaN : Number(raw);
+  };
+  const weights = {
+    exams: read("exams"),
+    attendance: read("attendance"),
+    conduct: read("conduct"),
+    activities: read("activities"),
+  };
+
+  try {
+    await saveWeights(weights);
+  } catch (e) {
+    if (e instanceof WeightsError) return { error: e.message };
+    throw e;
+  }
+
+  // The Honours page and every student pane show scores built from these.
+  revalidatePath("/dashboard", "layout");
+  return { success: "Honours weighting saved." };
 }

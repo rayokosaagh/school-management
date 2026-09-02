@@ -1,13 +1,15 @@
 import { redirect } from "next/navigation";
-import { Building2, KeyRound, ShieldCheck, Users } from "lucide-react";
+import { Building2, KeyRound, ShieldCheck, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, SectionCard } from "@/components/ui/page-shell";
 import { getSchool } from "@/lib/registry/school";
+import { getWeights } from "@/lib/honours/weights";
 import { listAccounts } from "@/lib/auth/registration";
 import { listStaff } from "@/lib/registry/staff";
 import { EmailForm } from "./_components/email-form";
 import { SchoolForm } from "./_components/school-form";
+import { HonoursWeightsForm } from "./_components/honours-weights-form";
 import { Accounts } from "./_components/accounts";
 import { PermissionMatrix } from "./_components/permission-matrix";
 import { loadGrants, granted } from "@/lib/auth/permissions";
@@ -29,13 +31,14 @@ export default async function SettingsPage() {
 
   // The session carries id and username, but not email — the JWT is issued at
   // sign-in and would go stale the moment the address changes. Read it fresh.
-  const [user, school, accounts] = await Promise.all([
+  const [user, school, accounts, weights] = await Promise.all([
     prisma.user.findUnique({
       where: { id: Number(session.user.id) },
       select: { username: true, email: true, createdAt: true },
     }),
     getSchool(),
     listAccounts(),
+    getWeights(),
   ]);
   const staff = await listStaff();
   const grants = await loadGrants();
@@ -70,6 +73,15 @@ export default async function SettingsPage() {
         description="Used on the dashboard header and every printed marksheet."
       >
         <SchoolForm school={school} />
+      </SectionCard>
+
+      <SectionCard
+        icon={Trophy}
+        tint="amber"
+        title="Honours weighting"
+        description="How exams, attendance, conduct and activities combine into each student's score on the Honours page."
+      >
+        <HonoursWeightsForm weights={weights} />
       </SectionCard>
 
       <SectionCard
