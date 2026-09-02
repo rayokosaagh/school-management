@@ -291,6 +291,159 @@ export function buildPlan(
     }
   }
 
+  // --- students -------------------------------------------------------------
+  const byOrder = [...snapshot.grades].sort((a, b) => a.order - b.order);
+  const nextGradeId = new Map<number, number | null>();
+  byOrder.forEach((g, i) => nextGradeId.set(g.id, byOrder[i + 1]?.id ?? null));
+
+  const targetIdByKey = new Map(
+    snapshot.targetSections.map((s) => [sectionKey(s.gradeId, s.name), s.id] as const),
+  );
+  const targetSectionById = new Map(snapshot.targetSections.map((s) => [s.id, s]));
+  const alreadyInTarget = new Set(snapshot.studentsAlreadyInTarget);
+
+  type Placement = { student: PlannedStudent; kind: "promote" | "retain"; key: SectionKey };
+  const placements: Placement[] = [];
+  const graduate: PlannedStudent[] = [];
+  const leave: PlannedStudent[] = [];
+  const stranded = new Map<number, PlannedStudent[]>();
+
+  for (const s of snapshot.students) {
+    const from = sourceSectionById.get(s.sectionId);
+    // A student whose section is not in the source year is not this run's to move.
+    if (!from) continue;
+
+    const planned: PlannedStudent = {
+      studentId: s.studentId,
+      fullName: s.fullName,
+      photoId: s.photoId,
+      admissionNo: s.admissionNo,
+      fromSectionId: from.id,
+      fromLabel: label(from.gradeId, from.name),
+      total: s.total,
+      attendancePercent: s.attendancePercent,
+    };
+
+    const decision = options.decisions[s.studentId] ?? "PROMOTE";
+    if (decision === "LEFT") {
+      leave.push(planned);
+      continue;
+    }
+
+    let gradeId = from.gradeId;
+    if (decision === "PROMOTE") {
+      const up = nextGradeId.get(from.gradeId) ?? null;
+      // The top of the school has nowhere to promote to; that is graduation.
+      if (up === null) {
+        graduate.push(planned);
+        continue;
+      }
+      gradeId = up;
+    }
+
+    let key: SectionKey | null = null;
+    const override = decision === "PROMOTE" ? options.placements[from.id] : undefined;
+    if (override !== undefined) {
+      const chosen = targetSectionById.get(override);
+      // An override into the wrong grade would silently demote the whole group.
+      if (chosen && chosen.gradeId === gradeId) key = sectionKey(chosen.gradeId, chosen.name);
+    } else {
+      const want = sectionKey(gradeId, from.name);
+      if (plannedSectionKeys.has(want)) key = want;
+    }
+
+    if (key === null) {
+      stranded.set(from.id, [...(stranded.get(from.id) ?? []), planned]);
+      continue;
+    }
+    placements.push({ student: planned, kind: decision === "RETAIN" ? "retain" : "promote", key });
+  }
+
+  // --- roll numbers ---------------------------------------------------------
+  const rollByStudent = new Map<number, number>();
+  const source = new Map(snapshot.students.map((s) => [s.studentId, s]));
+  const bySection = new Map<SectionKey, Placement[]>();
+  for (const p of placements) {
+    bySection.set(p.key, [...(bySection.get(p.key) ?? []), p]);
+  }
+
+  // Built alongside rollByStudent, in roll order, rather than re-derived from
+  // placements afterward — the write rows should read 1..n down the section
+  // the way the office's own register would, not in whatever order students
+  // happened to appear in the source snapshot.
+  const enrollments: RolloverWrites["enrollments"] = [];
+
+  for (const [key, group] of bySection) {
+    const targetId = targetIdByKey.get(key);
+    // A section the run is creating starts at 1; one that already exists picks
+    // up after whatever the office has already handed out in it.
+    let next = (targetId === undefined ? 0 : (snapshot.targetRollHighWater[targetId] ?? 0)) + 1;
+
+    const fresh = group.filter((p) => !alreadyInTarget.has(p.student.studentId));
+    const candidates: RollCandidate[] = fresh.map((p) => {
+      const s = source.get(p.student.studentId)!;
+      return {
+        enrollmentId: s.enrollmentId,
+        fullName: s.fullName,
+        admissionNo: s.admissionNo,
+        total: s.total,
+      };
+    });
+    const studentByEnrollment = new Map(fresh.map((p) => [source.get(p.student.studentId)!.enrollmentId, p]));
+
+    for (const ordered of orderForRoll(candidates, options.rollOrder)) {
+      const p = studentByEnrollment.get(ordered.enrollmentId);
+      if (!p) continue;
+      const rollNo = next++;
+      rollByStudent.set(p.student.studentId, rollNo);
+      enrollments.push({ studentId: p.student.studentId, sectionKey: key, rollNo });
+    }
+  }
+
+  const place = (p: Placement): PlacedStudent => ({
+    ...p.student,
+    toSectionKey: p.key,
+    toLabel: labelForKey(p.key, gradeById),
+    rollNo: rollByStudent.get(p.student.studentId) ?? null,
+    alreadyEnrolled: alreadyInTarget.has(p.student.studentId),
+  });
+
+  const promote = placements.filter((p) => p.kind === "promote").map(place);
+  const retain = placements.filter((p) => p.kind === "retain").map(place);
+
+  // --- unplaceable groups and blockers -------------------------------------
+  const unplaceable: UnplaceableGroup[] = [...stranded.entries()].map(([sourceSectionId, list]) => {
+    const from = sourceSectionById.get(sourceSectionId)!;
+    const up = nextGradeId.get(from.gradeId) ?? null;
+    return {
+      sourceSectionId,
+      label: label(from.gradeId, from.name),
+      count: list.length,
+      choices: snapshot.targetSections
+        .filter((t) => t.gradeId === up)
+        .map((t) => ({ id: t.id, label: label(t.gradeId, t.name) })),
+    };
+  });
+
+  const blockers: string[] = [];
+  if (snapshot.sourceYear.id === snapshot.targetYear.id) {
+    blockers.push("Source and target are the same academic year.");
+  }
+  if (snapshot.sourceSections.length === 0) {
+    blockers.push(`Academic year ${snapshot.sourceYear.nameBS} has no sections to copy.`);
+  }
+  if (snapshot.targetHasActivity) {
+    blockers.push(
+      `Academic year ${snapshot.targetYear.nameBS} already has attendance or marks recorded, so it is too late to roll into it.`,
+    );
+  }
+  if (options.rollOrder === "MARKS" && options.markOrderExamTermId === null) {
+    blockers.push("Choose the exam term the roll order should follow.");
+  }
+  for (const group of unplaceable) {
+    blockers.push(`${group.label} has ${group.count} student(s) with nowhere to go in the grade above.`);
+  }
+
   const plan: RolloverPlan = {
     sourceYear: snapshot.sourceYear,
     targetYear: snapshot.targetYear,
@@ -302,9 +455,9 @@ export function buildPlan(
       skipped: assignmentsSkipped,
     },
     timetable: { create: periods.length, existing: periodsExisting, skipped: periodsSkipped },
-    students: { promote: [], retain: [], graduate: [], leave: [] },
-    unplaceable: [],
-    blockers: [],
+    students: { promote, retain, graduate, leave },
+    unplaceable,
+    blockers,
   };
 
   const writes: RolloverWrites = {
@@ -312,12 +465,17 @@ export function buildPlan(
     offerings,
     assignments,
     periods,
-    enrollments: [],
-    graduateIds: [],
-    leaveIds: [],
+    enrollments,
+    graduateIds: graduate.map((s) => s.studentId),
+    leaveIds: leave.map((s) => s.studentId),
   };
 
-  void label;
-
   return { plan, writes };
+}
+
+/// A section key reads `gradeId:name`; the display label needs the grade's own
+/// name, which only the caller's grade map has.
+function labelForKey(key: SectionKey, gradeById: Map<number, { name: string }>): string {
+  const [gradeId, ...rest] = key.split(":");
+  return `${gradeById.get(Number(gradeId))?.name ?? "Unknown grade"} ${rest.join(":")}`;
 }

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { assignmentKey, buildPlan, sectionKey, type RolloverOptions, type RolloverSnapshot } from "./rollover-plan";
+import {
+  assignmentKey,
+  buildPlan,
+  sectionKey,
+  type RolloverOptions,
+  type RolloverSnapshot,
+  type SnapshotStudent,
+} from "./rollover-plan";
 
 /// Two grades, one section each, so the smallest interesting rollover is one
 /// promotion and one graduation.
@@ -173,5 +180,172 @@ describe("buildPlan — assignments and timetable", () => {
 
     expect(plan.assignments.create).toBe(0);
     expect(plan.timetable.create).toBe(0);
+  });
+});
+
+function student(id: number, sectionId: number, over: Partial<SnapshotStudent> = {}): SnapshotStudent {
+  return {
+    studentId: id,
+    enrollmentId: 900 + id,
+    fullName: `Student ${id}`,
+    admissionNo: String(id),
+    photoId: null,
+    sectionId,
+    rollNo: 1,
+    total: null,
+    attendancePercent: null,
+    ...over,
+  };
+}
+
+describe("buildPlan — students", () => {
+  it("promotes into the grade above, keeping the section letter", () => {
+    const { plan, writes } = buildPlan(
+      snapshot({ students: [student(1, 100)] }),
+      options(),
+    );
+
+    expect(plan.students.promote).toHaveLength(1);
+    expect(plan.students.promote[0]).toMatchObject({
+      toSectionKey: sectionKey(11, "A"),
+      toLabel: "Class 6 A",
+      rollNo: 1,
+    });
+    expect(writes.enrollments[0]).toEqual({
+      studentId: 1,
+      sectionKey: sectionKey(11, "A"),
+      rollNo: 1,
+    });
+  });
+
+  it("graduates a student with no grade above them", () => {
+    const { plan, writes } = buildPlan(
+      snapshot({ students: [student(2, 101)] }),
+      options(),
+    );
+
+    expect(plan.students.graduate.map((s) => s.studentId)).toEqual([2]);
+    expect(writes.graduateIds).toEqual([2]);
+    expect(writes.enrollments).toEqual([]);
+  });
+
+  it("keeps a retained student in their own grade and section", () => {
+    const { plan } = buildPlan(
+      snapshot({ students: [student(3, 100)] }),
+      options({ decisions: { 3: "RETAIN" } }),
+    );
+
+    expect(plan.students.retain[0]).toMatchObject({ toSectionKey: sectionKey(10, "A") });
+    expect(plan.students.promote).toEqual([]);
+  });
+
+  it("marks a leaver without enrolling them anywhere", () => {
+    const { plan, writes } = buildPlan(
+      snapshot({ students: [student(4, 100)] }),
+      options({ decisions: { 4: "LEFT" } }),
+    );
+
+    expect(writes.leaveIds).toEqual([4]);
+    expect(writes.enrollments).toEqual([]);
+    expect(plan.students.leave).toHaveLength(1);
+  });
+
+  it("numbers a target section 1..n in the chosen order", () => {
+    const students = [
+      student(5, 100, { fullName: "Zenith Rai", admissionNo: "5" }),
+      student(6, 100, { fullName: "Anisha Gurung", admissionNo: "6" }),
+    ];
+    const { writes } = buildPlan(snapshot({ students }), options());
+
+    expect(writes.enrollments).toEqual([
+      { studentId: 6, sectionKey: sectionKey(11, "A"), rollNo: 1 },
+      { studentId: 5, sectionKey: sectionKey(11, "A"), rollNo: 2 },
+    ]);
+  });
+
+  it("continues past the rolls a target section already handed out", () => {
+    const { writes } = buildPlan(
+      snapshot({
+        students: [student(7, 100)],
+        targetSections: [
+          { id: 200, gradeId: 10, name: "A" },
+          { id: 201, gradeId: 11, name: "A" },
+        ],
+        targetRollHighWater: { 201: 12 },
+      }),
+      options(),
+    );
+
+    expect(writes.enrollments[0]!.rollNo).toBe(13);
+  });
+
+  it("leaves a student already enrolled in the target year alone", () => {
+    const { plan, writes } = buildPlan(
+      snapshot({ students: [student(8, 100)], studentsAlreadyInTarget: [8] }),
+      options(),
+    );
+
+    expect(writes.enrollments).toEqual([]);
+    expect(plan.students.promote[0]).toMatchObject({ alreadyEnrolled: true, rollNo: null });
+  });
+
+  it("reports a promotion with no same-named section above as unplaceable", () => {
+    const noSixB = snapshot({
+      sourceSections: [
+        { id: 100, gradeId: 10, name: "B", classTeacherId: null },
+        { id: 101, gradeId: 11, name: "A", classTeacherId: null },
+      ],
+      students: [student(9, 100)],
+    });
+    const { plan } = buildPlan(noSixB, options());
+
+    expect(plan.unplaceable).toHaveLength(1);
+    expect(plan.unplaceable[0]).toMatchObject({ sourceSectionId: 100, count: 1 });
+    expect(plan.blockers.join(" ")).toContain("Class 5 B");
+  });
+
+  it("places an unplaceable group once the operator picks a target", () => {
+    const noSixB = snapshot({
+      sourceSections: [
+        { id: 100, gradeId: 10, name: "B", classTeacherId: null },
+        { id: 101, gradeId: 11, name: "A", classTeacherId: null },
+      ],
+      targetSections: [{ id: 201, gradeId: 11, name: "A" }],
+      students: [student(9, 100)],
+    });
+    const { plan, writes } = buildPlan(noSixB, options({ placements: { 100: 201 } }));
+
+    expect(plan.unplaceable).toEqual([]);
+    expect(plan.blockers).toEqual([]);
+    expect(writes.enrollments[0]).toMatchObject({ sectionKey: sectionKey(11, "A") });
+  });
+});
+
+describe("buildPlan — blockers", () => {
+  it("refuses a target year that is already being taught in", () => {
+    const { plan } = buildPlan(snapshot({ targetHasActivity: true }), options());
+
+    expect(plan.blockers.join(" ")).toContain("attendance");
+  });
+
+  it("refuses to roll a year into itself", () => {
+    const { plan } = buildPlan(
+      snapshot({ targetYear: { id: 1, nameBS: "2083" } }),
+      options(),
+    );
+
+    expect(plan.blockers.join(" ")).toContain("same academic year");
+  });
+
+  it("refuses a source year with no sections", () => {
+    const { plan } = buildPlan(snapshot({ sourceSections: [] }), options());
+
+    expect(plan.blockers.join(" ")).toContain("no sections");
+  });
+
+  it("refuses marks ordering with no exam term chosen", () => {
+    const { plan } = buildPlan(snapshot(), options({ rollOrder: "MARKS" }));
+
+    expect(plan.blockers.join(" ")).toContain("exam term");
   });
 });
