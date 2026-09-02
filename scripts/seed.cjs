@@ -51,7 +51,8 @@ const STAFF = [
 
 const FIRST_M = ["Anish", "Bibek", "Sujan", "Nabin", "Prakash", "Rohan", "Sagar", "Kiran", "Manish", "Ujjwal"];
 const FIRST_F = ["Asha", "Bina", "Puja", "Sarita", "Nisha", "Rekha", "Sabina", "Muna", "Anita", "Sunita"];
-const MIDDLES = [null, null, null, "Kumar", "Kumari", "Bahadur"];
+const MIDDLES_M = [null, null, null, "Kumar", "Bahadur"];
+const MIDDLES_F = [null, null, null, "Kumari"];
 const SURNAMES = ["Thapa", "Rai", "Shrestha", "Gurung", "Magar", "Karki", "Adhikari", "Poudel", "Lama", "Tamang"];
 const PLACES = ["Lalitpur-3", "Kathmandu-11", "Bhaktapur-6", "Pokhara-8", "Butwal-4", "Dharan-9"];
 
@@ -114,6 +115,16 @@ async function main() {
     if (process.argv.includes("--attendance")) {
       await seedAttendance(c);
     }
+    if (process.argv.includes("--timetable")) {
+      await seedBell(c);
+      await seedTimetable(c);
+    }
+    if (process.argv.includes("--exams")) {
+      await seedExams(c);
+    }
+    if (process.argv.includes("--honours")) {
+      await seedHonours(c);
+    }
 
     await c.query("COMMIT");
     console.log("done");
@@ -164,23 +175,34 @@ async function seedPeople(c) {
 
   // --- sections: one 'A' per grade for the current year ---
   const grades = await c.query('SELECT id, name FROM "Grade" ORDER BY "order"');
-  const sectionIds = [];
+  let sectionsAdded = 0;
   for (const g of grades.rows) {
     const found = await c.query(
       'SELECT id FROM "Section" WHERE "gradeId" = $1 AND "academicYearId" = $2 AND name = $3',
       [g.id, yearId, "A"],
     );
-    if (found.rowCount) {
-      sectionIds.push({ id: found.rows[0].id, grade: g.name });
-      continue;
-    }
-    const r = await c.query(
-      'INSERT INTO "Section" (name,"gradeId","academicYearId") VALUES ($1,$2,$3) RETURNING id',
+    if (found.rowCount) continue;
+    await c.query(
+      'INSERT INTO "Section" (name,"gradeId","academicYearId") VALUES ($1,$2,$3)',
       ["A", g.id, yearId],
     );
-    sectionIds.push({ id: r.rows[0].id, grade: g.name });
+    sectionsAdded++;
   }
-  console.log(`sections: ${sectionIds.length} present for the current year`);
+
+  // Include every section already configured for the year (B, C, and so on),
+  // not just the A sections ensured above.
+  const sections = await c.query(
+    `SELECT s.id, s.name, g.name AS grade, g."order" AS "gradeOrder"
+     FROM "Section" s
+     JOIN "Grade" g ON g.id = s."gradeId"
+     WHERE s."academicYearId" = $1
+     ORDER BY g."order", s.name, s.id`,
+    [yearId],
+  );
+  const sectionIds = sections.rows;
+  console.log(
+    `sections: ${sectionIds.length} present for the current year, ${sectionsAdded} added`,
+  );
 
   // Give each section a class teacher, cycling through the teaching staff.
   const teachers = staffIds.slice(2);
@@ -210,7 +232,9 @@ async function seedPeople(c) {
       [section.id, yearId],
     );
     if (existing.rows[0].n > 0) {
-      console.log(`  ${section.grade} A: ${existing.rows[0].n} already enrolled — left alone`);
+      console.log(
+        `  ${section.grade} ${section.name}: ${existing.rows[0].n} already enrolled — left alone`,
+      );
       continue;
     }
 
@@ -218,13 +242,13 @@ async function seedPeople(c) {
     for (let roll = 1; roll <= size; roll++) {
       const female = rand() < 0.5;
       const first = pick(female ? FIRST_F : FIRST_M);
-      const middle = pick(MIDDLES);
+      const middle = pick(female ? MIDDLES_F : MIDDLES_M);
       const last = pick(SURNAMES);
       const full = [first, middle, last].filter(Boolean).join(" ");
 
       // Ages roughly track the grade, so dates of birth look believable.
       const born = new Date(admittedOn);
-      born.setFullYear(born.getFullYear() - (4 + sectionIds.indexOf(section)));
+      born.setFullYear(born.getFullYear() - (4 + section.gradeOrder));
       born.setMonth(Math.floor(rand() * 12));
       born.setDate(1 + Math.floor(rand() * 27));
 
@@ -244,14 +268,15 @@ async function seedPeople(c) {
         ],
       );
       const studentId = s.rows[0].id;
+      const guardianIsFather = rand() < 0.7;
 
       await c.query(
         `INSERT INTO "Guardian" ("studentId",relation,"fullName",phone,"isPrimary")
          VALUES ($1,$2,$3,$4,true)`,
         [
           studentId,
-          rand() < 0.7 ? "FATHER" : "MOTHER",
-          `${pick(FIRST_M)} ${last}`,
+          guardianIsFather ? "FATHER" : "MOTHER",
+          `${pick(guardianIsFather ? FIRST_M : FIRST_F)} ${last}`,
           `98${String(10000000 + Math.floor(rand() * 89999999)).slice(0, 8)}`,
         ],
       );
@@ -332,36 +357,37 @@ async function seedSubjects(c) {
   const yearId = year.rows[0].id;
 
   // Resolve every canonical subject to a row, reusing anything already there.
-  const existing = await c.query('SELECT id, name, code FROM "Subject"');
-  const byCode = new Map(existing.rows.map((r) => [r.code.toUpperCase(), r]));
+  // Subjects no longer carry a code column, so a row is found by its canonical
+  // name first and then by the aliases a hand-typed list tends to use. The
+  // SUBJECTS keys stay as this script's own handles for CURRICULUM.
+  const existing = await c.query('SELECT id, name FROM "Subject"');
   const byName = new Map(existing.rows.map((r) => [r.name.trim().toLowerCase(), r]));
 
   const resolved = {};
   let created = 0;
   let reused = 0;
 
-  for (const [code, def] of Object.entries(SUBJECTS)) {
-    let row = byCode.get(code);
+  for (const [key, def] of Object.entries(SUBJECTS)) {
+    let row = byName.get(def.name.trim().toLowerCase());
     if (!row) {
       for (const alias of def.aliases) {
         const hit = byName.get(alias);
         if (hit) {
           row = hit;
-          console.log(`  reusing existing "${hit.name}" (${hit.code}) as ${def.name}`);
+          console.log(`  reusing existing "${hit.name}" as ${def.name}`);
           break;
         }
       }
     }
     if (row) {
-      resolved[code] = row.id;
+      resolved[key] = row.id;
       reused++;
       continue;
     }
-    const r = await c.query(
-      'INSERT INTO "Subject" (name, code) VALUES ($1, $2) RETURNING id',
-      [def.name, code],
-    );
-    resolved[code] = r.rows[0].id;
+    const r = await c.query('INSERT INTO "Subject" (name) VALUES ($1) RETURNING id', [
+      def.name,
+    ]);
+    resolved[key] = r.rows[0].id;
     created++;
   }
   console.log(`subjects: ${created} created, ${reused} reused`);
@@ -609,6 +635,337 @@ async function seedAttendance(c) {
     }
   }
   console.log(`attendance: ${sessions} roll calls, ${records} records`);
+}
+
+// ---------------------------------------------------------------------------
+// Timetable — the bell schedule, then a week per section.
+// ---------------------------------------------------------------------------
+
+/// Mirrors DEFAULT_BELL in src/lib/timetable/bell.ts. Duplicated rather than
+/// imported because this script is plain CommonJS and talks to pg directly.
+const BELL = [
+  ["Period 1", 600, 645, false],
+  ["Period 2", 645, 690, false],
+  ["Period 3", 690, 735, false],
+  ["Tiffin", 735, 765, true],
+  ["Period 4", 765, 810, false],
+  ["Period 5", 810, 855, false],
+  ["Period 6", 855, 900, false],
+  ["Period 7", 900, 945, false],
+];
+
+async function seedBell(c) {
+  const existing = await c.query('SELECT count(*)::int n FROM "SchoolPeriod"');
+  if (existing.rows[0].n > 0) {
+    console.log(`bell schedule: ${existing.rows[0].n} period(s) already set`);
+    return;
+  }
+  for (const [i, [name, start, end, isBreak]] of BELL.entries()) {
+    await c.query(
+      'INSERT INTO "SchoolPeriod" ("order", name, "startMinute", "endMinute", "isBreak") VALUES ($1,$2,$3,$4,$5)',
+      [i, name, start, end, isBreak],
+    );
+  }
+  console.log(`bell schedule: ${BELL.length} periods added`);
+}
+
+/// Fills each section's week. A cell is only filled when the subject still has
+/// weekly budget left and its teacher is free in that slot — a period is left
+/// empty rather than double-booking anyone, which is what setTimetableCell
+/// would refuse to do anyway.
+///
+/// Budget is the section's slots shared across its subjects, so Nepali does not
+/// land eleven periods while Science gets one.
+async function seedTimetable(c) {
+  const year = await c.query(
+    'SELECT id FROM "AcademicYear" WHERE "isCurrent" = true LIMIT 1',
+  );
+  if (!year.rowCount) {
+    console.log("no current academic year — skipping timetable");
+    return;
+  }
+  const yearId = year.rows[0].id;
+
+  if (process.argv.includes("--reschedule")) {
+    const cleared = await c.query(
+      `DELETE FROM "TimetablePeriod" tp
+       USING "Section" s
+       WHERE s.id = tp."sectionId" AND s."academicYearId" = $1`,
+      [yearId],
+    );
+    console.log(`cleared ${cleared.rowCount} scheduled lesson(s)`);
+  }
+
+  const periods = await c.query(
+    'SELECT id FROM "SchoolPeriod" WHERE "isBreak" = false ORDER BY "order"',
+  );
+  if (!periods.rowCount) {
+    console.log("no bell schedule — skipping timetable");
+    return;
+  }
+
+  const profile = await c.query('SELECT "workingDays" FROM "SchoolProfile" WHERE id = 1');
+  const days = profile.rowCount ? profile.rows[0].workingDays : [0, 1, 2, 3, 4, 5];
+
+  // Every assignment that could be scheduled, grouped by section.
+  const assignments = await c.query(
+    `SELECT ta.id, ta."sectionId", ta."staffId"
+     FROM "TeacherAssignment" ta
+     JOIN "Section" s ON s.id = ta."sectionId"
+     WHERE s."academicYearId" = $1
+     ORDER BY ta."sectionId", ta.id`,
+    [yearId],
+  );
+  if (!assignments.rowCount) {
+    console.log("no teaching assignments — skipping timetable");
+    return;
+  }
+
+  const bySection = new Map();
+  for (const row of assignments.rows) {
+    if (!bySection.has(row.sectionId)) bySection.set(row.sectionId, []);
+    bySection.get(row.sectionId).push(row);
+  }
+
+  // Slots a teacher already holds, so two sections cannot claim one person.
+  const taken = new Set();
+  const already = await c.query(
+    `SELECT tp."dayOfWeek", tp."schoolPeriodId", ta."staffId"
+     FROM "TimetablePeriod" tp
+     JOIN "TeacherAssignment" ta ON ta.id = tp."teacherAssignmentId"
+     JOIN "Section" s ON s.id = tp."sectionId"
+     WHERE s."academicYearId" = $1`,
+    [yearId],
+  );
+  for (const r of already.rows) taken.add(`${r.staffId}:${r.dayOfWeek}:${r.schoolPeriodId}`);
+
+  const filledSlots = new Set();
+  const existingCells = await c.query(
+    `SELECT "sectionId", "dayOfWeek", "schoolPeriodId" FROM "TimetablePeriod" tp
+     JOIN "Section" s ON s.id = tp."sectionId" WHERE s."academicYearId" = $1`,
+    [yearId],
+  );
+  for (const r of existingCells.rows) {
+    filledSlots.add(`${r.sectionId}:${r.dayOfWeek}:${r.schoolPeriodId}`);
+  }
+
+  let placed = 0;
+  let skipped = 0;
+
+  for (const [sectionId, rows] of bySection) {
+    const slots = days.length * periods.rowCount;
+    const budget = new Map(
+      rows.map((row) => [row.id, Math.ceil(slots / rows.length)]),
+    );
+
+    for (const day of days) {
+      for (const period of periods.rows) {
+        if (filledSlots.has(`${sectionId}:${day}:${period.id}`)) continue;
+
+        // Whoever has the most budget left and is free right now.
+        const candidate = rows
+          .filter((row) => (budget.get(row.id) ?? 0) > 0)
+          .filter((row) => !taken.has(`${row.staffId}:${day}:${period.id}`))
+          .sort((a, b) => (budget.get(b.id) ?? 0) - (budget.get(a.id) ?? 0))[0];
+
+        if (!candidate) {
+          skipped++;
+          continue;
+        }
+
+        await c.query(
+          'INSERT INTO "TimetablePeriod" ("teacherAssignmentId","sectionId","schoolPeriodId","dayOfWeek",room) VALUES ($1,$2,$3,$4,$5)',
+          [candidate.id, sectionId, period.id, day, ""],
+        );
+        budget.set(candidate.id, (budget.get(candidate.id) ?? 0) - 1);
+        taken.add(`${candidate.staffId}:${day}:${period.id}`);
+        filledSlots.add(`${sectionId}:${day}:${period.id}`);
+        placed++;
+      }
+    }
+  }
+
+  console.log(
+    `timetable: ${placed} lesson(s) placed` +
+      (skipped ? `, ${skipped} slot(s) left free (no teacher available)` : ""),
+  );
+}
+
+/// Three terminal exams with marks for every offering, the first two
+/// published. Each student gets a stable ability so the same names sit near
+/// the top across terms, which is what a real ledger looks like.
+async function seedExams(c) {
+  const year = await c.query(
+    'SELECT id, "startsOn", "endsOn" FROM "AcademicYear" WHERE "isCurrent" = true LIMIT 1',
+  );
+  if (!year.rowCount) {
+    console.log("no current academic year — skipping exams");
+    return;
+  }
+  const { id: yearId, startsOn } = year.rows[0];
+
+  const TERMS = [
+    { name: "First Terminal", published: true, offsetDays: 90 },
+    { name: "Second Terminal", published: true, offsetDays: 180 },
+    { name: "Final", published: false, offsetDays: 300 },
+  ];
+
+  const termIds = [];
+  for (let i = 0; i < TERMS.length; i++) {
+    const t = TERMS[i];
+    const existing = await c.query(
+      'SELECT id FROM "ExamTerm" WHERE "academicYearId" = $1 AND name = $2',
+      [yearId, t.name],
+    );
+    if (existing.rowCount) {
+      termIds.push(existing.rows[0].id);
+      continue;
+    }
+    const starts = new Date(startsOn);
+    starts.setUTCDate(starts.getUTCDate() + t.offsetDays);
+    const ends = new Date(starts);
+    ends.setUTCDate(ends.getUTCDate() + 6);
+    const r = await c.query(
+      `INSERT INTO "ExamTerm" ("academicYearId", name, "order", "startsOn", "endsOn", "isPublished")
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [yearId, t.name, i, starts.toISOString().slice(0, 10), ends.toISOString().slice(0, 10), t.published],
+    );
+    termIds.push(r.rows[0].id);
+  }
+
+  const offerings = await c.query(
+    'SELECT id, "gradeId", "hasPractical", "fullMarksTheory", "fullMarksPractical" FROM "SubjectOffering" WHERE "academicYearId" = $1',
+    [yearId],
+  );
+  const byGrade = new Map();
+  for (const o of offerings.rows) {
+    if (!byGrade.has(o.gradeId)) byGrade.set(o.gradeId, []);
+    byGrade.get(o.gradeId).push(o);
+  }
+
+  const roll = await c.query(
+    `SELECT e."studentId", s."gradeId"
+       FROM "Enrollment" e JOIN "Section" s ON s.id = e."sectionId"
+      WHERE e."academicYearId" = $1`,
+    [yearId],
+  );
+
+  const rand = rng(424242);
+  let written = 0;
+  let skipped = 0;
+  for (const termId of termIds) {
+    const already = await c.query('SELECT 1 FROM "Mark" WHERE "examTermId" = $1 LIMIT 1', [termId]);
+    if (already.rowCount) {
+      skipped++;
+      continue;
+    }
+    for (const e of roll.rows) {
+      // Ability in 0.35..0.95, fixed per student, so rankings are consistent.
+      const ability = 0.35 + (((e.studentId * 7919) % 1000) / 1000) * 0.6;
+      for (const o of byGrade.get(e.gradeId) ?? []) {
+        if (rand() < 0.02) {
+          await c.query(
+            `INSERT INTO "Mark" ("examTermId","studentId","subjectOfferingId",theory,practical,"isAbsent","updatedAt")
+             VALUES ($1,$2,$3,NULL,NULL,true,NOW())`,
+            [termId, e.studentId, o.id],
+          );
+          continue;
+        }
+        const wobble = () => (rand() - 0.5) * 0.3;
+        const theory = Math.max(
+          0,
+          Math.min(o.fullMarksTheory, Math.round(o.fullMarksTheory * (ability + wobble()))),
+        );
+        const practical = o.hasPractical
+          ? Math.max(
+              0,
+              Math.min(
+                o.fullMarksPractical,
+                Math.round(o.fullMarksPractical * (ability + 0.1 + wobble())),
+              ),
+            )
+          : null;
+        await c.query(
+          `INSERT INTO "Mark" ("examTermId","studentId","subjectOfferingId",theory,practical,"isAbsent","updatedAt")
+           VALUES ($1,$2,$3,$4,$5,false,NOW())`,
+          [termId, e.studentId, o.id, theory, practical],
+        );
+        written++;
+      }
+    }
+  }
+  console.log(
+    `exams: ${termIds.length} terms, ${written} marks written, ${skipped} term(s) already marked`,
+  );
+}
+
+/// A scatter of merits, demerits and activities so the conduct and activity
+/// pillars move the ranking. Skipped entirely once the year has any.
+async function seedHonours(c) {
+  const year = await c.query(
+    'SELECT id, "startsOn", "endsOn" FROM "AcademicYear" WHERE "isCurrent" = true LIMIT 1',
+  );
+  if (!year.rowCount) {
+    console.log("no current academic year — skipping honours");
+    return;
+  }
+  const { id: yearId, startsOn, endsOn } = year.rows[0];
+
+  const any = await c.query(
+    'SELECT (SELECT 1 FROM "ConductEntry" WHERE "academicYearId" = $1 LIMIT 1) AS c, (SELECT 1 FROM "ActivityEntry" WHERE "academicYearId" = $1 LIMIT 1) AS a',
+    [yearId],
+  );
+  if (any.rows[0].c || any.rows[0].a) {
+    console.log("honours: entries already present — skipping");
+    return;
+  }
+
+  const roll = await c.query('SELECT "studentId" FROM "Enrollment" WHERE "academicYearId" = $1', [
+    yearId,
+  ]);
+  const rand = rng(31337);
+  const last = new Date(Math.min(new Date(endsOn).getTime(), Date.now()));
+  const span = Math.max(1, Math.floor((last - new Date(startsOn)) / 86_400_000));
+  const someDay = () => {
+    const d = new Date(startsOn);
+    d.setUTCDate(d.getUTCDate() + Math.floor(rand() * span));
+    return d.toISOString().slice(0, 10);
+  };
+
+  const MERITS = ["Helped a classmate", "Class monitor", "Tidied the lab", "Read at assembly"];
+  const DEMERITS = ["Late three times", "Homework missing", "Disrupted the class", "Uniform"];
+  const ACTIVITIES = ["Science fair", "Football", "Debate", "Quiz", "Art exhibition", "Dance", "Spelling bee"];
+  const LEVELS = [["PARTICIPATED", 10], ["PLACED", 20], ["WON", 30]];
+
+  let conduct = 0;
+  let activities = 0;
+  for (const { studentId } of roll.rows) {
+    if (rand() < 0.25) {
+      await c.query(
+        'INSERT INTO "ConductEntry" ("studentId","academicYearId",kind,points,date,note) VALUES ($1,$2,$3,$4,$5,$6)',
+        [studentId, yearId, "MERIT", 5 + Math.floor(rand() * 6), someDay(), MERITS[Math.floor(rand() * MERITS.length)]],
+      );
+      conduct++;
+    }
+    if (rand() < 0.15) {
+      await c.query(
+        'INSERT INTO "ConductEntry" ("studentId","academicYearId",kind,points,date,note) VALUES ($1,$2,$3,$4,$5,$6)',
+        [studentId, yearId, "DEMERIT", 5 + Math.floor(rand() * 11), someDay(), DEMERITS[Math.floor(rand() * DEMERITS.length)]],
+      );
+      conduct++;
+    }
+    if (rand() < 0.3) {
+      const name = ACTIVITIES[Math.floor(rand() * ACTIVITIES.length)];
+      const r = rand();
+      const [level, points] = r < 0.6 ? LEVELS[0] : r < 0.85 ? LEVELS[1] : LEVELS[2];
+      await c.query(
+        'INSERT INTO "ActivityEntry" ("studentId","academicYearId",name,level,points,date) VALUES ($1,$2,$3,$4,$5,$6)',
+        [studentId, yearId, name, level, points, someDay()],
+      );
+      activities++;
+    }
+  }
+  console.log(`honours: ${conduct} conduct entries, ${activities} activities`);
 }
 
 main().catch((e) => {
