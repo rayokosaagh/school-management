@@ -44,3 +44,4 @@ next-env.d.ts
 
 /artifacts/smoke/
 /artifacts/rollover-walk/
+/artifacts/teardown-walk/
