@@ -46,7 +46,9 @@ model User {
   passwordHash String
   createdAt DateTime @default(now())
 
-  staff Staff?
+  staff              Staff?
+  conductRecorded    ConductEntry[]
+  activitiesRecorded ActivityEntry[]
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +70,8 @@ model AcademicYear {
   enrollments Enrollment[]
   attendance  AttendanceSession[]
   examTerms   ExamTerm[]
+  conduct     ConductEntry[]
+  activities  ActivityEntry[]
 }
 
 /// A year group: "Class 5". `order` drives sorting and year-end promotion.
@@ -93,14 +97,16 @@ model Section {
   enrollments  Enrollment[]
   assignments  TeacherAssignment[]
   attendance   AttendanceSession[]
+  timetable    TimetablePeriod[]
 
   @@unique([gradeId, academicYearId, name])
 }
 
 model Subject {
   id   Int    @id @default(autoincrement())
-  name String
-  code String @unique
+  /// Unique on its own now: the old short code was a second identifier that
+  /// only produced duplicate-key errors, and the id is the real key.
+  name String @unique
 
   offerings SubjectOffering[]
 }
@@ -158,8 +164,54 @@ model TeacherAssignment {
   staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
   section         Section         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   subjectOffering SubjectOffering @relation(fields: [subjectOfferingId], references: [id], onDelete: Cascade)
+  timetable       TimetablePeriod[]
 
   @@unique([staffId, sectionId, subjectOfferingId])
+}
+
+/// The school's bell schedule: the named slots every section's week is built
+/// from. Break rows carry no lesson but keep the grid honest about the gap.
+/// Minutes since midnight avoid attaching a timezone or arbitrary date to a
+/// wall-clock time.
+///
+/// `order` is deliberately not unique, so the whole schedule can be renumbered
+/// in one transaction without rows colliding mid-flight. Contiguity is a
+/// service-layer rule — see validateBell() in src/lib/timetable/bell.ts.
+model SchoolPeriod {
+  id          Int     @id @default(autoincrement())
+  order       Int
+  name        String
+  startMinute Int
+  endMinute   Int
+  isBreak     Boolean @default(false)
+
+  periods TimetablePeriod[]
+
+  @@index([order])
+}
+
+/// One recurring weekly lesson: a teaching assignment placed in a bell slot on
+/// a given weekday. Times are not stored here — they belong to the bell period,
+/// so moving Period 3 moves every Period 3 lesson with it.
+model TimetablePeriod {
+  id                  Int    @id @default(autoincrement())
+  teacherAssignmentId Int
+  /// Denormalised from the assignment so "one lesson per section per slot" can
+  /// be a database constraint rather than a hope. setTimetableCell() is the
+  /// only writer and always sets it to assignment.sectionId.
+  sectionId           Int
+  schoolPeriodId      Int
+  /// Sunday = 0 through Saturday = 6, matching JavaScript's getDay().
+  dayOfWeek           Int
+  room                String @default("")
+
+  assignment   TeacherAssignment @relation(fields: [teacherAssignmentId], references: [id], onDelete: Cascade)
+  section      Section           @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  schoolPeriod SchoolPeriod      @relation(fields: [schoolPeriodId], references: [id], onDelete: Cascade)
+
+  @@unique([sectionId, dayOfWeek, schoolPeriodId])
+  @@unique([teacherAssignmentId, dayOfWeek, schoolPeriodId])
+  @@index([dayOfWeek])
 }
 
 model Student {
@@ -184,6 +236,8 @@ model Student {
   enrollments Enrollment[]
   attendance  AttendanceRecord[]
   marks       Mark[]
+  conduct     ConductEntry[]
+  activities  ActivityEntry[]
 }
 
 enum Gender {
@@ -304,6 +358,15 @@ model SchoolProfile {
   phone     String?
   email     String?
   logoId    Int?     @unique
+  /// Which weekdays the school runs, Sunday = 0. Saturday is the weekly holiday
+  /// in Nepal, but enough schools differ for this to be a setting.
+  workingDays Int[]  @default([0, 1, 2, 3, 4, 5])
+  /// How the honours score is weighted, in percent. Must sum to 100; enforced
+  /// in src/lib/honours/weights.ts.
+  weightExams      Int @default(50)
+  weightAttendance Int @default(20)
+  weightConduct    Int @default(15)
+  weightActivities Int @default(15)
   updatedAt DateTime @updatedAt
 
   logo Photo? @relation(fields: [logoId], references: [id])
@@ -354,4 +417,59 @@ model Mark {
   @@unique([examTermId, studentId, subjectOfferingId])
   @@index([studentId])
   @@index([subjectOfferingId])
+}
+
+// ---------------------------------------------------------------------------
+// Honours — the conduct and activity records that, with exams and attendance,
+// make up a student's overall score. See src/lib/honours/score.ts.
+// ---------------------------------------------------------------------------
+
+/// One conduct event. `points` is always positive; `kind` gives it its sign.
+model ConductEntry {
+  id             Int         @id @default(autoincrement())
+  studentId      Int
+  academicYearId Int
+  kind           ConductKind
+  points         Int
+  date           DateTime    @db.Date
+  note           String
+  recordedById   Int?
+  createdAt      DateTime    @default(now())
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  recordedBy   User?        @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId, academicYearId])
+}
+
+enum ConductKind {
+  MERIT
+  DEMERIT
+}
+
+/// One participation in a co-curricular activity. Points are stored rather
+/// than derived from the level so a national win can outweigh a house match.
+model ActivityEntry {
+  id             Int           @id @default(autoincrement())
+  studentId      Int
+  academicYearId Int
+  name           String
+  level          ActivityLevel
+  points         Int
+  date           DateTime      @db.Date
+  recordedById   Int?
+  createdAt      DateTime      @default(now())
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  recordedBy   User?        @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId, academicYearId])
+}
+
+enum ActivityLevel {
+  PARTICIPATED
+  PLACED
+  WON
 }
