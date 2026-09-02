@@ -157,3 +157,65 @@ export async function snapshotYear(
 
   return { payload, counts };
 }
+
+/// Removes a year and everything recorded in it, optionally capturing a restore
+/// point first. Capture and delete share one transaction: a restore point must
+/// never be a promise the delete has already broken.
+export async function deleteYearWithData(
+  academicYearId: number,
+  options: { createRestorePoint: boolean; actorUserId: number | null },
+): Promise<{ counts: YearCounts; restorePointId: number | null }> {
+  const year = await prisma.academicYear.findUnique({ where: { id: academicYearId } });
+  if (!year) throw new YearTeardownError("That academic year no longer exists.");
+  // Deleting the current year would leave the school with none, which blanks
+  // every page in the app.
+  if (year.isCurrent) {
+    throw new YearTeardownError(
+      `Academic year ${year.nameBS} is the current year. Switch to another year before deleting it.`,
+    );
+  }
+
+  return prisma.$transaction(
+    async (tx) => {
+      const { payload, counts } = await snapshotYear(tx, academicYearId);
+
+      let restorePointId: number | null = null;
+      if (options.createRestorePoint) {
+        const point = await tx.restorePoint.create({
+          data: {
+            yearNameBS: year.nameBS,
+            startsOn: year.startsOn,
+            endsOn: year.endsOn,
+            createdById: options.actorUserId,
+            counts,
+            payload: payload as unknown as Prisma.InputJsonValue,
+          },
+          select: { id: true },
+        });
+        restorePointId = point.id;
+      }
+
+      const sectionIds = payload.sections.map((s) => (s as { id: number }).id);
+      const termIds = payload.examTerms.map((t) => (t as { id: number }).id);
+      const sessionIds = payload.attendanceSessions.map((s) => (s as { id: number }).id);
+
+      // Children before parents. Some of these cascade from each other, but
+      // each is deleted explicitly so the counts reported are the truth.
+      await tx.attendanceRecord.deleteMany({ where: { sessionId: { in: sessionIds } } });
+      await tx.attendanceSession.deleteMany({ where: { academicYearId } });
+      await tx.mark.deleteMany({ where: { examTermId: { in: termIds } } });
+      await tx.examTerm.deleteMany({ where: { academicYearId } });
+      await tx.conductEntry.deleteMany({ where: { academicYearId } });
+      await tx.activityEntry.deleteMany({ where: { academicYearId } });
+      await tx.enrollment.deleteMany({ where: { academicYearId } });
+      await tx.timetablePeriod.deleteMany({ where: { sectionId: { in: sectionIds } } });
+      await tx.teacherAssignment.deleteMany({ where: { sectionId: { in: sectionIds } } });
+      await tx.section.deleteMany({ where: { academicYearId } });
+      await tx.subjectOffering.deleteMany({ where: { academicYearId } });
+      await tx.academicYear.delete({ where: { id: academicYearId } });
+
+      return { counts, restorePointId };
+    },
+    { timeout: 120_000, maxWait: 10_000 },
+  );
+}

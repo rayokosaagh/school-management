@@ -10,7 +10,13 @@ import { setSubjectTeacher } from "./assignments";
 import { createExamTerm } from "@/lib/assessment/exams";
 import { saveSheet } from "@/lib/attendance/attendance";
 import { addActivity, addConduct } from "@/lib/honours/entries";
-import { snapshotYear, summariseYear, YearTeardownError, PAYLOAD_VERSION } from "./year-teardown";
+import {
+  deleteYearWithData,
+  snapshotYear,
+  summariseYear,
+  YearTeardownError,
+  PAYLOAD_VERSION,
+} from "./year-teardown";
 
 // Talks to the real database. Everything it makes is torn down afterwards, and
 // it touches nothing it did not create.
@@ -27,15 +33,22 @@ const made = {
   studentIds: [] as number[],
   examTermId: 0,
   attendanceSessionId: 0,
+  /// Set once the delete test captures a restore point, so afterAll can clean
+  /// up a row the module itself created.
+  restorePointId: 0,
   /// The year the school had marked current before this suite hijacked it.
   previousCurrentYearId: null as number | null,
 };
 
 const YEAR = "2087";
 const BARE_YEAR = "2088";
+const GUARD_YEAR = "2089";
 const stamp = Date.now() % 100000;
 
 afterAll(async () => {
+  if (made.restorePointId) {
+    await prisma.restorePoint.deleteMany({ where: { id: made.restorePointId } });
+  }
   await prisma.activityEntry.deleteMany({ where: { studentId: { in: made.studentIds } } });
   await prisma.conductEntry.deleteMany({ where: { studentId: { in: made.studentIds } } });
   if (made.attendanceSessionId) {
@@ -296,5 +309,122 @@ describe.skipIf(!process.env.DB_TESTS)("year teardown: summarise and snapshot", 
       conduct: 1,
       activities: 1,
     });
+  });
+
+  it("refuses to delete the current year, changing nothing", async () => {
+    // A throwaway year of its own, so this test never has to touch the
+    // current-ness of the other fixtures.
+    const guardYear = await createAcademicYear({ nameBS: GUARD_YEAR });
+    await setCurrentAcademicYear(guardYear.id);
+
+    try {
+      const yearsBefore = await prisma.academicYear.count();
+
+      await expect(
+        deleteYearWithData(guardYear.id, { createRestorePoint: true, actorUserId: null }),
+      ).rejects.toThrow(YearTeardownError);
+
+      // Not "probably unchanged" — counted, so a partial delete would show.
+      expect(await prisma.academicYear.count()).toBe(yearsBefore);
+      const stillThere = await prisma.academicYear.findUnique({ where: { id: guardYear.id } });
+      expect(stillThere).not.toBeNull();
+      expect(stillThere?.isCurrent).toBe(true);
+      expect(await prisma.restorePoint.count({ where: { yearNameBS: GUARD_YEAR } })).toBe(0);
+    } finally {
+      // Hand the current flag back before it can block any later delete in
+      // this suite.
+      if (made.previousCurrentYearId) await setCurrentAcademicYear(made.previousCurrentYearId);
+      await prisma.academicYear.deleteMany({ where: { id: guardYear.id } });
+    }
+  });
+
+  it("refuses to delete a year that does not exist", async () => {
+    await expect(
+      deleteYearWithData(-1, { createRestorePoint: false, actorUserId: null }),
+    ).rejects.toThrow(YearTeardownError);
+  });
+
+  it("deletes the taught fixture year, matches the prior summary, and leaves everything outside the year untouched", async () => {
+    const statusesBefore = (
+      await prisma.student.findMany({
+        where: { id: { in: made.studentIds } },
+        select: { id: true, status: true },
+      })
+    ).sort((a, b) => a.id - b.id);
+
+    const summary = await summariseYear(made.yearId);
+    const result = await deleteYearWithData(made.yearId, {
+      createRestorePoint: true,
+      actorUserId: null,
+    });
+    made.restorePointId = result.restorePointId ?? 0;
+
+    // The delete's own counts are exactly what the summary promised moments
+    // earlier — no drift between "what we said we'd remove" and "what we did".
+    expect(result.counts).toEqual(summary.counts);
+
+    // The year, and every row scoped to it, is gone.
+    expect(await prisma.academicYear.findUnique({ where: { id: made.yearId } })).toBeNull();
+    expect(await prisma.section.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.subjectOffering.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.enrollment.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.examTerm.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.attendanceSession.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.conductEntry.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    expect(await prisma.activityEntry.count({ where: { academicYearId: made.yearId } })).toBe(0);
+    // These four are scoped through the deleted sections/term/session rather
+    // than academicYearId directly, so check them by the fixture's own ids.
+    expect(await prisma.teacherAssignment.count({ where: { sectionId: { in: made.sectionIds } } })).toBe(0);
+    expect(await prisma.timetablePeriod.count({ where: { sectionId: { in: made.sectionIds } } })).toBe(0);
+    expect(await prisma.mark.count({ where: { examTermId: made.examTermId } })).toBe(0);
+    expect(await prisma.attendanceRecord.count({ where: { sessionId: made.attendanceSessionId } })).toBe(0);
+
+    // Nothing outside the year moved: grades, subject, staff and students
+    // remain, and no student's status was touched.
+    const grades = await prisma.grade.findMany({ where: { id: { in: made.gradeIds } } });
+    expect(grades).toHaveLength(made.gradeIds.length);
+    expect(await prisma.subject.findUnique({ where: { id: made.subjectId } })).not.toBeNull();
+    expect(await prisma.staff.findUnique({ where: { id: made.staffId } })).not.toBeNull();
+    const statusesAfter = (
+      await prisma.student.findMany({
+        where: { id: { in: made.studentIds } },
+        select: { id: true, status: true },
+      })
+    ).sort((a, b) => a.id - b.id);
+    expect(statusesAfter).toHaveLength(statusesBefore.length);
+    expect(statusesAfter).toEqual(statusesBefore);
+
+    // The restore point was captured before the delete, inside the same
+    // transaction, and reports the same counts.
+    expect(result.restorePointId).not.toBeNull();
+    const restorePoint = await prisma.restorePoint.findUnique({
+      where: { id: result.restorePointId! },
+    });
+    expect(restorePoint).not.toBeNull();
+    expect(restorePoint?.yearNameBS).toBe(YEAR);
+    expect(restorePoint?.counts).toEqual(result.counts);
+  });
+
+  it("deletes the untaught fixture year without a restore point when asked not to", async () => {
+    const restorePointsBefore = await prisma.restorePoint.count();
+
+    const summary = await summariseYear(made.bareYearId);
+    const result = await deleteYearWithData(made.bareYearId, {
+      createRestorePoint: false,
+      actorUserId: null,
+    });
+
+    expect(result.counts).toEqual(summary.counts);
+    expect(result.restorePointId).toBeNull();
+    // No row appeared anywhere, not just none named for this year.
+    expect(await prisma.restorePoint.count()).toBe(restorePointsBefore);
+
+    expect(await prisma.academicYear.findUnique({ where: { id: made.bareYearId } })).toBeNull();
+    expect(await prisma.section.count({ where: { id: made.bareSectionId } })).toBe(0);
+    expect(await prisma.subjectOffering.count({ where: { id: made.bareOfferingId } })).toBe(0);
+    // The subject and grade this bare year borrowed are shared fixtures and
+    // must survive.
+    expect(await prisma.subject.findUnique({ where: { id: made.subjectId } })).not.toBeNull();
+    expect(await prisma.grade.findUnique({ where: { id: made.gradeIds[0] } })).not.toBeNull();
   });
 });
