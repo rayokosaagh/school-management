@@ -223,13 +223,85 @@ export function buildPlan(
 
   const plannedOfferingKeys = new Set([...targetOfferings, ...offerings.map((o) => o.key)]);
 
+  // --- assignments ----------------------------------------------------------
+  const targetAssignments = new Set(snapshot.targetAssignmentKeys);
+  const sourceAssignmentById = new Map(snapshot.sourceAssignments.map((a) => [a.id, a]));
+  /// Source assignment id -> the key its target twin has or will have, so a
+  /// period can find its assignment whether it was copied now or already there.
+  const keyBySourceAssignment = new Map<number, string>();
+  const assignments: RolloverWrites["assignments"] = [];
+  let assignmentsExisting = 0;
+  let assignmentsSkipped = 0;
+
+  if (options.copyAssignments) {
+    for (const a of snapshot.sourceAssignments) {
+      const from = sourceSectionById.get(a.sectionId);
+      const offering = snapshot.offeringById[a.subjectOfferingId];
+      // A teacher who has left keeps their history but takes on nothing new.
+      if (!from || !offering || !activeStaff.has(a.staffId)) {
+        assignmentsSkipped += 1;
+        continue;
+      }
+
+      const sKey = sectionKey(from.gradeId, from.name);
+      const oKey = offeringKey(offering.subjectId, offering.gradeId);
+      if (!plannedSectionKeys.has(sKey) || !plannedOfferingKeys.has(oKey)) {
+        assignmentsSkipped += 1;
+        continue;
+      }
+
+      const key = assignmentKey(a.staffId, sKey, oKey);
+      keyBySourceAssignment.set(a.id, key);
+      if (targetAssignments.has(key)) {
+        assignmentsExisting += 1;
+        continue;
+      }
+      assignments.push({ key, staffId: a.staffId, sectionKey: sKey, offeringKey: oKey });
+    }
+  }
+
+  // --- timetable ------------------------------------------------------------
+  const targetPeriods = new Set(snapshot.targetPeriodKeys);
+  const periods: RolloverWrites["periods"] = [];
+  let periodsExisting = 0;
+  let periodsSkipped = 0;
+
+  if (options.copyTimetable) {
+    for (const p of snapshot.sourcePeriods) {
+      const aKey = keyBySourceAssignment.get(p.teacherAssignmentId);
+      const source = sourceAssignmentById.get(p.teacherAssignmentId);
+      const from = source ? sourceSectionById.get(source.sectionId) : undefined;
+      if (!aKey || !from) {
+        periodsSkipped += 1;
+        continue;
+      }
+
+      const sKey = sectionKey(from.gradeId, from.name);
+      if (targetPeriods.has(periodKey(sKey, p.dayOfWeek, p.schoolPeriodId))) {
+        periodsExisting += 1;
+        continue;
+      }
+      periods.push({
+        assignmentKey: aKey,
+        sectionKey: sKey,
+        schoolPeriodId: p.schoolPeriodId,
+        dayOfWeek: p.dayOfWeek,
+        room: p.room,
+      });
+    }
+  }
+
   const plan: RolloverPlan = {
     sourceYear: snapshot.sourceYear,
     targetYear: snapshot.targetYear,
     sections: { create: sections.length, existing: sectionsExisting, skipped: 0 },
     offerings: { create: offerings.length, existing: offeringsExisting, skipped: 0 },
-    assignments: { create: 0, existing: 0, skipped: 0 },
-    timetable: { create: 0, existing: 0, skipped: 0 },
+    assignments: {
+      create: assignments.length,
+      existing: assignmentsExisting,
+      skipped: assignmentsSkipped,
+    },
+    timetable: { create: periods.length, existing: periodsExisting, skipped: periodsSkipped },
     students: { promote: [], retain: [], graduate: [], leave: [] },
     unplaceable: [],
     blockers: [],
@@ -238,17 +310,13 @@ export function buildPlan(
   const writes: RolloverWrites = {
     sections,
     offerings,
-    assignments: [],
-    periods: [],
+    assignments,
+    periods,
     enrollments: [],
     graduateIds: [],
     leaveIds: [],
   };
 
-  // Referenced by the stages added in the next tasks.
-  void plannedSectionKeys;
-  void plannedOfferingKeys;
-  void sourceSectionById;
   void label;
 
   return { plan, writes };
