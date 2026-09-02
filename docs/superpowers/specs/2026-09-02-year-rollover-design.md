@@ -83,6 +83,11 @@ highest, so a second run never renumbers a section the office has started using.
 
 ## 4. Module — `src/lib/registry/rollover.ts`
 
+The planning logic itself is pure and lives in `src/lib/registry/rollover-plan.ts`,
+which touches no database and can be tested with plain objects; `rollover.ts`
+reads the snapshot it needs and owns the transaction. This mirrors
+`honours/score.ts` sitting under `honours/honours.ts`.
+
 Two exports, split so the preview and the write cannot disagree:
 
 ```ts
@@ -251,7 +256,7 @@ every part of this by hand, one row at a time.
 
 ## 8. Testing
 
-- `src/lib/registry/rollover.test.ts` — pure planning over fixtures: grade
+- `src/lib/registry/rollover-plan.test.ts` — pure planning over fixtures: grade
   advance by `order`, top grade graduating, unplaceable detection, decision
   tallies, and that section numbering goes through `orderForRoll`.
 - `src/lib/registry/rollover.integration.test.ts`, gated on `DB_TESTS=1` — two
