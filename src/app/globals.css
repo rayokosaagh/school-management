@@ -10,31 +10,55 @@
    the generated primitives restyle without edits.
    --------------------------------------------------------------------------- */
 :root {
-  --brand: oklch(0.45 0.21 276);
-  --brand-deep: oklch(0.34 0.16 278);
-  --brand-tint: oklch(0.96 0.02 276);
-  --brand-tint-2: oklch(0.92 0.04 276);
-  --brand-text: oklch(0.40 0.18 277);
+  /* Deep teal on warm paper: an accent that is not the default indigo, and a
+     neutral ramp with a little warmth so panels read as paper, not chrome. */
+  --brand: oklch(0.44 0.12 216);
+  --brand-deep: oklch(0.32 0.09 219);
+  --brand-tint: oklch(0.955 0.022 216);
+  --brand-tint-2: oklch(0.90 0.05 216);
+  --brand-text: oklch(0.37 0.11 217);
   --brand-ink: oklch(0.99 0 0);
 
-  --page: oklch(0.975 0.005 270);
-  --surface: oklch(1 0 0);
-  --surface-2: oklch(0.985 0.004 270);
-  --line: oklch(0.92 0.008 270);
-  --line-strong: oklch(0.85 0.012 270);
+  --page: oklch(0.968 0.007 84);
+  --surface: oklch(0.997 0.002 84);
+  --surface-2: oklch(0.975 0.006 84);
+  --line: oklch(0.895 0.009 84);
+  --line-strong: oklch(0.80 0.014 84);
 
-  --ink: oklch(0.17 0.02 275);
-  --ink-2: oklch(0.36 0.02 275);
-  --ink-3: oklch(0.55 0.02 275);
+  --ink: oklch(0.21 0.016 248);
+  --ink-2: oklch(0.40 0.014 248);
+  --ink-3: oklch(0.56 0.013 248);
 
-  --ok: oklch(0.52 0.12 165);
-  --ok-tint: oklch(0.96 0.03 165);
-  --warn: oklch(0.55 0.13 65);
-  --warn-tint: oklch(0.96 0.04 80);
-  --bad: oklch(0.52 0.20 15);
-  --bad-tint: oklch(0.95 0.03 15);
+  --ok: oklch(0.50 0.11 160);
+  --ok-tint: oklch(0.95 0.035 160);
+  --warn: oklch(0.55 0.12 72);
+  --warn-tint: oklch(0.955 0.05 80);
+  --bad: oklch(0.50 0.18 22);
+  --bad-tint: oklch(0.95 0.035 22);
 
-  --shadow-panel: 0 1px 2px oklch(0.17 0.02 275 / 6%), 0 8px 24px -12px oklch(0.17 0.02 275 / 18%);
+  /* Podium metals. One lightness apart so the three steps read in order even
+     in greyscale; the position label is always printed beside them. */
+  --gold: oklch(0.76 0.14 85);
+  --gold-tint: oklch(0.96 0.05 90);
+  --silver: oklch(0.72 0.02 250);
+  --silver-tint: oklch(0.95 0.008 250);
+  --bronze: oklch(0.62 0.10 50);
+  --bronze-tint: oklch(0.95 0.04 55);
+
+  /* Subject tones. Eight hues at one lightness and chroma so none shouts over
+     the others or over the brand: this is a coding system for scanning a grid,
+     not decoration. Never the only signal — the subject's name is always set
+     beside its colour. Assigned by subjectTone() in src/lib/timetable/schedule.ts. */
+  --subject-0: oklch(0.58 0.11 25);
+  --subject-1: oklch(0.60 0.10 62);
+  --subject-2: oklch(0.58 0.10 108);
+  --subject-3: oklch(0.57 0.10 155);
+  --subject-4: oklch(0.58 0.10 196);
+  --subject-5: oklch(0.56 0.11 250);
+  --subject-6: oklch(0.55 0.11 295);
+  --subject-7: oklch(0.57 0.11 340);
+
+  --shadow-panel: 0 1px 2px oklch(0.24 0.02 84 / 7%), 0 10px 28px -14px oklch(0.24 0.02 84 / 22%);
 
   --rail: 64px;
   --topbar: 56px;
@@ -44,22 +68,22 @@
 }
 
 .dark {
-  --brand: oklch(0.62 0.19 276);
-  --brand-deep: oklch(0.32 0.12 278);
-  --brand-tint: oklch(0.25 0.05 276);
-  --brand-tint-2: oklch(0.30 0.07 276);
-  --brand-text: oklch(0.82 0.09 276);
-  --brand-ink: oklch(0.99 0 0);
+  --brand: oklch(0.70 0.11 210);
+  --brand-deep: oklch(0.30 0.08 216);
+  --brand-tint: oklch(0.26 0.05 212);
+  --brand-tint-2: oklch(0.31 0.07 212);
+  --brand-text: oklch(0.85 0.08 210);
+  --brand-ink: oklch(0.16 0.02 216);
 
-  --page: oklch(0.15 0.012 275);
-  --surface: oklch(0.19 0.014 275);
-  --surface-2: oklch(0.22 0.015 275);
-  --line: oklch(0.28 0.015 275);
-  --line-strong: oklch(0.36 0.018 275);
+  --page: oklch(0.155 0.009 250);
+  --surface: oklch(0.198 0.010 250);
+  --surface-2: oklch(0.235 0.011 250);
+  --line: oklch(0.29 0.011 250);
+  --line-strong: oklch(0.38 0.013 250);
 
-  --ink: oklch(0.95 0.008 275);
-  --ink-2: oklch(0.82 0.012 275);
-  --ink-3: oklch(0.64 0.015 275);
+  --ink: oklch(0.95 0.006 250);
+  --ink-2: oklch(0.82 0.009 250);
+  --ink-3: oklch(0.63 0.011 250);
 
   --ok: oklch(0.80 0.14 165);
   --ok-tint: oklch(0.26 0.04 165);
@@ -67,6 +91,23 @@
   --warn-tint: oklch(0.28 0.05 80);
   --bad: oklch(0.74 0.16 15);
   --bad-tint: oklch(0.28 0.06 15);
+
+  --gold: oklch(0.82 0.14 88);
+  --gold-tint: oklch(0.30 0.06 85);
+  --silver: oklch(0.80 0.015 250);
+  --silver-tint: oklch(0.30 0.01 250);
+  --bronze: oklch(0.72 0.11 55);
+  --bronze-tint: oklch(0.30 0.05 50);
+
+  /* Lifted and slightly desaturated for the dark ground; same hue order. */
+  --subject-0: oklch(0.74 0.12 25);
+  --subject-1: oklch(0.78 0.11 62);
+  --subject-2: oklch(0.76 0.11 108);
+  --subject-3: oklch(0.76 0.11 155);
+  --subject-4: oklch(0.76 0.10 196);
+  --subject-5: oklch(0.74 0.11 250);
+  --subject-6: oklch(0.72 0.12 295);
+  --subject-7: oklch(0.74 0.12 340);
 
   --shadow-panel: 0 1px 2px oklch(0 0 0 / 40%), 0 12px 32px -12px oklch(0 0 0 / 60%);
 }
@@ -175,6 +216,12 @@
   --color-warn-tint: var(--warn-tint);
   --color-bad: var(--bad);
   --color-bad-tint: var(--bad-tint);
+  --color-gold: var(--gold);
+  --color-gold-tint: var(--gold-tint);
+  --color-silver: var(--silver);
+  --color-silver-tint: var(--silver-tint);
+  --color-bronze: var(--bronze);
+  --color-bronze-tint: var(--bronze-tint);
 
   /* legacy */
   --color-surface-ring: var(--surface-ring);

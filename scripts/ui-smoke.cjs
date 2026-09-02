@@ -34,8 +34,10 @@ const ROUTES = [
   "dashboard/classes",
   "dashboard/subjects",
   "dashboard/assignments",
+  "dashboard/timetable",
   "dashboard/attendance",
   "dashboard/exams",
+  "dashboard/honours",
   "dashboard/settings",
 ];
 const WIDTHS = [1440, 1000, 390];

@@ -1,12 +1,14 @@
 import {
   BookOpen,
   CalendarCheck,
+  CalendarRange,
   ClipboardCheck,
   ClipboardList,
   GraduationCap,
   LayoutDashboard,
   NotebookPen,
   Settings,
+  Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -29,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "classes", label: "Classes", href: "/dashboard/classes", icon: BookOpen },
       { id: "subjects", label: "Subjects", href: "/dashboard/subjects", icon: NotebookPen },
       { id: "assignments", label: "Teaching", href: "/dashboard/assignments", icon: ClipboardList },
+      { id: "timetable", label: "Timetable", href: "/dashboard/timetable", icon: CalendarRange },
     ],
   },
   {
@@ -36,6 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "attendance", label: "Roll call", href: "/dashboard/attendance", icon: CalendarCheck },
       { id: "exams", label: "Exams", href: "/dashboard/exams", icon: ClipboardCheck },
+      { id: "honours", label: "Honours", href: "/dashboard/honours", icon: Trophy },
     ],
   },
 ];
