@@ -29,6 +29,12 @@ import {
   setAccountRole,
   validateAccount,
 } from "@/lib/auth/registration";
+import {
+  RestoreError,
+  deleteRestorePoint,
+  restoreYear,
+  type RestoreReport,
+} from "@/lib/registry/restore-point";
 
 const ROLES: Role[] = ["ADMIN", "OFFICE", "TEACHER"];
 
@@ -324,4 +330,65 @@ export async function updateHonoursWeights(
   // The Honours page and every student pane show scores built from these.
   revalidatePath("/dashboard", "layout");
   return { success: "Honours weighting saved." };
+}
+
+export type RestoreState = { error?: string; report?: RestoreReport };
+
+/// Brings a deleted year back. The result carries the full RestoreReport
+/// rather than a success string, so the card can show exactly what came back
+/// row for row — a plain "Restored" would hide any skipped rows.
+export async function restoreYearAction(
+  _prev: RestoreState,
+  formData: FormData,
+): Promise<RestoreState> {
+  try {
+    await requireCapability("manage:settings");
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+
+  const id = numericField(formData, "restorePointId");
+  if (id === null) return { error: "Pick a restore point." };
+
+  try {
+    const report = await restoreYear(id);
+    // A restored year changes what every year-scoped page shows.
+    revalidatePath("/dashboard", "layout");
+    return { report };
+  } catch (e) {
+    if (e instanceof RestoreError) return { error: e.message };
+    throw e;
+  }
+}
+
+export type DeleteRestorePointState = { error?: string; success?: string };
+
+export async function deleteRestorePointAction(
+  _prev: DeleteRestorePointState,
+  formData: FormData,
+): Promise<DeleteRestorePointState> {
+  try {
+    await requireCapability("manage:settings");
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+
+  const id = numericField(formData, "restorePointId");
+  if (id === null) return { error: "Pick a restore point." };
+
+  try {
+    await deleteRestorePoint(id);
+  } catch (e) {
+    // deleteRestorePoint has no custom error type; a delete-twice race is the
+    // only realistic failure, surfaced by Prisma as "record not found".
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025") {
+      return { error: "That restore point no longer exists." };
+    }
+    throw e;
+  }
+
+  revalidatePath("/dashboard", "layout");
+  return { success: "Restore point deleted." };
 }

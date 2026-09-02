@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Building2, KeyRound, ShieldCheck, Trophy, Users } from "lucide-react";
+import { Building2, History, KeyRound, ShieldCheck, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, SectionCard } from "@/components/ui/page-shell";
@@ -7,11 +7,13 @@ import { getSchool } from "@/lib/registry/school";
 import { getWeights } from "@/lib/honours/weights";
 import { listAccounts } from "@/lib/auth/registration";
 import { listStaff } from "@/lib/registry/staff";
+import { listRestorePoints } from "@/lib/registry/restore-point";
 import { EmailForm } from "./_components/email-form";
 import { SchoolForm } from "./_components/school-form";
 import { HonoursWeightsForm } from "./_components/honours-weights-form";
 import { Accounts } from "./_components/accounts";
 import { PermissionMatrix } from "./_components/permission-matrix";
+import { RestorePoints } from "./_components/restore-points";
 import { loadGrants, granted } from "@/lib/auth/permissions";
 import {
   CAPABILITIES,
@@ -31,7 +33,7 @@ export default async function SettingsPage() {
 
   // The session carries id and username, but not email — the JWT is issued at
   // sign-in and would go stale the moment the address changes. Read it fresh.
-  const [user, school, accounts, weights] = await Promise.all([
+  const [user, school, accounts, weights, restorePoints] = await Promise.all([
     prisma.user.findUnique({
       where: { id: Number(session.user.id) },
       select: { username: true, email: true, createdAt: true },
@@ -39,6 +41,7 @@ export default async function SettingsPage() {
     getSchool(),
     listAccounts(),
     getWeights(),
+    listRestorePoints(),
   ]);
   const staff = await listStaff();
   const grants = await loadGrants();
@@ -142,6 +145,31 @@ export default async function SettingsPage() {
         description="Tick a box to allow that role into a section. Takes effect on their next page load."
       >
         <PermissionMatrix capabilities={matrix} anyChanged={anyChanged} />
+      </SectionCard>
+
+      <SectionCard
+        icon={History}
+        tint="rose"
+        title="Restore points"
+        description="Captured when an academic year is deleted. Each one is the only copy of that year's data once the year itself is gone — deleting a restore point loses it for good."
+      >
+        <RestorePoints
+          restorePoints={restorePoints.map((p) => ({
+            id: p.id,
+            yearNameBS: p.yearNameBS,
+            takenLabel: `${p.createdAt.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })} at ${p.createdAt.toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`,
+            createdByUsername: p.createdByUsername,
+            payloadBytes: p.payloadBytes,
+            counts: p.counts,
+          }))}
+        />
       </SectionCard>
     </div>
   );
