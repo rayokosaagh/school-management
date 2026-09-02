@@ -5,7 +5,8 @@ import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
 import { useActionToast } from "@/components/ui/toast";
 import type { RolloverOptions, RolloverPlan, StudentDecision } from "@/lib/registry/rollover-plan";
-import { previewRollover, type RolloverResult } from "../actions";
+import { previewRollover, runRollover, type RolloverResult } from "../actions";
+import { ReviewStep } from "./review-step";
 import { StudentsStep } from "./students-step";
 import { YearStep } from "./year-step";
 
@@ -40,6 +41,7 @@ export function RolloverWorkspace({
   const [plan, setPlan] = useState<RolloverPlan | null>(null);
   const [result, setResult] = useState<RolloverResult>({});
   const [pending, startTransition] = useTransition();
+  const [done, setDone] = useState(false);
 
   useActionToast({ error: result.error });
 
@@ -78,6 +80,26 @@ export function RolloverWorkspace({
     const decisions = { ...options.decisions };
     for (const id of studentIds) decisions[id] = decision;
     update({ decisions });
+  };
+
+  const setPlacement = (sourceSectionId: number, targetSectionId: number) => {
+    update({ placements: { ...options.placements, [sourceSectionId]: targetSectionId } });
+  };
+
+  const run = () => {
+    if (targetYearId === null) return;
+    startTransition(async () => {
+      const outcome = await runRollover({
+        sourceYearId: sourceYear.id,
+        targetYearId,
+        options,
+      });
+      setResult(outcome);
+      if (outcome.plan) {
+        setPlan(outcome.plan);
+        setDone(true);
+      }
+    });
   };
 
   return (
@@ -126,7 +148,17 @@ export function RolloverWorkspace({
             onContinue={() => setStep("review")}
           />
         ) : null}
-        {/* Step 3 arrives in the next task. */}
+        {step === "review" && plan ? (
+          <ReviewStep
+            plan={plan}
+            options={options}
+            pending={pending}
+            done={done}
+            onOptions={update}
+            onPlacement={setPlacement}
+            onRun={run}
+          />
+        ) : null}
       </PageFrame.Body>
     </PageFrame>
   );
