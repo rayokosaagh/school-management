@@ -50,13 +50,21 @@ export function YearSwitcher({
 
   if (years.length === 0) {
     return (
-      <Link
-        href="/dashboard/classes"
-        className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
-      >
-        <TriangleAlert className="size-4" />
-        Add an academic year
-      </Link>
+      <div className="flex gap-2 shrink-0">
+        <Link
+          href="/dashboard/classes"
+          className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
+        >
+          <TriangleAlert className="size-4" />
+          Add an academic year
+        </Link>
+        <Link
+          href="/dashboard/rollover"
+          className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
+        >
+          Roll last year into it
+        </Link>
+      </div>
     );
   }
 
