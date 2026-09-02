@@ -27,7 +27,7 @@ const EMPTY: ActionState = {};
 function Pillar({ label, value, weight }: { label: string; value: number | null; weight: number }) {
   return (
     <div className="min-w-0">
-      <dt className="text-ink-3 text-[11.5px]">
+      <dt className="text-ink-3 text-[11px] whitespace-nowrap">
         {label} <span className="font-mono">×{weight}</span>
       </dt>
       <dd className="mt-px font-mono font-medium tabular-nums">
@@ -83,10 +83,10 @@ export function HonoursSections({
           </span>
         </p>
         <dl className="mt-2.5 grid grid-cols-4 gap-x-3">
-          <Pillar label="Exams" value={honours.pillars.exams} weight={w.exams} />
-          <Pillar label="Attend." value={honours.pillars.attendance} weight={w.attendance} />
+          <Pillar label="Exam" value={honours.pillars.exams} weight={w.exams} />
+          <Pillar label="Attend" value={honours.pillars.attendance} weight={w.attendance} />
           <Pillar label="Conduct" value={honours.pillars.conduct} weight={w.conduct} />
-          <Pillar label="Activities" value={honours.pillars.activities} weight={w.activities} />
+          <Pillar label="Activity" value={honours.pillars.activities} weight={w.activities} />
         </dl>
       </DetailPane.Section>
 
