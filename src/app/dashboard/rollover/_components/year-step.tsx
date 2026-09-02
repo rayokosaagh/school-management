@@ -1,0 +1,166 @@
+"use client";
+
+import { AlertTriangle, Info } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Callout } from "@/components/ui/page-shell";
+import { FieldSelect } from "@/components/ui/select";
+import { ROLL_ORDER_LABEL, isRollOrder } from "@/lib/registry/roll-order";
+import type { RolloverOptions, RolloverPlan } from "@/lib/registry/rollover-plan";
+import { addTargetYear } from "../actions";
+import type { YearOption } from "./rollover-workspace";
+
+export function YearStep({
+  sourceYear,
+  years,
+  examTerms,
+  targetYearId,
+  options,
+  plan,
+  pending,
+  onTargetYear,
+  onOptions,
+  onContinue,
+}: {
+  sourceYear: { id: number; nameBS: string };
+  years: YearOption[];
+  examTerms: { id: number; name: string }[];
+  targetYearId: number | null;
+  options: RolloverOptions;
+  plan: RolloverPlan | null;
+  pending: boolean;
+  onTargetYear: (id: number) => void;
+  onOptions: (patch: Partial<RolloverOptions>) => void;
+  onContinue: () => void;
+}) {
+  const [newYear, setNewYear] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <section className="space-y-2">
+        <Label htmlFor="target-year">Roll {sourceYear.nameBS} into</Label>
+        <div className="flex gap-2">
+          <FieldSelect
+            id="target-year"
+            aria-label="Target academic year"
+            value={targetYearId === null ? "" : String(targetYearId)}
+            // base-ui hands back null when a select is cleared.
+            onValueChange={(value) => {
+              if (value) onTargetYear(Number(value));
+            }}
+            placeholder="Choose a year"
+            options={years.map((y) => ({
+              value: String(y.id),
+              label:
+                y.sections === 0
+                  ? `${y.nameBS} — empty`
+                  : `${y.nameBS} — ${y.sections} section(s), ${y.enrollments} student(s)`,
+            }))}
+          />
+        </div>
+        <div className="flex items-end gap-2 pt-2">
+          <div className="space-y-1">
+            <Label htmlFor="new-year">Or create a year</Label>
+            <Input
+              id="new-year"
+              value={newYear}
+              onChange={(e) => setNewYear(e.target.value)}
+              placeholder={String(Number(sourceYear.nameBS) + 1)}
+              inputMode="numeric"
+              className="w-32 font-mono"
+            />
+          </div>
+          <Button
+            variant="secondary"
+            disabled={creating || newYear.trim() === ""}
+            onClick={async () => {
+              setCreating(true);
+              const made = await addTargetYear(newYear.trim());
+              setCreating(false);
+              if (made.id !== undefined) {
+                setNewYear("");
+                onTargetYear(made.id);
+              }
+            }}
+          >
+            {creating ? "Creating…" : "Create"}
+          </Button>
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">
+          What to copy
+        </p>
+        <p className="text-ink-2 text-sm">
+          Sections always copy — promoted students need somewhere to land.
+        </p>
+        {(
+          [
+            ["copyOfferings", "Subject offerings, with their full and pass marks"],
+            ["copyAssignments", "Which teacher takes which subject in which section"],
+            ["copyTimetable", "The weekly timetable"],
+          ] as const
+        ).map(([field, label]) => (
+          <label key={field} className="flex items-center gap-2.5 text-sm">
+            <Checkbox
+              checked={options[field]}
+              onCheckedChange={(checked) => onOptions({ [field]: checked === true })}
+            />
+            {label}
+          </label>
+        ))}
+      </section>
+
+      <section className="space-y-2">
+        <Label htmlFor="roll-order">New roll numbers</Label>
+        <FieldSelect
+          id="roll-order"
+          aria-label="Roll number order"
+          value={options.rollOrder}
+          onValueChange={(value) => {
+            if (value && isRollOrder(value)) onOptions({ rollOrder: value });
+          }}
+          options={Object.entries(ROLL_ORDER_LABEL).map(([value, label]) => ({ value, label }))}
+        />
+        {options.rollOrder === "MARKS" ? (
+          <FieldSelect
+            aria-label="Exam term for roll order"
+            value={options.markOrderExamTermId === null ? "" : String(options.markOrderExamTermId)}
+            onValueChange={(value) => {
+              if (value) onOptions({ markOrderExamTermId: Number(value) });
+            }}
+            placeholder="Choose the exam term"
+            options={examTerms.map((t) => ({ value: String(t.id), label: t.name }))}
+          />
+        ) : null}
+      </section>
+
+      {plan && plan.blockers.length > 0 ? (
+        <Callout icon={AlertTriangle} tint="rose">
+          <ul className="space-y-1">
+            {plan.blockers.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        </Callout>
+      ) : null}
+
+      {plan && plan.blockers.length === 0 ? (
+        <Callout icon={Info} tint="blue">
+          {plan.sections.create} section(s), {plan.offerings.create} offering(s),{" "}
+          {plan.assignments.create} assignment(s) and {plan.timetable.create} timetable period(s)
+          would be created.
+        </Callout>
+      ) : null}
+
+      <Button disabled={targetYearId === null || pending} onClick={onContinue}>
+        Continue to students
+      </Button>
+    </div>
+  );
+}
