@@ -10,12 +10,14 @@ describe("default grants", () => {
     expect(canByDefault("OFFICE", "manage:settings")).toBe(false);
     expect(canByDefault("OFFICE", "manage:registry")).toBe(true);
     expect(canByDefault("OFFICE", "manage:exams")).toBe(true);
+    expect(canByDefault("OFFICE", "record:conduct")).toBe(true);
   });
 
   it("limits a teacher to marks, attendance and viewing by default", () => {
     expect(canByDefault("TEACHER", "enter:marks")).toBe(true);
     expect(canByDefault("TEACHER", "take:attendance")).toBe(true);
     expect(canByDefault("TEACHER", "view:records")).toBe(true);
+    expect(canByDefault("TEACHER", "record:conduct")).toBe(true);
     expect(canByDefault("TEACHER", "manage:registry")).toBe(false);
     expect(canByDefault("TEACHER", "manage:exams")).toBe(false);
     expect(canByDefault("TEACHER", "manage:settings")).toBe(false);
@@ -32,6 +34,7 @@ describe("capabilityFor", () => {
     expect(capabilityFor("/dashboard/students")).toBe("view:records");
     expect(capabilityFor("/dashboard/attendance")).toBe("take:attendance");
     expect(capabilityFor("/dashboard/exams")).toBe("enter:marks");
+    expect(capabilityFor("/dashboard/honours")).toBe("view:records");
   });
 
   it("applies to nested paths, not just the section root", () => {
@@ -47,6 +50,7 @@ describe("capabilityFor", () => {
   it("covers every capability it can grant", () => {
     // A capability nothing routes to would be unreachable from the navigation.
     expect(CAPABILITIES).toContain("view:records");
+    expect(CAPABILITIES).toContain("record:conduct");
     expect(new Set(CAPABILITIES).size).toBe(CAPABILITIES.length);
   });
 });

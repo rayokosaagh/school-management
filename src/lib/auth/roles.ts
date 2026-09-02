@@ -8,12 +8,17 @@ export type Capability =
   | "manage:settings"
   /// Students, staff, grades, sections, subjects, offerings, teaching.
   | "manage:registry"
+  /// Build the weekly class timetable and set the school day.
+  | "manage:timetable"
   /// Create and publish exams.
   | "manage:exams"
   /// Enter marks. Teachers are additionally limited to their own subjects.
   | "enter:marks"
   /// Take attendance. Teachers are additionally limited to their own sections.
   | "take:attendance"
+  /// Record merits, demerits and activity participations. Teachers are limited
+  /// to their own sections.
+  | "record:conduct"
   /// See student and staff records at all.
   | "view:records";
 
@@ -21,25 +26,32 @@ export type Capability =
 export const CAPABILITIES: Capability[] = [
   "manage:settings",
   "manage:registry",
+  "manage:timetable",
   "manage:exams",
   "enter:marks",
   "take:attendance",
+  "record:conduct",
   "view:records",
 ];
 
 export const CAPABILITY_LABEL: Record<Capability, string> = {
   "manage:settings": "School settings and logins",
   "manage:registry": "Students, staff, classes and subjects",
+  "manage:timetable": "Build the class timetable",
   "manage:exams": "Create and publish exams",
   "enter:marks": "Enter marks",
   "take:attendance": "Take attendance",
+  "record:conduct": "Record conduct and activities",
   "view:records": "View student and staff records",
 };
 
 export const CAPABILITY_NOTE: Partial<Record<Capability, string>> = {
   "enter:marks": "Teachers are limited to the subjects assigned to them.",
   "take:attendance": "Teachers are limited to sections they teach or lead.",
+  "record:conduct": "Teachers are limited to sections they teach or lead.",
   "manage:settings": "Includes creating logins and editing this matrix.",
+  "manage:timetable":
+    "Teachers always see their own timetable, whether or not this is granted.",
 };
 
 /// The built-in starting point. The school's own matrix overrides it.
@@ -47,21 +59,25 @@ export const DEFAULT_GRANTS: Record<Role, Capability[]> = {
   ADMIN: [
     "manage:settings",
     "manage:registry",
+    "manage:timetable",
     "manage:exams",
     "enter:marks",
     "take:attendance",
+    "record:conduct",
     "view:records",
   ],
   // Runs the office: every record, but cannot hand out logins or change roles.
   OFFICE: [
     "manage:registry",
+    "manage:timetable",
     "manage:exams",
     "enter:marks",
     "take:attendance",
+    "record:conduct",
     "view:records",
   ],
   // Teaches: marks and attendance for their own classes, and nothing structural.
-  TEACHER: ["enter:marks", "take:attendance", "view:records"],
+  TEACHER: ["enter:marks", "take:attendance", "record:conduct", "view:records"],
 };
 
 /// Default-only check, for places that cannot reach the database — currently
@@ -89,8 +105,10 @@ export const ROUTE_CAPABILITY: { prefix: string; capability: Capability }[] = [
   { prefix: "/dashboard/classes", capability: "manage:registry" },
   { prefix: "/dashboard/subjects", capability: "manage:registry" },
   { prefix: "/dashboard/assignments", capability: "manage:registry" },
+  { prefix: "/dashboard/timetable", capability: "manage:timetable" },
   { prefix: "/dashboard/teachers", capability: "manage:registry" },
   { prefix: "/dashboard/students", capability: "view:records" },
+  { prefix: "/dashboard/honours", capability: "view:records" },
   { prefix: "/dashboard/attendance", capability: "take:attendance" },
   { prefix: "/dashboard/exams", capability: "enter:marks" },
 ];

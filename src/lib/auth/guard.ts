@@ -8,7 +8,7 @@ import type { Actor } from "./scope";
 export class ForbiddenError extends Error {}
 
 export type { Actor };
-export { allowedSectionIds, canEnterMarks, canTakeAttendance } from "./scope";
+export { allowedSectionIds, canEnterMarks, canRecordConduct, canTakeAttendance } from "./scope";
 
 /// Reads the signed-in user from the database rather than the token. The token
 /// is issued at sign-in and would keep a role that has since been changed or

@@ -59,3 +59,23 @@ export async function canTakeAttendance(actor: Actor, sectionId: number) {
   const allowed = await allowedSectionIds(actor);
   return allowed === "all" || allowed.includes(sectionId);
 }
+
+/// Roll numbers belong to the class, so the section's own class teacher may
+/// reorder them as well as anyone who can manage the registry.
+export async function canReorderRolls(actor: Actor, sectionId: number) {
+  if (granted(await loadGrants(), actor.role, "manage:registry")) return true;
+  if (actor.staffId === null) return false;
+
+  const section = await prisma.section.findFirst({
+    where: { id: sectionId, classTeacherId: actor.staffId },
+    select: { id: true },
+  });
+  return section !== null;
+}
+
+/// Conduct and activities follow the attendance rule: a teacher records for
+/// the sections they take the register for. The capability itself is checked
+/// separately by the action.
+export async function canRecordConduct(actor: Actor, sectionId: number) {
+  return canTakeAttendance(actor, sectionId);
+}
