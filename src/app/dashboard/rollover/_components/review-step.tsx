@@ -8,7 +8,7 @@ import { Kpi } from "@/components/ui/kpi";
 import { Callout } from "@/components/ui/page-shell";
 import { FieldSelect } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
-import type { RolloverOptions, RolloverPlan, StageCount } from "@/lib/registry/rollover-plan";
+import type { RolloverOptions, RolloverPlan, SectionKey, StageCount } from "@/lib/registry/rollover-plan";
 
 function stage(count: StageCount) {
   return count.existing === 0 && count.skipped === 0
@@ -37,7 +37,7 @@ export function ReviewStep({
   pending: boolean;
   done: boolean;
   onOptions: (patch: Partial<RolloverOptions>) => void;
-  onPlacement: (sourceSectionId: number, targetSectionId: number) => void;
+  onPlacement: (sourceSectionId: number, targetSectionKey: SectionKey) => void;
   onRun: () => void;
 }) {
   const blocked = plan.blockers.length > 0;
@@ -77,18 +77,14 @@ export function ReviewStep({
           <div className="pt-2">
             <FieldSelect
               aria-label={`Where ${group.label} goes`}
-              value={
-                options.placements[group.sourceSectionId] === undefined
-                  ? ""
-                  : String(options.placements[group.sourceSectionId])
-              }
+              value={options.placements[group.sourceSectionId] ?? ""}
               onValueChange={(value) => {
-                if (value) onPlacement(group.sourceSectionId, Number(value));
+                if (value) onPlacement(group.sourceSectionId, value);
               }}
               placeholder={
                 group.choices.length === 0 ? "No sections in that grade yet" : "Choose a section"
               }
-              options={group.choices.map((c) => ({ value: String(c.id), label: c.label }))}
+              options={group.choices.map((c) => ({ value: c.key, label: c.label }))}
             />
           </div>
         </div>

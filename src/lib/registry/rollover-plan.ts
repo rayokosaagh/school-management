@@ -32,9 +32,10 @@ export type RolloverOptions = {
   markOrderExamTermId: number | null;
   /// studentId -> decision. Absent means PROMOTE.
   decisions: Record<number, StudentDecision>;
-  /// Source section id -> target section id, for promotions with no same-named
-  /// section waiting in the grade above.
-  placements: Record<number, number>;
+  /// Source section id -> target section key, for promotions with no same-named
+  /// section waiting in the grade above. A key rather than an id because the
+  /// chosen section is usually one this same run is about to create.
+  placements: Record<number, SectionKey>;
   makeTargetCurrent: boolean;
 };
 
@@ -133,7 +134,7 @@ export type UnplaceableGroup = {
   sourceSectionId: number;
   label: string;
   count: number;
-  choices: { id: number; label: string }[];
+  choices: { key: SectionKey; label: string }[];
 };
 
 export type RolloverPlan = {
@@ -299,7 +300,6 @@ export function buildPlan(
   const targetIdByKey = new Map(
     snapshot.targetSections.map((s) => [sectionKey(s.gradeId, s.name), s.id] as const),
   );
-  const targetSectionById = new Map(snapshot.targetSections.map((s) => [s.id, s]));
   const alreadyInTarget = new Set(snapshot.studentsAlreadyInTarget);
 
   type Placement = { student: PlannedStudent; kind: "promote" | "retain"; key: SectionKey };
@@ -344,9 +344,10 @@ export function buildPlan(
     let key: SectionKey | null = null;
     const override = decision === "PROMOTE" ? options.placements[from.id] : undefined;
     if (override !== undefined) {
-      const chosen = targetSectionById.get(override);
-      // An override into the wrong grade would silently demote the whole group.
-      if (chosen && chosen.gradeId === gradeId) key = sectionKey(chosen.gradeId, chosen.name);
+      // An override into the wrong grade would silently demote the whole group,
+      // and a key this run neither has nor is about to create is not a choice.
+      const overrideGradeId = Number(override.split(":")[0]);
+      if (plannedSectionKeys.has(override) && overrideGradeId === gradeId) key = override;
     } else {
       const want = sectionKey(gradeId, from.name);
       if (plannedSectionKeys.has(want)) key = want;
@@ -419,9 +420,13 @@ export function buildPlan(
       sourceSectionId,
       label: label(from.gradeId, from.name),
       count: list.length,
-      choices: snapshot.targetSections
-        .filter((t) => t.gradeId === up)
-        .map((t) => ({ id: t.id, label: label(t.gradeId, t.name) })),
+      // The offered choices must include sections this run is about to create
+      // (e.g. Class 3 A copied fresh) — on the normal path into an empty
+      // target year, targetSections alone is always empty.
+      choices: [...plannedSectionKeys]
+        .filter((key) => Number(key.split(":")[0]) === up)
+        .map((key) => ({ key, label: labelForKey(key, gradeById) }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
     };
   });
 

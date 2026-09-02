@@ -4,7 +4,12 @@ import { useEffect, useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
 import { useActionToast } from "@/components/ui/toast";
-import type { RolloverOptions, RolloverPlan, StudentDecision } from "@/lib/registry/rollover-plan";
+import type {
+  RolloverOptions,
+  RolloverPlan,
+  SectionKey,
+  StudentDecision,
+} from "@/lib/registry/rollover-plan";
 import { previewRollover, runRollover, type RolloverResult } from "../actions";
 import { ReviewStep } from "./review-step";
 import { StudentsStep } from "./students-step";
@@ -90,8 +95,8 @@ export function RolloverWorkspace({
     update({ decisions });
   };
 
-  const setPlacement = (sourceSectionId: number, targetSectionId: number) => {
-    update({ placements: { ...options.placements, [sourceSectionId]: targetSectionId } });
+  const setPlacement = (sourceSectionId: number, targetSectionKey: SectionKey) => {
+    update({ placements: { ...options.placements, [sourceSectionId]: targetSectionKey } });
   };
 
   const run = () => {

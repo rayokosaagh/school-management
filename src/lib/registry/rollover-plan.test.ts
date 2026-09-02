@@ -304,6 +304,30 @@ describe("buildPlan — students", () => {
     expect(plan.blockers.join(" ")).toContain("Class 5 B");
   });
 
+  // Regression guard: on the normal rollover path the target year is empty,
+  // so choices built from snapshot.targetSections (rather than the sections
+  // this run is about to create) were always [] and the blocker could never
+  // be cleared from the UI. See rollover-plan.ts UnplaceableGroup.choices.
+  it("offers the grade-above section this run is about to create as a choice, even into an empty target year", () => {
+    const noClass6B = snapshot({
+      sourceSections: [
+        { id: 100, gradeId: 10, name: "A", classTeacherId: null },
+        { id: 102, gradeId: 10, name: "B", classTeacherId: null },
+        { id: 101, gradeId: 11, name: "A", classTeacherId: null },
+      ],
+      targetSections: [],
+      students: [student(9, 102)],
+    });
+    const { plan } = buildPlan(noClass6B, options());
+
+    expect(plan.unplaceable).toHaveLength(1);
+    expect(plan.unplaceable[0]!.choices).not.toEqual([]);
+    expect(plan.unplaceable[0]!.choices).toContainEqual({
+      key: sectionKey(11, "A"),
+      label: "Class 6 A",
+    });
+  });
+
   it("places an unplaceable group once the operator picks a target", () => {
     const noSixB = snapshot({
       sourceSections: [
@@ -313,7 +337,7 @@ describe("buildPlan — students", () => {
       targetSections: [{ id: 201, gradeId: 11, name: "A" }],
       students: [student(9, 100)],
     });
-    const { plan, writes } = buildPlan(noSixB, options({ placements: { 100: 201 } }));
+    const { plan, writes } = buildPlan(noSixB, options({ placements: { 100: sectionKey(11, "A") } }));
 
     expect(plan.unplaceable).toEqual([]);
     expect(plan.blockers).toEqual([]);
