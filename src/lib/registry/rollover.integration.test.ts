@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "@/lib/prisma";
 import { createAcademicYear, setCurrentAcademicYear } from "./academic-year";
-import { planRollover } from "./rollover";
+import { applyRollover, planRollover } from "./rollover";
 import type { RolloverOptions } from "./rollover-plan";
 
 // Talks to the real database. Everything it makes is torn down afterwards, and
@@ -202,5 +202,119 @@ describe.skipIf(!process.env.DB_TESTS)("rollover planning", () => {
       ["Anisha Gurung", 1],
       ["Zenith Rai", 2],
     ]);
+  });
+});
+
+describe.skipIf(!process.env.DB_TESTS)("rollover apply", () => {
+  it("writes the structure and the enrolments in one pass", async () => {
+    const plan = await applyRollover(made.sourceYearId, made.targetYearId, options());
+
+    expect(plan.sections.create).toBe(4);
+
+    const [sections, offerings, assignments, periods, enrollments] = await Promise.all([
+      prisma.section.count({ where: { academicYearId: made.targetYearId } }),
+      prisma.subjectOffering.count({ where: { academicYearId: made.targetYearId } }),
+      prisma.teacherAssignment.count({
+        where: { section: { academicYearId: made.targetYearId } },
+      }),
+      prisma.timetablePeriod.count({ where: { section: { academicYearId: made.targetYearId } } }),
+      prisma.enrollment.count({ where: { academicYearId: made.targetYearId } }),
+    ]);
+
+    expect(sections).toBe(4);
+    expect(offerings).toBe(1);
+    expect(assignments).toBe(1);
+    expect(periods).toBe(1);
+    expect(enrollments).toBe(2);
+  });
+
+  it("carries the class teacher onto the copied section", async () => {
+    const section = await prisma.section.findFirst({
+      where: { academicYearId: made.targetYearId, name: "A", grade: { name: LOWER } },
+    });
+
+    expect(section?.classTeacherId).toBe(made.staffIds[0]);
+  });
+
+  it("numbers the promoted students 1..n in the new section", async () => {
+    const rolls = await prisma.enrollment.findMany({
+      where: { academicYearId: made.targetYearId },
+      include: { student: { select: { fullName: true } } },
+      orderBy: { rollNo: "asc" },
+    });
+
+    expect(rolls.map((r) => [r.student.fullName, r.rollNo])).toEqual([
+      ["Anisha Gurung", 1],
+      ["Zenith Rai", 2],
+    ]);
+  });
+
+  it("creates nothing on a second run", async () => {
+    const plan = await applyRollover(made.sourceYearId, made.targetYearId, options());
+
+    expect(plan.sections).toMatchObject({ create: 0, existing: 4 });
+    expect(plan.offerings).toMatchObject({ create: 0, existing: 1 });
+    expect(plan.assignments).toMatchObject({ create: 0, existing: 1 });
+    expect(plan.timetable).toMatchObject({ create: 0, existing: 1 });
+    expect(await prisma.enrollment.count({ where: { academicYearId: made.targetYearId } })).toBe(2);
+  });
+
+  it("refuses once the target year has attendance", async () => {
+    const section = await prisma.section.findFirst({
+      where: { academicYearId: made.targetYearId },
+    });
+    const session = await prisma.attendanceSession.create({
+      data: {
+        sectionId: section!.id,
+        academicYearId: made.targetYearId,
+        date: new Date("2035-04-15"),
+      },
+    });
+
+    // try/finally: an undeleted session (if the assertion below throws) would
+    // otherwise leak into the next test as unrelated "target has activity" noise.
+    try {
+      await expect(
+        applyRollover(made.sourceYearId, made.targetYearId, options()),
+      ).rejects.toThrow(/attendance or marks/);
+    } finally {
+      await prisma.attendanceSession.delete({ where: { id: session.id } });
+    }
+  });
+
+  it("graduates the top grade and leaves a departing student unenrolled", async () => {
+    // A third student, in the upper grade, so promotion means graduation.
+    const student = await prisma.student.create({
+      data: {
+        admissionNo: "__ro-top",
+        firstName: "Top",
+        lastName: "Leaver",
+        fullName: "Top Leaver",
+        dob: new Date("2010-01-01"),
+        gender: "FEMALE",
+        admittedOn: new Date("2023-01-01"),
+      },
+    });
+    made.studentIds.push(student.id);
+    const upperA = made.sectionIds[2]!;
+    await prisma.enrollment.create({
+      data: {
+        studentId: student.id,
+        sectionId: upperA,
+        academicYearId: made.sourceYearId,
+        rollNo: 1,
+        enrolledOn: new Date("2023-01-01"),
+      },
+    });
+
+    await applyRollover(made.sourceYearId, made.targetYearId, options());
+
+    const after = await prisma.student.findUnique({ where: { id: student.id } });
+    expect(after?.status).toBe("GRADUATED");
+    expect(
+      await prisma.enrollment.count({
+        where: { studentId: student.id, academicYearId: made.targetYearId },
+      }),
+    ).toBe(0);
   });
 });

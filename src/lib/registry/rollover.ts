@@ -222,3 +222,138 @@ export async function planRollover(
   const snapshot = await loadSnapshot(sourceYearId, targetYearId, options.markOrderExamTermId);
   return buildPlan(snapshot, options).plan;
 }
+
+/// Runs the whole rollover as one unit. It re-plans from its own read rather
+/// than trusting a plan posted from the browser, so a preview that has gone
+/// stale cannot write stale rows.
+export async function applyRollover(
+  sourceYearId: number,
+  targetYearId: number,
+  options: RolloverOptions,
+): Promise<RolloverPlan> {
+  const snapshot = await loadSnapshot(sourceYearId, targetYearId, options.markOrderExamTermId);
+  const { plan, writes } = buildPlan(snapshot, options);
+  if (plan.blockers.length > 0) throw new RolloverError(plan.blockers[0]!);
+
+  await prisma.$transaction(
+    async (tx) => {
+      // Sections first: every later stage addresses its rows through them.
+      const sectionIdByKey = new Map(
+        snapshot.targetSections.map((s) => [sectionKey(s.gradeId, s.name), s.id] as const),
+      );
+      for (const s of writes.sections) {
+        const created = await tx.section.create({
+          data: {
+            name: s.name,
+            gradeId: s.gradeId,
+            academicYearId: targetYearId,
+            classTeacherId: s.classTeacherId,
+          },
+        });
+        sectionIdByKey.set(s.key, created.id);
+      }
+
+      const offeringIdByKey = new Map<string, number>();
+      const existingOfferings = await tx.subjectOffering.findMany({
+        where: { academicYearId: targetYearId },
+      });
+      for (const o of existingOfferings) {
+        offeringIdByKey.set(offeringKey(o.subjectId, o.gradeId), o.id);
+      }
+      for (const o of writes.offerings) {
+        const created = await tx.subjectOffering.create({
+          data: {
+            subjectId: o.subjectId,
+            gradeId: o.gradeId,
+            academicYearId: targetYearId,
+            hasPractical: o.hasPractical,
+            fullMarksTheory: o.fullMarksTheory,
+            passMarksTheory: o.passMarksTheory,
+            fullMarksPractical: o.fullMarksPractical,
+            passMarksPractical: o.passMarksPractical,
+          },
+        });
+        offeringIdByKey.set(o.key, created.id);
+      }
+
+      const assignmentIdByKey = new Map<string, number>();
+      const existingAssignments = await tx.teacherAssignment.findMany({
+        where: { section: { academicYearId: targetYearId } },
+        include: { section: true, subjectOffering: true },
+      });
+      for (const a of existingAssignments) {
+        assignmentIdByKey.set(
+          assignmentKey(
+            a.staffId,
+            sectionKey(a.section.gradeId, a.section.name),
+            offeringKey(a.subjectOffering.subjectId, a.subjectOffering.gradeId),
+          ),
+          a.id,
+        );
+      }
+      for (const a of writes.assignments) {
+        const sectionId = sectionIdByKey.get(a.sectionKey);
+        const subjectOfferingId = offeringIdByKey.get(a.offeringKey);
+        if (sectionId === undefined || subjectOfferingId === undefined) continue;
+        const created = await tx.teacherAssignment.create({
+          data: { staffId: a.staffId, sectionId, subjectOfferingId },
+        });
+        assignmentIdByKey.set(a.key, created.id);
+      }
+
+      for (const p of writes.periods) {
+        const teacherAssignmentId = assignmentIdByKey.get(p.assignmentKey);
+        const sectionId = sectionIdByKey.get(p.sectionKey);
+        if (teacherAssignmentId === undefined || sectionId === undefined) continue;
+        await tx.timetablePeriod.create({
+          data: {
+            teacherAssignmentId,
+            sectionId,
+            schoolPeriodId: p.schoolPeriodId,
+            dayOfWeek: p.dayOfWeek,
+            room: p.room,
+          },
+        });
+      }
+
+      // One date for the whole run, so a rolled-over cohort reads as one event.
+      const enrolledOn = new Date();
+      for (const e of writes.enrollments) {
+        const sectionId = sectionIdByKey.get(e.sectionKey);
+        if (sectionId === undefined) continue;
+        await tx.enrollment.create({
+          data: {
+            studentId: e.studentId,
+            sectionId,
+            academicYearId: targetYearId,
+            rollNo: e.rollNo,
+            enrolledOn,
+          },
+        });
+      }
+
+      if (writes.graduateIds.length > 0) {
+        await tx.student.updateMany({
+          where: { id: { in: writes.graduateIds } },
+          data: { status: "GRADUATED" },
+        });
+      }
+      if (writes.leaveIds.length > 0) {
+        await tx.student.updateMany({
+          where: { id: { in: writes.leaveIds } },
+          data: { status: "LEFT" },
+        });
+      }
+
+      if (options.makeTargetCurrent) {
+        await tx.academicYear.updateMany({ where: { isCurrent: true }, data: { isCurrent: false } });
+        await tx.academicYear.update({ where: { id: targetYearId }, data: { isCurrent: true } });
+      }
+    },
+    // Hundreds of sequential inserts on a school-sized year; the default 5s
+    // interactive limit is not enough.
+    { timeout: 120_000, maxWait: 10_000 },
+  );
+
+  return plan;
+}
