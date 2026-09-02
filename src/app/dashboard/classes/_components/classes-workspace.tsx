@@ -1,0 +1,322 @@
+"use client";
+
+import type { ColumnDef } from "@tanstack/react-table";
+import { BookOpen, Layers, Pencil, Plus, Search } from "lucide-react";
+import { startTransition, useId, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
+import { Modal } from "@/components/ui/modal";
+import { PageFrame } from "@/components/ui/page-frame";
+import {
+  RegisterTabs,
+  registerTabId,
+  type RegisterTab,
+} from "@/components/ui/register-tabs";
+import { Segmented } from "@/components/ui/segmented";
+import { FieldSelect } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { useToastedActionState } from "@/components/ui/toast";
+import { shortGrade } from "@/lib/registry/grade-label";
+import { assignClassTeacher } from "@/app/dashboard/teachers/actions";
+import { AddGradeForm, AddSectionForm, AddYearForm } from "./classes-forms";
+import { CODE } from "@/lib/record-code";
+import {
+  GradeDetail,
+  SectionDetail,
+  YearsView,
+  type GradeRow,
+  type SectionRow,
+  type YearRow,
+} from "./classes-view";
+
+const ALL = "all";
+
+export function ClassesWorkspace({
+  years,
+  grades,
+  sections,
+  staff,
+  exams,
+  academicYearId,
+  yearLabel,
+}: {
+  years: YearRow[];
+  grades: GradeRow[];
+  sections: SectionRow[];
+  staff: { id: number; fullName: string }[];
+  exams: { id: number; name: string }[];
+  academicYearId: number | null;
+  yearLabel: string;
+}) {
+  const baseId = useId();
+  const panelId = `${baseId}-panel`;
+
+  const ordered = useMemo(
+    () => [...grades].sort((a, b) => a.order - b.order),
+    [grades],
+  );
+
+  const [view, setView] = useState<"structure" | "years">("structure");
+  const [tab, setTab] = useState(ordered[0] ? String(ordered[0].id) : ALL);
+  const [query, setQuery] = useState("");
+  const [editingGrade, setEditingGrade] = useState<GradeRow | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
+  const [, assignAction] = useToastedActionState(assignClassTeacher, {});
+
+  // Controlled, so revalidation feeding a new teacher down cannot fight an
+  // uncontrolled select's initial value.
+  const [chosen, setChosen] = useState<Record<number, string>>({});
+
+  const teacherOptions = useMemo(
+    () => [
+      { value: "", label: "No class teacher" },
+      ...staff.map((s) => ({ value: String(s.id), label: s.fullName })),
+    ],
+    [staff],
+  );
+
+  function assign(sectionId: number, next: string | null) {
+    setChosen((prev) => ({ ...prev, [sectionId]: next ?? "" }));
+    const data = new FormData();
+    data.set("sectionId", String(sectionId));
+    data.set("classTeacherId", next ?? "");
+    startTransition(() => assignAction(data));
+  }
+
+  const tabs = useMemo<RegisterTab[]>(() => {
+    const counts = new Map<number, number>();
+    for (const s of sections) counts.set(s.gradeId, (counts.get(s.gradeId) ?? 0) + 1);
+    return [
+      { id: ALL, code: "ALL", label: "All grades", count: sections.length },
+      ...ordered.map((g) => {
+        const n = counts.get(g.id) ?? 0;
+        return {
+          id: String(g.id),
+          code: shortGrade(g.name),
+          label: g.name,
+          count: n,
+          empty: n === 0,
+        };
+      }),
+    ];
+  }, [ordered, sections]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return sections.filter((s) => {
+      if (tab !== ALL && String(s.gradeId) !== tab) return false;
+      if (q && !`${s.gradeName} ${s.name} ${s.classTeacher ?? ""}`.toLowerCase().includes(q))
+        return false;
+      return true;
+    });
+  }, [sections, tab, query]);
+
+  const grade = ordered.find((g) => String(g.id) === tab) ?? null;
+
+  const columns = useMemo<ColumnDef<SectionRow, unknown>[]>(
+    () => [
+      {
+        id: "recordId",
+        accessorFn: (row) => row.id,
+        header: "ID",
+        meta: { mono: true, width: "96px" } satisfies ColumnMeta,
+        cell: ({ row }) => <span className="text-ink-3">{CODE.section(row.original.id)}</span>,
+      },
+      {
+        id: "section",
+        accessorFn: (row) => `${row.gradeName} ${row.name}`,
+        header: "Class",
+        enableHiding: false,
+        cell: ({ row }) => (
+          <span className="font-medium">
+            {row.original.gradeName} {row.original.name}
+          </span>
+        ),
+      },
+      {
+        id: "classTeacher",
+        header: "Class teacher",
+        enableSorting: false,
+        meta: { width: "240px" } satisfies ColumnMeta,
+        cell: ({ row }) => (
+          <FieldSelect
+            value={
+              chosen[row.original.id] ??
+              (row.original.classTeacherId ? String(row.original.classTeacherId) : "")
+            }
+            onValueChange={(next) => assign(row.original.id, next)}
+            aria-label={`Class teacher for ${row.original.gradeName} ${row.original.name}`}
+            className="h-8 w-full rounded-lg"
+            options={teacherOptions}
+          />
+        ),
+      },
+      {
+        id: "students",
+        accessorKey: "students",
+        header: "Students",
+        meta: { numeric: true, mono: true, width: "96px" } satisfies ColumnMeta,
+      },
+    ],
+    // assign is stable for a render; chosen drives the value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [chosen, teacherOptions],
+  );
+
+  return (
+    <PageFrame
+      eyebrow="Structure"
+      title="Classes"
+      meta={`${grades.length} grades · ${sections.length} sections · ${yearLabel}`}
+      actions={
+        <div className="flex items-center gap-2">
+          <Segmented
+            ariaLabel="View"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "structure" as const, label: "Structure", count: sections.length },
+              { value: "years" as const, label: "Years", count: years.length },
+            ]}
+          />
+          <Sheet>
+            <SheetTrigger render={<Button size="sm" />}>
+              <Plus data-icon="inline-start" aria-hidden="true" />
+              Add
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+              <SheetHeader>
+                <SheetTitle>Add to the structure</SheetTitle>
+                <SheetDescription>
+                  A grade is school-wide; its sections belong to one year.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="space-y-6 px-4 pb-6">
+                <div className="space-y-3">
+                  <p className="text-sm font-medium">New academic year</p>
+                  <AddYearForm />
+                </div>
+                <div className="border-line space-y-3 border-t pt-5">
+                  <p className="text-sm font-medium">New grade</p>
+                  <AddGradeForm />
+                </div>
+                {academicYearId ? (
+                  <div className="border-line space-y-3 border-t pt-5">
+                    <p className="text-sm font-medium">New section in {yearLabel}</p>
+                    <AddSectionForm grades={grades} academicYearId={academicYearId} />
+                  </div>
+                ) : null}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      }
+    >
+      {view === "years" ? (
+        <PageFrame.Body>
+          <YearsView rows={years} />
+        </PageFrame.Body>
+      ) : (
+        <>
+          <PageFrame.Tabs>
+            <RegisterTabs
+              tabs={tabs}
+              value={tab}
+              onChange={setTab}
+              ariaLabel="Grades"
+              baseId={baseId}
+              panelId={panelId}
+            />
+          </PageFrame.Tabs>
+
+          <PageFrame.Toolbar>
+            <label className="border-line bg-surface text-ink-3 flex h-8 min-w-[220px] shrink-0 items-center gap-2 rounded-lg border px-2.5">
+              <Search className="size-3.5" aria-hidden="true" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search section or teacher"
+                aria-label="Search section or teacher"
+                className="h-7 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
+              />
+            </label>
+            {grade ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingGrade(grade)}
+              >
+                <Pencil data-icon="inline-start" aria-hidden="true" />
+                Edit {grade.name}
+              </Button>
+            ) : null}
+            <span className="flex-1" />
+            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+              {visible.length} section{visible.length === 1 ? "" : "s"}
+            </span>
+          </PageFrame.Toolbar>
+
+          <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, tab)}>
+            <DataTable<SectionRow>
+              id="sections"
+              columns={columns}
+              rows={visible}
+              getRowId={(r) => String(r.id)}
+              onSelect={(row) => setEditingSection(row)}
+              initialSort={[{ id: "section", desc: false }]}
+              empty={{
+                icon: sections.length === 0 ? Layers : BookOpen,
+                title: sections.length === 0 ? "No sections yet" : "No sections match",
+                description:
+                  sections.length === 0
+                    ? "Add a grade, then a section for this year."
+                    : "Try another grade or search.",
+              }}
+            />
+          </PageFrame.Body>
+        </>
+      )}
+
+      <Modal
+        open={editingGrade !== null}
+        title={editingGrade?.name ?? ""}
+        onClose={() => setEditingGrade(null)}
+      >
+        {editingGrade ? (
+          <GradeDetail
+            key={editingGrade.id}
+            row={editingGrade}
+            onDone={() => setEditingGrade(null)}
+          />
+        ) : null}
+      </Modal>
+
+      <Modal
+        open={editingSection !== null}
+        title={
+          editingSection ? `${editingSection.gradeName} ${editingSection.name}` : ""
+        }
+        onClose={() => setEditingSection(null)}
+      >
+        {editingSection ? (
+          <SectionDetail
+            key={editingSection.id}
+            row={editingSection}
+            exams={exams}
+            onDone={() => setEditingSection(null)}
+          />
+        ) : null}
+      </Modal>
+    </PageFrame>
+  );
+}

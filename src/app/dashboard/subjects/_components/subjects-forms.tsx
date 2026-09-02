@@ -22,14 +22,10 @@ export function AddSubjectForm() {
 
   return (
     <form action={action} className="space-y-2">
-      <div className="grid grid-cols-[1fr_8rem_auto] items-end gap-2">
+      <div className="grid grid-cols-[1fr_auto] items-end gap-2">
         <div className="space-y-2">
           <Label htmlFor="subject-name">Subject</Label>
           <Input id="subject-name" name="name" placeholder="Compulsory Maths" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="subject-code">Code</Label>
-          <Input id="subject-code" name="code" placeholder="MATH" required />
         </div>
         <Button type="submit" disabled={pending}>
           {pending ? "Adding…" : "Add"}
@@ -45,7 +41,7 @@ export function AddOfferingForm({
   grades,
   academicYearId,
 }: {
-  subjects: { id: number; name: string; code: string }[];
+  subjects: { id: number; name: string }[];
   grades: { id: number; name: string }[];
   academicYearId: number;
 }) {
@@ -65,7 +61,7 @@ export function AddOfferingForm({
             required
             options={subjects.map((s) => ({
               value: String(s.id),
-              label: `${s.name} (${s.code})`,
+              label: s.name,
             }))}
             defaultValue={subjects[0] ? String(subjects[0].id) : undefined}
             placeholder="Choose a subject"

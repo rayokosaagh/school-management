@@ -1,7 +1,8 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useId } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /// The DOM id of one tab button. A page that wants its panel labelled by the
@@ -52,6 +53,46 @@ export function RegisterTabs({
   const generatedId = useId();
   const baseId = baseIdProp ?? generatedId;
 
+  const scroller = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState({ left: false, right: false });
+
+  const measure = useCallback(() => {
+    const box = scroller.current;
+    if (!box) return;
+    const max = box.scrollWidth - box.clientWidth;
+    setCanScroll({ left: box.scrollLeft > 1, right: box.scrollLeft < max - 1 });
+  }, []);
+
+  function nudge(direction: 1 | -1) {
+    const box = scroller.current;
+    if (!box) return;
+    box.scrollBy({ left: direction * Math.max(160, box.clientWidth * 0.6), behavior: "smooth" });
+  }
+
+  // Re-measure when the strip or its container changes size, not only on scroll.
+  useEffect(() => {
+    const box = scroller.current;
+    if (!box) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    for (const child of box.children) observer.observe(child);
+    return () => observer.disconnect();
+  }, [measure, tabs.length]);
+
+  // Keep the selected tab on screen: arrow-key navigation and a selection made
+  // elsewhere both have to be able to reach a tab past the edge. Scrolled by
+  // hand rather than scrollIntoView, which would also move the page vertically.
+  useEffect(() => {
+    const box = scroller.current;
+    const tab = box?.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(value)}"]`);
+    if (!box || !tab) return;
+    const b = box.getBoundingClientRect();
+    const t = tab.getBoundingClientRect();
+    if (t.left < b.left) box.scrollLeft -= b.left - t.left + 12;
+    else if (t.right > b.right) box.scrollLeft += t.right - b.right + 12;
+  }, [value]);
+
   function onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     const i = tabs.findIndex((t) => t.id === value);
     if (i < 0) return;
@@ -63,8 +104,50 @@ export function RegisterTabs({
   }
 
   return (
-    <div className={cn("border-line overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
-      <div role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown} className="flex min-w-max items-end gap-0.5">
+    <div className={cn("border-line relative border-b", className)}>
+      {/* The scrollbar is hidden by design, so an overflowing strip needs its
+          own affordance — without these, tabs past the edge are unreachable
+          by mouse. */}
+      {canScroll.left ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="from-page pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r to-transparent"
+          />
+          <button
+            type="button"
+            onClick={() => nudge(-1)}
+            aria-label="Scroll tabs left"
+            className="border-line bg-surface text-ink-2 hover:text-ink focus-visible:ring-ring/50 absolute top-1/2 left-0 z-20 grid size-6 -translate-y-1/2 place-items-center rounded-full border shadow-sm focus-visible:ring-3 focus-visible:outline-none"
+          >
+            <ChevronLeft className="size-3.5" />
+          </button>
+        </>
+      ) : null}
+
+      {canScroll.right ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="from-page pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l to-transparent"
+          />
+          <button
+            type="button"
+            onClick={() => nudge(1)}
+            aria-label="Scroll tabs right"
+            className="border-line bg-surface text-ink-2 hover:text-ink focus-visible:ring-ring/50 absolute top-1/2 right-0 z-20 grid size-6 -translate-y-1/2 place-items-center rounded-full border shadow-sm focus-visible:ring-3 focus-visible:outline-none"
+          >
+            <ChevronRight className="size-3.5" />
+          </button>
+        </>
+      ) : null}
+
+      <div
+        ref={scroller}
+        onScroll={measure}
+        className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown} className="flex min-w-max items-end gap-0.5">
         {tabs.map((tab) => {
           const selected = tab.id === value;
           return (
@@ -73,6 +156,7 @@ export function RegisterTabs({
               type="button"
               role="tab"
               id={registerTabId(baseId, tab.id)}
+              data-tab-id={tab.id}
               aria-selected={selected}
               aria-controls={panelId}
               tabIndex={selected ? 0 : -1}
@@ -107,6 +191,7 @@ export function RegisterTabs({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

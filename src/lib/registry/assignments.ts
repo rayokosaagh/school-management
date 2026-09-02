@@ -71,11 +71,35 @@ export async function setSubjectTeacher(
   }
 
   return prisma.$transaction(async (tx) => {
-    await tx.teacherAssignment.deleteMany({ where: { sectionId, subjectOfferingId } });
-    if (staffId === null) return null;
-    return tx.teacherAssignment.create({
-      data: { staffId, sectionId, subjectOfferingId },
+    if (staffId === null) {
+      await tx.teacherAssignment.deleteMany({ where: { sectionId, subjectOfferingId } });
+      return null;
+    }
+
+    // The assignment is moved to the new teacher, not replaced. TimetablePeriod
+    // cascades from it, so deleting and recreating the row would silently wipe
+    // every lesson already scheduled for this subject — the timetable would
+    // empty itself every time somebody changed who teaches a class.
+    const [keep, ...duplicates] = await tx.teacherAssignment.findMany({
+      where: { sectionId, subjectOfferingId },
+      orderBy: { id: "asc" },
+      select: { id: true },
     });
+
+    // One teacher per subject per section is a service rule, not a schema one,
+    // so any extra rows from before it held are cleared out here.
+    if (duplicates.length > 0) {
+      await tx.teacherAssignment.deleteMany({
+        where: { id: { in: duplicates.map((row) => row.id) } },
+      });
+    }
+
+    if (!keep) {
+      return tx.teacherAssignment.create({
+        data: { staffId, sectionId, subjectOfferingId },
+      });
+    }
+    return tx.teacherAssignment.update({ where: { id: keep.id }, data: { staffId } });
   });
 }
 

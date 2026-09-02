@@ -18,8 +18,8 @@ export function listSubjects() {
   });
 }
 
-export function createSubject({ name, code }: { name: string; code: string }) {
-  return prisma.subject.create({ data: { name, code } });
+export function createSubject({ name }: { name: string }) {
+  return prisma.subject.create({ data: { name } });
 }
 
 /// A subject still taught somewhere cannot be removed; retire the offering first.
@@ -72,7 +72,7 @@ export async function deleteOffering(id: number) {
   return prisma.subjectOffering.delete({ where: { id } });
 }
 
-export function updateSubject(id: number, data: { name: string; code: string }) {
+export function updateSubject(id: number, data: { name: string }) {
   return prisma.subject.update({ where: { id }, data });
 }
 

@@ -25,6 +25,7 @@ const made = {
   studentIds: [] as number[],
   offeringIds: [] as number[],
   subjectIds: [] as number[],
+  subjectNames: [] as string[],
   sectionId: 0,
   gradeId: 0,
   otherGradeId: 0,
@@ -184,9 +185,11 @@ describe.skipIf(!process.env.DB_TESTS)("registry vertical slice", () => {
   });
 
   it("offers subjects to a grade with their mark schemes", async () => {
-    const maths = await createSubject({ name: "__smoke Maths", code: `SMK${Date.now() % 100000}` });
-    const science = await createSubject({ name: "__smoke Science", code: `SSC${Date.now() % 100000}` });
+    const stamp = Date.now() % 100000;
+    const maths = await createSubject({ name: `__smoke Maths ${stamp}` });
+    const science = await createSubject({ name: `__smoke Science ${stamp}` });
     made.subjectIds.push(maths.id, science.id);
+    made.subjectNames.push(maths.name, science.name);
 
     const theoryOnly = await createOffering({
       subjectId: maths.id,
@@ -223,10 +226,9 @@ describe.skipIf(!process.env.DB_TESTS)("registry vertical slice", () => {
     const rows = await listOfferings(made.yearId);
     expect(rows).toHaveLength(2);
     expect(rows[0].grade.name).toBe(GRADE);
-    expect(rows.map((r) => r.subject.name).sort()).toEqual([
-      "__smoke Maths",
-      "__smoke Science",
-    ]);
+    expect(rows.map((r) => r.subject.name).sort()).toEqual(
+      [...made.subjectNames].sort(),
+    );
   });
 
   it("refuses to delete a subject that is still offered", async () => {

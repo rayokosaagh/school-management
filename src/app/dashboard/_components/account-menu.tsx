@@ -48,52 +48,70 @@ export function AccountMenu({
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        aria-label={`Account menu: ${username}, ${roleLabel}`}
-        className="bg-brand-tint-2 text-brand-text focus-visible:ring-ring/50 ml-1 grid size-[30px] place-items-center rounded-full text-xs font-semibold uppercase focus-visible:ring-3 focus-visible:outline-none"
-      >
-        {username.slice(0, 2)}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex flex-col">
-          <span className="truncate font-medium">{username}</span>
-          <span className="text-ink-3 text-xs font-normal">{roleLabel}</span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {overflow.length > 0 ? (
-          <>
-            <DropdownMenuGroup className="shell:hidden">
-              {overflow.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <DropdownMenuItem key={item.id} render={<Link href={item.href} />}>
-                    <Icon className="size-4" aria-hidden="true" />
-                    {item.label}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator className="shell:hidden" />
-          </>
-        ) : null}
-        {allowed.includes(SETTINGS.id) ? (
-          <DropdownMenuItem render={<Link href={SETTINGS.href} />}>
-            <SETTINGS.icon className="size-4" aria-hidden="true" />
-            Settings
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label={`Account menu: ${username}, ${roleLabel}`}
+          className="bg-brand-tint-2 text-brand-text focus-visible:ring-ring/50 ml-1 grid size-[30px] place-items-center rounded-full text-xs font-semibold uppercase focus-visible:ring-3 focus-visible:outline-none"
+        >
+          {username.slice(0, 2)}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="flex flex-col">
+            <span className="truncate font-medium">{username}</span>
+            <span className="text-ink-3 text-xs font-normal">{roleLabel}</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {overflow.length > 0 ? (
+            <>
+              <DropdownMenuGroup className="shell:hidden">
+                {overflow.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={item.id}
+                      render={<Link href={item.href} />}
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                      {item.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator className="shell:hidden" />
+            </>
+          ) : null}
+          {allowed.includes(SETTINGS.id) ? (
+            <DropdownMenuItem render={<Link href={SETTINGS.href} />}>
+              <SETTINGS.icon className="size-4" aria-hidden="true" />
+              Settings
+            </DropdownMenuItem>
+          ) : null}
+          <DropdownMenuItem onClick={toggleTheme}>
+            <Sun className="size-4 dark:hidden" aria-hidden="true" />
+            <Moon className="hidden size-4 dark:block" aria-hidden="true" />
+            Switch theme
           </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem onClick={toggleTheme}>
-          <Sun className="size-4 dark:hidden" aria-hidden="true" />
-          <Moon className="hidden size-4 dark:block" aria-hidden="true" />
-          Switch theme
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logOut} disabled={signingOut}>
-          <LogOut className="size-4" aria-hidden="true" />
-          {signingOut ? "Signing out…" : "Sign out"}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={logOut} disabled={signingOut}>
+            <LogOut className="size-4" aria-hidden="true" />
+            {signingOut ? "Signing out…" : "Sign out"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <button
+        type="button"
+        onClick={logOut}
+        disabled={signingOut}
+        aria-label={signingOut ? "Signing out" : "Sign out"}
+        title="Sign out"
+        className="text-ink-2 hover:bg-page focus-visible:ring-ring/50 inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:ring-3 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+      >
+        <LogOut className="size-4" aria-hidden="true" />
+        <span className="hidden shell:inline">
+          {signingOut ? "Signing out..." : "Sign out"}
+        </span>
+      </button>
+    </>
   );
 }

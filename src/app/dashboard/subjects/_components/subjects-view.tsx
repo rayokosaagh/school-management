@@ -29,14 +29,12 @@ export type SubjectRow = {
   gradeNames?: string[];
   id: number;
   name: string;
-  code: string;
   offerings: number;
 };
 
 export type OfferingRow = {
   id: number;
   subjectName: string;
-  subjectCode: string;
   gradeName: string;
   gradeOrder: number;
   hasPractical: boolean;
@@ -47,23 +45,17 @@ export type OfferingRow = {
   assignments: number;
 };
 
-function SubjectDetail({ row, onDone }: { row: SubjectRow; onDone: () => void }) {
+export function SubjectDetail({ row, onDone }: { row: SubjectRow; onDone: () => void }) {
   const [editState, editAction, saving] = useToastedActionState(editSubject, EMPTY);
   const [delState, delAction, deleting] = useToastedActionState(removeSubject, EMPTY);
 
   return (
     <div className="space-y-5">
-      <form key={`${row.name}-${row.code}`} action={editAction} className="space-y-4">
+      <form key={row.name} action={editAction} className="space-y-4">
         <input type="hidden" name="subjectId" value={row.id} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor={`subn-${row.id}`}>Subject</Label>
-            <Input id={`subn-${row.id}`} name="name" defaultValue={row.name} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor={`subc-${row.id}`}>Code</Label>
-            <Input id={`subc-${row.id}`} name="code" defaultValue={row.code} required />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor={`subn-${row.id}`}>Subject</Label>
+          <Input id={`subn-${row.id}`} name="name" defaultValue={row.name} required />
         </div>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
@@ -204,13 +196,12 @@ export function SubjectsView({ rows }: { rows: SubjectRow[] }) {
       density="compact"
       rows={rows}
       getKey={(r) => r.id}
-      getSearchText={(r) => `${r.name} ${r.code}`}
-      searchPlaceholder="Subject or code"
+      getSearchText={(r) => r.name}
+      searchPlaceholder="Search subjects"
       empty="No subjects yet."
       detailTitle={(r) => r.name}
       columns={[
-        { key: "name", header: "Subject", span: 3, render: (r) => <span className="font-medium">{r.name}</span> },
-        { key: "code", header: "Code", span: 2, render: (r) => <span className="tabular-nums">{r.code}</span> },
+        { key: "name", header: "Subject", span: 5, render: (r) => <span className="font-medium">{r.name}</span> },
         {
           key: "offered",
           header: "Offered in",

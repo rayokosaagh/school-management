@@ -34,17 +34,13 @@ export async function addSubject(
   await requireSession();
 
   const name = String(formData.get("name") ?? "").trim();
-  const code = String(formData.get("code") ?? "").trim().toUpperCase();
-
   if (name.length < 2) return { error: "Enter the subject name." };
-  if (!/^[A-Z0-9-]{2,12}$/.test(code)) {
-    return { error: "Code should be 2–12 letters, digits or hyphens." };
-  }
 
   try {
-    await createSubject({ name, code });
+    await createSubject({ name });
   } catch (e) {
-    if (isDuplicate(e)) return { error: `Code ${code} is already used.` };
+    // Name is the only unique field now, so this is the one clash left.
+    if (isDuplicate(e)) return { error: `${name} is already a subject.` };
     throw e;
   }
 
@@ -164,20 +160,16 @@ export async function editSubject(
 ): Promise<ActionState> {
   await requireSession();
 
-  const id = Number(formData.get("subjectId"));
+  const id = numericField(formData, "subjectId");
   const name = String(formData.get("name") ?? "").trim();
-  const code = String(formData.get("code") ?? "").trim().toUpperCase();
 
-  if (!Number.isInteger(id)) return { error: "Pick a subject." };
+  if (id === null) return { error: "Pick a subject." };
   if (name.length < 2) return { error: "Enter the subject name." };
-  if (!/^[A-Z0-9-]{2,12}$/.test(code)) {
-    return { error: "Code should be 2–12 letters, digits or hyphens." };
-  }
 
   try {
-    await updateSubject(id, { name, code });
+    await updateSubject(id, { name });
   } catch (e) {
-    if (isDuplicate(e)) return { error: `Code ${code} is already used.` };
+    if (isDuplicate(e)) return { error: `${name} is already a subject.` };
     throw e;
   }
 

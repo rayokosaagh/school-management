@@ -19,6 +19,7 @@ import { removeStaff, toggleStaffActive, type ActionState } from "../actions";
 import { StaffPane, StaffPaneSkeleton, StaffStatus } from "./staff-pane";
 import type { StaffRow } from "./staff-detail";
 import { AddStaffForm } from "./teachers-forms";
+import { CODE } from "@/lib/record-code";
 
 const ALL = "all";
 const EMPTY: ActionState = {};
@@ -121,6 +122,7 @@ export function StaffWorkspace({
 
   const columns = useMemo<ColumnDef<StaffRow, unknown>[]>(
     () => [
+      { id: "recordId", accessorFn: (r) => r.id, header: "ID", meta: { mono: true, width: "96px" } satisfies ColumnMeta, cell: ({ row }) => <span className="text-ink-3">{CODE.staff(row.original.id)}</span> },
       { id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false, cell: ({ row }) => (
         <span className="font-medium">{row.original.fullName}{row.original.fullNameNp ? <span className="font-devanagari text-ink-3 block text-[11.5px] leading-tight font-normal">{row.original.fullNameNp}</span> : null}</span>
       ) },

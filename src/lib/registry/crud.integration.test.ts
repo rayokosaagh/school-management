@@ -69,7 +69,7 @@ beforeAll(async () => {
   ).id;
 
   made.subjectId = (
-    await createSubject({ name: "__crud Nepali", code: `CRD${Date.now() % 100000}` })
+    await createSubject({ name: `__crud Nepali ${Date.now() % 100000}` })
   ).id;
 
   made.offeringId = (

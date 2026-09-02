@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { BsDateField } from "@/components/ui/bs-date-field";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { RecordTable, StatusPill } from "@/components/ui/record-table";
+import { CODE } from "@/lib/record-code";
 import {
   type ActionState,
   addExamTerm,
@@ -169,11 +170,17 @@ export function ExamsView({ rows }: { rows: ExamRow[] }) {
         },
       ]}
       columns={[
-        { key: "name", header: "Exam", span: 4, render: (r) => <span className="font-medium">{r.name}</span> },
+        {
+          key: "recordId",
+          header: "ID",
+          span: 2,
+          render: (r) => <span className="text-ink-3 font-mono text-[12px]">{CODE.exam(r.id)}</span>,
+        },
+        { key: "name", header: "Exam", span: 3, render: (r) => <span className="font-medium">{r.name}</span> },
         {
           key: "span",
           header: "Dates",
-          span: 4,
+          span: 3,
           hideOnMobile: true,
           render: (r) => <span className="tabular-nums">{r.span}</span>,
         },

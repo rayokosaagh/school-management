@@ -21,7 +21,10 @@ import {
   renameSection,
   updateGrade,
 } from "@/lib/registry/structure";
-import { resequenceRolls } from "@/lib/registry/students";
+import { reorderRolls, resequenceRolls } from "@/lib/registry/students";
+import { ROLL_ORDER_LABEL, isRollOrder } from "@/lib/registry/roll-order";
+import { canReorderRolls } from "@/lib/auth/scope";
+import { currentActor } from "@/lib/auth/guard";
 import { numericField } from "@/lib/form";
 
 export type ActionState = { error?: string; success?: string };
@@ -314,5 +317,50 @@ export async function renumberSectionRolls(
       count === 0
         ? "Nobody is enrolled in that section."
         : `Roll numbers now run 1 to ${count}.`,
+  };
+}
+
+export async function reorderSectionRolls(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actor = await currentActor();
+  if (!actor) return { error: "You are not signed in." };
+
+  const sectionId = numericField(formData, "sectionId");
+  if (sectionId === null) return { error: "Pick a section." };
+
+  const order = String(formData.get("order") ?? "");
+  if (!isRollOrder(order)) return { error: "Pick how the roll should be ordered." };
+
+  // Admins and the office may reorder any section; a teacher only the class
+  // they lead.
+  if (!(await canReorderRolls(actor, sectionId))) {
+    return { error: "Only an administrator or this section's class teacher can do that." };
+  }
+
+  const section = await getSection(sectionId);
+  if (!section) return { error: "That section no longer exists." };
+
+  const examTermId = numericField(formData, "examTermId");
+  if (order === "MARKS" && examTermId === null) {
+    return { error: "Pick the exam to rank by." };
+  }
+
+  let count = 0;
+  try {
+    count = await reorderRolls(sectionId, section.academicYearId, order, examTermId);
+  } catch (e) {
+    if (e instanceof Error) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  revalidatePath("/dashboard/students");
+  return {
+    success:
+      count === 0
+        ? "Nobody is enrolled in that section."
+        : `Roll numbers reissued 1 to ${count}, ${ROLL_ORDER_LABEL[order].toLowerCase()}.`,
   };
 }

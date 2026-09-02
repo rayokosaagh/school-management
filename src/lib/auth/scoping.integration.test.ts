@@ -47,8 +47,8 @@ beforeAll(async () => {
   ).id;
 
   const stamp = Date.now() % 100000;
-  const maths = await createSubject({ name: "__scope Maths", code: `SC${stamp}` });
-  const science = await createSubject({ name: "__scope Science", code: `SD${stamp}` });
+  const maths = await createSubject({ name: `__scope Maths ${stamp}` });
+  const science = await createSubject({ name: `__scope Science ${stamp}` });
   made.subjectIds.push(maths.id, science.id);
 
   const offering = (subjectId: number) =>

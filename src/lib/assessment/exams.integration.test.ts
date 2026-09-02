@@ -39,8 +39,8 @@ beforeAll(async () => {
   ).id;
 
   const stamp = Date.now() % 100000;
-  const maths = await createSubject({ name: "__exam Maths", code: `XM${stamp}` });
-  const science = await createSubject({ name: "__exam Science", code: `XS${stamp}` });
+  const maths = await createSubject({ name: `__exam Maths ${stamp}` });
+  const science = await createSubject({ name: `__exam Science ${stamp}` });
   made.subjectIds.push(maths.id, science.id);
 
   // Theory only, out of 100, pass 40.

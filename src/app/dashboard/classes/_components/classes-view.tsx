@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 import { useToastedActionState } from "@/components/ui/toast";
-import { ArrowDown, ArrowUp, ListOrdered } from "lucide-react";
+import { ROLL_ORDER_LABEL, type RollOrder } from "@/lib/registry/roll-order";
+import { ArrowDown, ArrowDownAZ, ArrowUp, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FieldSelect } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
@@ -17,6 +21,7 @@ import {
   removeGrade,
   removeSection,
   renumberSectionRolls,
+  reorderSectionRolls,
   reorderGrade,
   tidyGradeOrder,
 } from "../actions";
@@ -150,13 +155,27 @@ export function GradeDetail({ row, onDone }: { row: GradeRow; onDone: () => void
   );
 }
 
-export function SectionDetail({ row, onDone }: { row: SectionRow; onDone: () => void }) {
+export function SectionDetail({
+  row,
+  exams,
+  onDone,
+}: {
+  row: SectionRow;
+  /// Exams for this year, so a roll can be ranked by one of them.
+  exams: { id: number; name: string }[];
+  onDone: () => void;
+}) {
   const [editState, editAction, saving] = useToastedActionState(editSection, EMPTY);
   const [delState, delAction, deleting] = useToastedActionState(removeSection, EMPTY);
   const [, renumberAction, renumbering] = useToastedActionState(
     renumberSectionRolls,
     EMPTY,
   );
+  const [reorderState, reorderAction, reordering] = useToastedActionState(
+    reorderSectionRolls,
+    EMPTY,
+  );
+  const [order, setOrder] = useState<RollOrder>("ALPHABETICAL");
 
   return (
     <div className="space-y-5">
@@ -191,6 +210,44 @@ export function SectionDetail({ row, onDone }: { row: SectionRow; onDone: () => 
           order. Moves and deletions already close their own gaps; this is for
           rolls that drifted before that.
         </p>
+
+        <form action={reorderAction} className="border-line space-y-2 border-t pt-4">
+          <p className="text-sm font-medium">Reissue in a different order</p>
+          <input type="hidden" name="sectionId" value={row.id} />
+          <div className="flex flex-wrap items-end gap-2">
+            <FieldSelect
+              name="order"
+              aria-label="Roll order"
+              value={order}
+              onValueChange={(next) => setOrder((next as RollOrder) ?? "ALPHABETICAL")}
+              className="h-9 w-56"
+              options={(Object.keys(ROLL_ORDER_LABEL) as RollOrder[]).map((key) => ({
+                value: key,
+                label: ROLL_ORDER_LABEL[key],
+              }))}
+            />
+            {order === "MARKS" ? (
+              <FieldSelect
+                name="examTermId"
+                aria-label="Exam to rank by"
+                defaultValue={exams[0] ? String(exams[0].id) : undefined}
+                className="h-9 w-48"
+                placeholder="Choose an exam"
+                options={exams.map((e) => ({ value: String(e.id), label: e.name }))}
+              />
+            ) : null}
+            <Button type="submit" variant="outline" disabled={reordering || row.students === 0}>
+              <ArrowDownAZ />
+              {reordering ? "Reissuing…" : "Reissue"}
+            </Button>
+          </div>
+          <Status state={reorderState} />
+          <p className="text-muted-foreground text-xs">
+            {order === "MARKS" && exams.length === 0
+              ? "No exams exist for this year yet, so there is nothing to rank by."
+              : "Every student is given a new roll number in this order. The class teacher of this section can do this too."}
+          </p>
+        </form>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t pt-4">

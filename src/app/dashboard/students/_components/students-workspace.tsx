@@ -21,6 +21,7 @@ import { removeStudent, type ActionState } from "../actions";
 import { StudentPane, StudentPaneSkeleton, STATUS_LABEL, STATUS_TONE } from "./student-pane";
 import type { StudentDetailData } from "./student-detail";
 import { AddStudentForm } from "./student-form";
+import { studentCode } from "@/lib/record-code";
 
 export type StudentRow = StudentDetailData & {
   rollNo: number;
@@ -135,9 +136,36 @@ export function StudentsWorkspace({
     });
   }
 
-  const columns = useMemo<ColumnDef<StudentRow, unknown>[]>(
-    () => [
-      { id: "rollNo", accessorKey: "rollNo", header: "Roll", enableHiding: false, meta: { numeric: true, mono: true, width: "64px" } satisfies ColumnMeta },
+  const columns = useMemo<ColumnDef<StudentRow, unknown>[]>(() => {
+    const rollColumn: ColumnDef<StudentRow, unknown> = {
+      id: "rollNo",
+      accessorKey: "rollNo",
+      header: "Roll",
+      enableHiding: false,
+      meta: { numeric: true, mono: true, width: "64px" } satisfies ColumnMeta,
+    };
+
+    const recordIdColumn: ColumnDef<StudentRow, unknown> = {
+      id: "recordId",
+      // Sorted on the admission number itself, so the order matches the code
+      // on screen. Numeric where it can be, so 9 comes before 10.
+      accessorFn: (r) =>
+        /^\d+$/.test(r.admissionNo.trim())
+          ? Number(r.admissionNo)
+          : Number.MAX_SAFE_INTEGER,
+      header: "ID",
+      enableHiding: false,
+      meta: { mono: true, width: "96px" } satisfies ColumnMeta,
+      cell: ({ row }) => (
+        <span className="text-ink-3">{studentCode(row.original.admissionNo)}</span>
+      ),
+    };
+
+    return [
+      // Across every section the roll number repeats, so the unique id leads
+      // and the roll follows; inside one section the roll is the natural first
+      // column and the id steps back.
+      ...(tab === ALL ? [recordIdColumn, rollColumn] : [rollColumn, recordIdColumn]),
       {
         id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false,
         cell: ({ row }) => (
@@ -147,8 +175,7 @@ export function StudentsWorkspace({
           </span>
         ),
       },
-      { id: "section", accessorKey: "sectionLabel", header: "Section", cell: ({ getValue }) => <span className="text-ink-2">{String(getValue())}</span> },
-      { id: "admissionNo", accessorKey: "admissionNo", header: "Admission", meta: { numeric: true, mono: true } satisfies ColumnMeta },
+      { id: "section", accessorKey: "sectionLabel", header: "Class", cell: ({ getValue }) => <span className="text-ink-2">{String(getValue())}</span> },
       { id: "dob", accessorKey: "dobLabel", header: "Born (BS)", meta: { mono: true } satisfies ColumnMeta },
       { id: "guardian", accessorKey: "guardianLabel", header: "Guardian", cell: ({ row }) => {
         const g = row.original.guardians.find((x) => x.isPrimary) ?? row.original.guardians[0];
@@ -156,9 +183,8 @@ export function StudentsWorkspace({
       } },
       { id: "strip", header: "Last 14 days", enableSorting: false, cell: ({ row }) => <AttendanceStrip days={row.original.strip} percent={stripPercent(row.original.strip)} /> },
       { id: "status", accessorKey: "status", header: "Status", cell: ({ getValue }) => { const s = String(getValue()); return <StatusDot tone={STATUS_TONE[s] ?? "neutral"}>{STATUS_LABEL[s] ?? s}</StatusDot>; } },
-    ],
-    [],
-  );
+    ];
+  }, [tab]);
 
   const currentTabLabel = tabs.find((t) => t.id === tab)?.label ?? "All sections";
   const exportHref = tab === ALL ? "/api/export/students" : `/api/export/students?section=${tab}`;
@@ -233,7 +259,7 @@ export function StudentsWorkspace({
             selectedId={optimisticId == null ? null : String(optimisticId)}
             onSelect={select}
             rowActions={(row) => <DeleteRowButton row={row} />}
-            initialSort={[{ id: "rollNo", desc: false }]}
+            initialSort={[{ id: "recordId", desc: false }]}
             empty={{
               icon: rows.length === 0 ? UserPlus : GraduationCap,
               title: rows.length === 0 ? "No students admitted yet" : "No students match",

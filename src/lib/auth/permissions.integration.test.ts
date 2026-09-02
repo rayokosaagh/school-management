@@ -87,12 +87,16 @@ describe.skipIf(!process.env.DB_TESTS)("permission matrix", () => {
   });
 
   it("ignores stored rows for capabilities that no longer exist", async () => {
+    // Deliberately not a real capability. It was "manage:timetable" until that
+    // one shipped, which is the point: this test has to name something the
+    // code does not know, so the assertion below guards the premise.
+    const retired = "manage:cafeteria";
     await prisma.rolePermission.create({
-      data: { role: "OFFICE", capability: "manage:timetable", granted: true },
+      data: { role: "OFFICE", capability: retired, granted: true },
     });
     // Nothing throws, and the unknown capability is simply not in the set.
     const grants = await readGrants();
-    expect(CAPABILITIES).not.toContain("manage:timetable");
+    expect(CAPABILITIES).not.toContain(retired);
     // The office keeps exactly its defaults; the unknown row changes nothing.
     expect(granted(grants, "OFFICE", "manage:registry")).toBe(true);
     expect(granted(grants, "OFFICE", "manage:settings")).toBe(false);
