@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
 import { useActionToast } from "@/components/ui/toast";
-import type { RolloverOptions, RolloverPlan } from "@/lib/registry/rollover-plan";
+import type { RolloverOptions, RolloverPlan, StudentDecision } from "@/lib/registry/rollover-plan";
 import { previewRollover, type RolloverResult } from "../actions";
+import { StudentsStep } from "./students-step";
 import { YearStep } from "./year-step";
 
 export type YearOption = { id: number; nameBS: string; sections: number; enrollments: number };
@@ -69,6 +70,16 @@ export function RolloverWorkspace({
     refresh(merged, targetYearId);
   };
 
+  const setDecision = (studentId: number, decision: StudentDecision) => {
+    update({ decisions: { ...options.decisions, [studentId]: decision } });
+  };
+
+  const setBulk = (studentIds: number[], decision: StudentDecision) => {
+    const decisions = { ...options.decisions };
+    for (const id of studentIds) decisions[id] = decision;
+    update({ decisions });
+  };
+
   return (
     <PageFrame
       eyebrow="School"
@@ -107,7 +118,15 @@ export function RolloverWorkspace({
             onContinue={() => setStep("students")}
           />
         ) : null}
-        {/* Steps 2 and 3 arrive in the next two tasks. */}
+        {step === "students" && plan ? (
+          <StudentsStep
+            plan={plan}
+            onDecision={setDecision}
+            onBulk={setBulk}
+            onContinue={() => setStep("review")}
+          />
+        ) : null}
+        {/* Step 3 arrives in the next task. */}
       </PageFrame.Body>
     </PageFrame>
   );
