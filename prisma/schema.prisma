@@ -49,6 +49,7 @@ model User {
   staff              Staff?
   conductRecorded    ConductEntry[]
   activitiesRecorded ActivityEntry[]
+  restorePoints      RestorePoint[]
 }
 
 // ---------------------------------------------------------------------------
@@ -210,7 +211,11 @@ model TimetablePeriod {
   schoolPeriod SchoolPeriod      @relation(fields: [schoolPeriodId], references: [id], onDelete: Cascade)
 
   @@unique([sectionId, dayOfWeek, schoolPeriodId])
-  @@unique([teacherAssignmentId, dayOfWeek, schoolPeriodId])
+  // Pinned: the live index name was hand-shortened (dropped the trailing "Id")
+  // to fit Postgres's 63-byte identifier limit when this migration was hand-
+  // written. Mapping it here keeps the schema in agreement with the database
+  // instead of Prisma proposing a rename to its own longer default.
+  @@unique([teacherAssignmentId, dayOfWeek, schoolPeriodId], map: "TimetablePeriod_teacherAssignmentId_dayOfWeek_schoolPeriod_key")
   @@index([dayOfWeek])
 }
 
@@ -472,4 +477,30 @@ enum ActivityLevel {
   PARTICIPATED
   PLACED
   WON
+}
+
+// ---------------------------------------------------------------------------
+// Year teardown — deleting an academic year and everything recorded in it,
+// only after a restore point is captured. See docs/superpowers/specs.
+// ---------------------------------------------------------------------------
+
+/// A year's rows, captured before that year was deleted, so it can be brought
+/// back. Held in the database rather than a file so it travels with the
+/// school's existing backups.
+model RestorePoint {
+  id          Int      @id @default(autoincrement())
+  /// Kept as plain values rather than a relation: the year this names is gone
+  /// by the time anyone needs the snapshot.
+  yearNameBS  String
+  startsOn    DateTime @db.Date
+  endsOn      DateTime @db.Date
+  createdAt   DateTime @default(now())
+  createdById Int?
+  /// Row counts per table, so the list reads without parsing the payload.
+  counts      Json
+  /// Every captured row, keyed by table, each carrying its original id.
+  payload     Json
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }
