@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getStudentHonours, type StudentHonours } from "@/lib/honours/honours";
 import type { Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
 import { composeFullName, type NameParts } from "./names";
 import { studentCalendar } from "@/lib/attendance/attendance";
@@ -6,6 +7,7 @@ import { attendancePercent, lastDays, stripFromCalendar } from "@/lib/attendance
 import { getStudentMarksheets } from "@/lib/assessment/exams";
 import { formatBs, toBsInput } from "@/lib/date/bs";
 import type { DayStatus } from "@/lib/attendance/strip";
+import { orderForRoll, type RollOrder } from "./roll-order";
 
 export type GuardianInput = {
   relation: GuardianRelation;
@@ -286,6 +288,7 @@ export type StudentSummary = {
   guardians: { id: number; relation: string; fullName: string; phone: string; occupation: string | null; isPrimary: boolean }[];
   attendance: { percent: number | null; recorded: number; days: DayStatus[] };
   exams: { termId: number; name: string; isPublished: boolean; percent: number | null; gpa: number | null }[];
+  honours: StudentHonours | null;
   history: { year: string; sectionLabel: string; rollNo: number; enrolledOnBs: string }[];
 };
 
@@ -302,9 +305,10 @@ export async function getStudentSummary(
   const current = student.enrollments.find((e) => e.academicYearId === academicYearId) ?? null;
   const year = current?.academicYear ?? null;
 
-  const [records, sheets] = await Promise.all([
+  const [records, sheets, honours] = await Promise.all([
     year ? studentCalendar(studentId, year.startsOn, year.endsOn) : Promise.resolve([]),
     getStudentMarksheets(studentId),
+    current ? getStudentHonours(studentId, academicYearId) : Promise.resolve(null),
   ]);
 
   const days = lastDays(today, 14);
@@ -338,6 +342,7 @@ export async function getStudentSummary(
       percent: s.result.overall.percent == null ? null : Math.round(s.result.overall.percent),
       gpa: s.result.overall.gpa == null ? null : Math.round(s.result.overall.gpa * 100) / 100,
     })),
+    honours,
     history: student.enrollments.map((e) => ({
       year: e.academicYear.nameBS,
       sectionLabel: label(e),
@@ -345,4 +350,67 @@ export async function getStudentSummary(
       enrolledOnBs: formatBs(e.enrolledOn, "YYYY-MM-DD"),
     })),
   };
+}
+
+/// Hands out roll numbers 1..n in the chosen order. Marks ordering needs an
+/// exam term; the other orders ignore it.
+///
+/// Roll numbers are unique per section and year, so every row is parked on a
+/// negative number before the new ones are written — the same two-pass trick
+/// `resequenceRolls` uses, for the same reason.
+export async function reorderRolls(
+  sectionId: number,
+  academicYearId: number,
+  order: RollOrder,
+  examTermId?: number | null,
+) {
+  const enrollments = await prisma.enrollment.findMany({
+    where: { sectionId, academicYearId },
+    select: {
+      id: true,
+      student: { select: { id: true, fullName: true, admissionNo: true } },
+    },
+  });
+  if (enrollments.length === 0) return 0;
+
+  const totals = new Map<number, number>();
+  if (order === "MARKS") {
+    if (!examTermId) throw new Error("Pick the exam to rank by.");
+    const marks = await prisma.mark.findMany({
+      where: {
+        examTermId,
+        studentId: { in: enrollments.map((e) => e.student.id) },
+        isAbsent: false,
+      },
+      select: { studentId: true, theory: true, practical: true },
+    });
+    for (const mark of marks) {
+      // A subject with nothing entered contributes nothing rather than a zero.
+      const scored = (mark.theory ?? 0) + (mark.practical ?? 0);
+      if (mark.theory === null && mark.practical === null) continue;
+      totals.set(mark.studentId, (totals.get(mark.studentId) ?? 0) + scored);
+    }
+  }
+
+  const ordered = orderForRoll(
+    enrollments.map((e) => ({
+      enrollmentId: e.id,
+      fullName: e.student.fullName,
+      admissionNo: e.student.admissionNo,
+      total: totals.get(e.student.id) ?? null,
+    })),
+    order,
+  );
+
+  await prisma.$transaction(async (tx) => {
+    let parking = -1;
+    for (const row of ordered) {
+      await tx.enrollment.update({ where: { id: row.enrollmentId }, data: { rollNo: parking-- } });
+    }
+    for (const [index, row] of ordered.entries()) {
+      await tx.enrollment.update({ where: { id: row.enrollmentId }, data: { rollNo: index + 1 } });
+    }
+  });
+
+  return ordered.length;
 }

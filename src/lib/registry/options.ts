@@ -29,3 +29,14 @@ export function sectionOptions(
     label: `${s.grade.name} ${s.name}`,
   }));
 }
+
+export const CONDUCT_KIND_OPTIONS: SelectOption[] = [
+  { value: "MERIT", label: "Merit" },
+  { value: "DEMERIT", label: "Demerit" },
+];
+
+export const ACTIVITY_LEVEL_OPTIONS: SelectOption[] = [
+  { value: "PARTICIPATED", label: "Participated" },
+  { value: "PLACED", label: "Placed" },
+  { value: "WON", label: "Won" },
+];

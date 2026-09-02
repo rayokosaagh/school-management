@@ -10,16 +10,14 @@ import { StatusDot } from "@/components/ui/status-dot";
 import type { StudentSummary } from "@/lib/registry/students";
 import { StudentDetail, type StudentDetailData } from "./student-detail";
 import { StudentPhotoForm } from "./photo-form";
+import { HonoursSections } from "./honours-sections";
+import { StudentAvatar, initialsOf } from "@/components/ui/student-avatar";
 
 const RELATION: Record<string, string> = { FATHER: "Father", MOTHER: "Mother", GUARDIAN: "Guardian" };
 const GENDER: Record<string, string> = { MALE: "Male", FEMALE: "Female", OTHER: "Other" };
 /// Shared with the table so a status reads the same in both places.
 export const STATUS_TONE: Record<string, "ok" | "neutral" | "warn"> = { ACTIVE: "ok", LEFT: "neutral", GRADUATED: "warn" };
 export const STATUS_LABEL: Record<string, string> = { ACTIVE: "Active", LEFT: "Left", GRADUATED: "Graduated" };
-
-function initialsOf(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
-}
 
 export function StudentPaneSkeleton() {
   return (
@@ -62,14 +60,7 @@ export function StudentPane({
         </>
       }
       initials={initialsOf(summary.fullName)}
-      photo={
-        summary.photoId ? (
-          // Served from our own route; next/image would add no value for a
-          // one-off private thumbnail. Falls back to the initials tile.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/photo/${summary.photoId}`} alt="" className="size-13 shrink-0 rounded-xl object-cover" />
-        ) : undefined
-      }
+      photo={summary.photoId ? <StudentAvatar photoId={summary.photoId} name={summary.fullName} /> : undefined}
       actions={
         <>
           <Button size="sm" variant={editing ? "outline" : "default"} onClick={() => setEditing((v) => !v)}>
@@ -157,6 +148,8 @@ export function StudentPane({
               </ul>
             )}
           </DetailPane.Section>
+
+          {summary.honours ? <HonoursSections studentId={summary.studentId} honours={summary.honours} /> : null}
 
           <DetailPane.Section label="History">
             <ul className="space-y-1.5 text-[12.5px]">

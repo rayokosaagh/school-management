@@ -1,10 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ForbiddenError, requireCapability } from "@/lib/auth/guard";
+import { ForbiddenError, canRecordConduct, requireCapability } from "@/lib/auth/guard";
+import { prisma } from "@/lib/prisma";
+import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
+import {
+  HonoursError,
+  activityEntryStudent,
+  addActivity,
+  addConduct,
+  conductEntryStudent,
+  deleteActivity,
+  deleteConduct,
+} from "@/lib/honours/entries";
 import { PhotoError, clearStudentPhoto, setStudentPhoto } from "@/lib/registry/photos";
 import { Prisma } from "@/generated/prisma/client";
-import type { Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
+import type { ActivityLevel, ConductKind, Gender, GuardianRelation, StudentStatus } from "@/generated/prisma/enums";
 import { parseBsInput } from "@/lib/date/bs";
 import { NAME_MESSAGES, readNameParts, validateName } from "@/lib/registry/names";
 import { numericField } from "@/lib/form";
@@ -277,4 +288,156 @@ export async function saveStudentPhoto(
 
   revalidatePath(PATH);
   return { success: "Photo saved." };
+}
+
+const CONDUCT_KINDS: ConductKind[] = ["MERIT", "DEMERIT"];
+const ACTIVITY_LEVELS: ActivityLevel[] = ["PARTICIPATED", "PLACED", "WON"];
+
+/// The capability, then the scope: a teacher records only for the sections
+/// they take the register for. Returns what the write needs, or the message
+/// to show.
+async function recordingContext(studentId: number) {
+  const actor = await requireCapability("record:conduct");
+  const year = await getCurrentAcademicYear();
+  if (!year) return { error: "No academic year is current." } as const;
+
+  const enrolment = await prisma.enrollment.findUnique({
+    where: { studentId_academicYearId: { studentId, academicYearId: year.id } },
+    select: { sectionId: true },
+  });
+  if (!enrolment) return { error: "That student is not enrolled this year." } as const;
+
+  if (!(await canRecordConduct(actor, enrolment.sectionId))) {
+    return { error: "Only teachers of this student's section can record for them." } as const;
+  }
+  return { actor, year } as const;
+}
+
+function readDate(formData: FormData, year: { startsOn: Date; endsOn: Date }) {
+  const date = parseBsInput(String(formData.get("dateBs") ?? ""));
+  if (!date) return { error: "Enter a valid date (YYYY-MM-DD in BS)." } as const;
+  if (date < year.startsOn || date > year.endsOn) {
+    return { error: "The date must fall within the current academic year." } as const;
+  }
+  return { date } as const;
+}
+
+export async function saveConduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const studentId = numericField(formData, "studentId");
+  if (studentId === null) return { error: "Pick a student." };
+
+  let context;
+  try {
+    context = await recordingContext(studentId);
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+  if ("error" in context) return { error: context.error };
+
+  const kind = String(formData.get("kind") ?? "") as ConductKind;
+  if (!CONDUCT_KINDS.includes(kind)) return { error: "Pick merit or demerit." };
+  const points = Number(String(formData.get("points") ?? "").trim());
+  const when = readDate(formData, context.year);
+  if ("error" in when) return { error: when.error };
+
+  try {
+    await addConduct({
+      studentId,
+      academicYearId: context.year.id,
+      kind,
+      points,
+      date: when.date,
+      note: String(formData.get("note") ?? ""),
+      recordedById: context.actor.userId,
+    });
+  } catch (e) {
+    if (e instanceof HonoursError) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  revalidatePath("/dashboard/honours");
+  return { success: kind === "MERIT" ? "Merit recorded." : "Demerit recorded." };
+}
+
+export async function removeConduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const id = numericField(formData, "conductId");
+  if (id === null) return { error: "Pick an entry." };
+  const studentId = await conductEntryStudent(id);
+  if (studentId === null) return { error: "That entry is already gone." };
+
+  let context;
+  try {
+    context = await recordingContext(studentId);
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+  if ("error" in context) return { error: context.error };
+
+  await deleteConduct(id);
+  revalidatePath(PATH);
+  revalidatePath("/dashboard/honours");
+  return { success: "Entry removed." };
+}
+
+export async function saveActivity(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const studentId = numericField(formData, "studentId");
+  if (studentId === null) return { error: "Pick a student." };
+
+  let context;
+  try {
+    context = await recordingContext(studentId);
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+  if ("error" in context) return { error: context.error };
+
+  const level = String(formData.get("level") ?? "") as ActivityLevel;
+  if (!ACTIVITY_LEVELS.includes(level)) return { error: "Pick how they did." };
+  const points = Number(String(formData.get("points") ?? "").trim());
+  const when = readDate(formData, context.year);
+  if ("error" in when) return { error: when.error };
+
+  try {
+    await addActivity({
+      studentId,
+      academicYearId: context.year.id,
+      name: String(formData.get("name") ?? ""),
+      level,
+      points,
+      date: when.date,
+      recordedById: context.actor.userId,
+    });
+  } catch (e) {
+    if (e instanceof HonoursError) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  revalidatePath("/dashboard/honours");
+  return { success: "Activity recorded." };
+}
+
+export async function removeActivity(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const id = numericField(formData, "activityId");
+  if (id === null) return { error: "Pick an entry." };
+  const studentId = await activityEntryStudent(id);
+  if (studentId === null) return { error: "That entry is already gone." };
+
+  let context;
+  try {
+    context = await recordingContext(studentId);
+  } catch (e) {
+    if (e instanceof ForbiddenError) return { error: e.message };
+    throw e;
+  }
+  if ("error" in context) return { error: context.error };
+
+  await deleteActivity(id);
+  revalidatePath(PATH);
+  revalidatePath("/dashboard/honours");
+  return { success: "Entry removed." };
 }
