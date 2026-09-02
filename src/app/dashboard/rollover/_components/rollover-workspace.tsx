@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
 import { useActionToast } from "@/components/ui/toast";
@@ -60,6 +60,14 @@ export function RolloverWorkspace({
       if (outcome.plan) setPlan(outcome.plan);
     });
   };
+
+  // The target year is preselected, so on the common path the operator never
+  // touches the select — without this the flow reaches step 2 with no plan.
+  // Mount only: every later preview is driven by onTargetYear and update().
+  useEffect(() => {
+    if (targetYearId !== null) refresh(options, targetYearId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (patch: Partial<RolloverOptions>) => {
     if (targetYearId === null) return;

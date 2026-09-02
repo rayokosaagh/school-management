@@ -158,7 +158,9 @@ export function YearStep({
         </Callout>
       ) : null}
 
-      <Button disabled={targetYearId === null || pending} onClick={onContinue}>
+      {/* Step 2 renders only when plan is set — without this check a stale or
+          in-flight preview would strand the operator on a blank panel. */}
+      <Button disabled={targetYearId === null || pending || !plan} onClick={onContinue}>
         Continue to students
       </Button>
     </div>
