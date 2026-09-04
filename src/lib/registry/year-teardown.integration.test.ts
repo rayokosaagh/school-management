@@ -34,6 +34,9 @@ const made = {
   studentIds: [] as number[],
   examTermId: 0,
   attendanceSessionId: 0,
+  /// SchoolPeriod is global, not year-scoped, so nothing else removes it — a
+  /// run that forgets leaves an orphan period showing in the real timetable.
+  schoolPeriodId: 0,
   /// Set once the delete test captures a restore point, so afterAll can clean
   /// up a row the module itself created.
   restorePointId: 0,
@@ -72,6 +75,11 @@ afterAll(async () => {
     await prisma.subjectOffering.deleteMany({ where: { id: made.offeringId } });
   }
   if (made.subjectId) await prisma.subject.deleteMany({ where: { id: made.subjectId } });
+  // Global, so it outlives the year this suite deletes; TimetablePeriod
+  // cascades from it and is already gone by here either way.
+  if (made.schoolPeriodId) {
+    await prisma.schoolPeriod.deleteMany({ where: { id: made.schoolPeriodId } });
+  }
   if (made.bareSectionId) await prisma.section.deleteMany({ where: { id: made.bareSectionId } });
   if (made.sectionIds.length) {
     await prisma.section.deleteMany({ where: { id: { in: made.sectionIds } } });
@@ -148,6 +156,7 @@ describe.skipIf(!process.env.DB_TESTS)("year teardown: summarise and snapshot", 
     const period = await prisma.schoolPeriod.create({
       data: { order: 9001 + stamp, name: `__teardown Period ${stamp}`, startMinute: 600, endMinute: 645 },
     });
+    made.schoolPeriodId = period.id;
     await prisma.timetablePeriod.create({
       data: {
         teacherAssignmentId: assignment.id,
