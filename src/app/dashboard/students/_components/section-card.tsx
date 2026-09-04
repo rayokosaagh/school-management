@@ -2,7 +2,10 @@ import type { SectionHonours } from "@/lib/honours/honours";
 import { Podium } from "./podium";
 import { RankedList } from "./ranked-list";
 
-export function SectionCard({ section }: { section: SectionHonours }) {
+export function SectionCard({ section, query = "" }: { section: SectionHonours; query?: string }) {
+  // Always the section's real standing — never narrowed by `query`, so a
+  // search that happens to match only unranked students cannot make a fully
+  // ranked section claim nobody can be placed.
   const ranked = section.students.filter((s) => s.position !== null).length;
   return (
     <section
@@ -34,7 +37,9 @@ export function SectionCard({ section }: { section: SectionHonours }) {
         </div>
       )}
 
-      <RankedList students={section.students} />
+      {section.students.length > 0 ? (
+        <RankedList students={section.students} query={query} />
+      ) : null}
     </section>
   );
 }

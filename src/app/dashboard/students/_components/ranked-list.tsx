@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
 import type { HonoursStudent } from "@/lib/honours/honours";
+import { rankedListRows } from "@/lib/honours/podium";
 import { ordinal } from "@/lib/honours/score";
 
 function Pillar({ label, value }: { label: string; value: number | null }) {
@@ -50,10 +51,12 @@ function Row({ s }: { s: HonoursStudent }) {
 }
 
 /// Everyone after the podium, then the unranked in their own group so the
-/// "—" rows do not read as last place.
-export function RankedList({ students }: { students: HonoursStudent[] }) {
-  const ranked = students.filter((s) => s.position !== null).slice(3);
-  const waiting = students.filter((s) => s.position === null);
+/// "—" rows do not read as last place. `students` should be a section's full
+/// roster, same as `Podium` — `query` narrows what this list shows without
+/// touching which three are past it; see `rankedListRows`.
+export function RankedList({ students, query = "" }: { students: HonoursStudent[]; query?: string }) {
+  const { ranked, waiting } = rankedListRows(students, query);
+  const searching = query.trim() !== "";
 
   return (
     <div className="space-y-3">
@@ -75,6 +78,11 @@ export function RankedList({ students }: { students: HonoursStudent[] }) {
             ))}
           </ul>
         </div>
+      ) : null}
+      {searching && ranked.length === 0 && waiting.length === 0 ? (
+        <p className="text-ink-3 px-2 text-sm">
+          No one below the podium matches “{query.trim()}”.
+        </p>
       ) : null}
     </div>
   );

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { formatBs } from "@/lib/date/bs";
+import { formatAd } from "@/lib/date/bs";
 import { currentActor } from "@/lib/auth/guard";
 import { granted, loadGrants } from "@/lib/auth/permissions";
 import { canOpenTimetableView, timetableViewIsEditable } from "@/lib/auth/roles";
@@ -84,7 +84,7 @@ export default async function ClassesPage({
   const yearRows: YearRow[] = years.map((y) => ({
     id: y.id,
     nameBS: y.nameBS,
-    span: `${formatBs(y.startsOn, "YYYY-MM-DD")} → ${formatBs(y.endsOn, "YYYY-MM-DD")}`,
+    span: `${formatAd(y.startsOn)} → ${formatAd(y.endsOn)}`,
     isCurrent: y.isCurrent,
   }));
 

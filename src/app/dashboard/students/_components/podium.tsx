@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
 import type { HonoursStudent } from "@/lib/honours/honours";
+import { podiumStudents } from "@/lib/honours/podium";
 import { ordinal } from "@/lib/honours/score";
 import { cn } from "@/lib/utils";
 
@@ -35,11 +36,15 @@ const STEP: Record<
 };
 
 /// The top three, second on the left, first raised in the middle, third on
-/// the right. Takes whatever is ranked in the first three rows; a tie shares a
-/// step label, and a short section leaves steps empty rather than inventing
-/// placings.
+/// the right. A tie shares a step label, and a short section leaves steps
+/// empty rather than inventing placings.
+///
+/// `students` must always be a section's full, unfiltered roster — never a
+/// search-narrowed subset. A podium means "the top three of this section";
+/// it must not change because someone typed in a search box. See
+/// `podiumStudents` in `lib/honours/podium.ts`.
 export function Podium({ students }: { students: HonoursStudent[] }) {
-  const top = students.filter((s) => s.position !== null).slice(0, 3);
+  const top = podiumStudents(students);
   const slots = ([1, 2, 3] as const).map((step) => ({ step, student: top[step - 1] ?? null }));
 
   return (

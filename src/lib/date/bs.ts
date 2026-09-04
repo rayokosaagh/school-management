@@ -85,6 +85,15 @@ export function formatBsNepali(date: Date, pattern = "YYYY MMMM DD"): string {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+// "2027-04-13" — the stored Gregorian date, plain, for the displays (an
+// academic year's span, a top-bar stamp) that must show the AD dates a BS
+// year covers rather than another BS rendering of the same value. formatBs
+// converts *to* BS; this is the one place that deliberately does not.
+export function formatAd(date: Date): string {
+  const { y, m, d } = utcParts(date);
+  return `${y}-${pad(m)}-${pad(d)}`;
+}
+
 // "2083-05-12" — the wire format for date inputs and form fields.
 export function toBsInput(date: Date): string {
   const bs = adToBs(date);

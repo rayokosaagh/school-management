@@ -46,21 +46,16 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
     [grades, honours.sections],
   );
 
-  const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return honours.sections
-      .filter((s) => tab === ALL || String(s.gradeId) === tab)
-      .map((s) =>
-        q
-          ? {
-              ...s,
-              students: s.students.filter((st) =>
-                `${st.fullName} ${st.fullNameNp ?? ""}`.toLowerCase().includes(q),
-              ),
-            }
-          : s,
-      );
-  }, [honours.sections, tab, query]);
+  // Which sections are shown is the only thing the tab and search box change
+  // here — each section keeps its full roster all the way down to Podium and
+  // RankedList, which apply the search themselves. Filtering it here once
+  // used to hand SectionCard an already-narrowed roster, which let a search
+  // matching only a low-ranked student put her on the podium (see
+  // lib/honours/podium.ts).
+  const visible = useMemo(
+    () => honours.sections.filter((s) => tab === ALL || String(s.gradeId) === tab),
+    [honours.sections, tab],
+  );
 
   const ranked = honours.sections.reduce(
     (n, s) => n + s.students.filter((st) => st.position !== null).length,
@@ -122,7 +117,7 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
       >
         <div className="space-y-4 pb-4">
           {visible.map((s) => (
-            <SectionCard key={s.sectionId} section={s} />
+            <SectionCard key={s.sectionId} section={s} query={query} />
           ))}
         </div>
       </PageFrame.Body>

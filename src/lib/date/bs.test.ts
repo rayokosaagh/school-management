@@ -7,6 +7,7 @@ import {
   bsMonthLength,
   bsToAd,
   bsYearRange,
+  formatAd,
   formatBs,
   formatBsNepali,
   isValidBs,
@@ -179,5 +180,16 @@ describe("formatting", () => {
 
   it("formats in Devanagari for printed documents", () => {
     expect(formatBsNepali(utc(2026, 8, 28))).toBe("२०८३ भाद्र १२");
+  });
+
+  // formatAd is the deliberate exception to "every formatter here produces
+  // BS" — a column labelled Gregorian must not call formatBs, which converts
+  // the other way. Reproduces the reported case: BS year 2083 stored as its
+  // Gregorian bounds, formatted for a "Gregorian span" column.
+  it("formats the stored Gregorian date, not its BS conversion", () => {
+    expect(formatAd(utc(2026, 8, 28))).toBe("2026-08-28");
+    const { startsOn, endsOn } = bsYearRange(2083);
+    expect(formatAd(startsOn)).toBe("2026-04-14");
+    expect(formatAd(endsOn)).toBe("2027-04-13");
   });
 });
