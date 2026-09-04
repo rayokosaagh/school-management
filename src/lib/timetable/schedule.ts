@@ -220,6 +220,63 @@ export function periodProgress(
 }
 
 // ---------------------------------------------------------------------------
+// Day shapes, on the browser side. day-shapes.ts carries the database calls
+// and cannot be imported here (it pulls in Prisma); these three are the pure
+// pieces the shape switcher and its confirmations need, kept testable apart
+// from any component.
+// ---------------------------------------------------------------------------
+
+export type ShapeWeekdays = { id: number; weekdays: number[] };
+
+/// Which shape each weekday is on, the other way round from how
+/// DayShapeSummary carries it (shape -> its weekdays). Every weekday resolves
+/// to exactly one shape — listDayShapes() already guarantees that — so this
+/// is a plain flip, not a merge that could disagree with itself.
+export function shapeIdByDay(shapes: ShapeWeekdays[]): Record<number, number> {
+  const map: Record<number, number> = {};
+  for (const shape of shapes) {
+    for (const day of shape.weekdays) map[day] = shape.id;
+  }
+  return map;
+}
+
+export type OrphanPreview = {
+  count: number;
+  sections: { id: number; name: string; gradeName: string }[];
+};
+
+/// What the weekday-reassignment confirmation says before it lets the change
+/// through. Named classes, not just a count — "3 lessons" alone does not tell
+/// anyone which register loses its Friday period 6.
+export function describeOrphanedLessons(orphaned: OrphanPreview): string {
+  if (orphaned.count === 0) return "No lessons will be removed.";
+  const classes = orphaned.sections.map((s) => `${s.gradeName} ${s.name}`).join(", ");
+  return `${orphaned.count} lesson${orphaned.count === 1 ? "" : "s"} will be deleted, from ${classes}.`;
+}
+
+/// What the clear-timetable confirmation says, for either scope.
+export function describeClear(count: number, scopeLabel: string): string {
+  if (count === 0) return `${scopeLabel} has no lessons scheduled.`;
+  return `This deletes ${count} lesson${count === 1 ? "" : "s"} from ${scopeLabel}.`;
+}
+
+export type DayColumnEntry<P, C> = { period: P; cell: C | null };
+
+/// One weekday's own column: its periods, each paired with the lesson booked
+/// into it, or null for a free slot, a break or an event. `periods` is
+/// already that day's own shape (see SectionGrid.periodsByDay) — this never
+/// sees another day's periods to pad itself out with, which is the exact
+/// fix for the grid used to show an inert cell for a period a shorter day
+/// simply does not have.
+export function buildDayColumn<
+  P extends { id: number },
+  C extends { schoolPeriodId: number },
+>(periods: P[], cellsForDay: C[]): DayColumnEntry<P, C>[] {
+  const byPeriod = new Map(cellsForDay.map((cell) => [cell.schoolPeriodId, cell]));
+  return periods.map((period) => ({ period, cell: byPeriod.get(period.id) ?? null }));
+}
+
+// ---------------------------------------------------------------------------
 // Subject colour. A timetable is read by pattern far more often than by word —
 // "where is my Nepali?" — so each subject keeps one hue across every class.
 // ---------------------------------------------------------------------------

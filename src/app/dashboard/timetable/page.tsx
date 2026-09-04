@@ -21,7 +21,7 @@ import { TimetableWorkspace } from "./_components/timetable-workspace";
 export default async function TimetablePage({
   searchParams,
 }: {
-  searchParams: Promise<{ section?: string; teacher?: string }>;
+  searchParams: Promise<{ section?: string; teacher?: string; shape?: string }>;
 }) {
   // Redirects unless the stored permission matrix allows this section.
   await requirePage("/dashboard/timetable");
@@ -37,9 +37,10 @@ export default async function TimetablePage({
     );
   }
 
-  // The School day editor works on one shape at a time (see day-shapes.ts),
-  // and until the shape switcher ships (a later task) that is always the
-  // default one — the same shape the whole school ran before shapes existed.
+  // The School day editor works on one shape at a time (see day-shapes.ts).
+  // Which one comes from the URL, same as ?section= and ?teacher= below, and
+  // falls back to the default shape when nothing — or something stale — is
+  // named there.
   const shapes = await listDayShapes();
   const defaultShape = shapes.find((s) => s.isDefault);
   if (!defaultShape) {
@@ -48,11 +49,21 @@ export default async function TimetablePage({
     throw new Error("No default day shape is configured.");
   }
 
+  const {
+    section: sectionParam,
+    teacher: teacherParam,
+    shape: shapeParam,
+  } = await searchParams;
+
+  const askedShape = Number(shapeParam);
+  const selectedShapeId =
+    shapes.find((s) => s.id === askedShape)?.id ?? defaultShape.id;
+
   const [sections, staff, bell, workingDays, filled, clashes, lessonsByPeriod] =
     await Promise.all([
       listSectionsWithAssignmentCounts(currentYear.id),
       listActiveStaffForSelect(),
-      listBellPeriods(defaultShape.id),
+      listBellPeriods(selectedShapeId),
       getWorkingDays(),
       countFilledBySection(currentYear.id),
       listTeacherClashes(currentYear.id),
@@ -61,7 +72,6 @@ export default async function TimetablePage({
 
   // The selected section comes from the URL, so the grid below is server
   // rendered and a deep link opens the class it names.
-  const { section: sectionParam, teacher: teacherParam } = await searchParams;
   const asked = Number(sectionParam);
   const selectedId =
     sections.find((s) => s.id === asked)?.id ?? sections[0]?.id ?? null;
@@ -79,7 +89,9 @@ export default async function TimetablePage({
   return (
     <TimetableWorkspace
       yearLabel={currentYear.nameBS}
-      dayShapeId={defaultShape.id}
+      academicYearId={currentYear.id}
+      dayShapeId={selectedShapeId}
+      shapes={shapes}
       bell={bell}
       workingDays={workingDays}
       sections={sections.map((s) => ({

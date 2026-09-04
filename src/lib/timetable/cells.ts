@@ -145,6 +145,20 @@ export async function setTimetableCell(input: CellInput): Promise<void> {
 /// rebuilt from the assignments it already has.
 export type ClearTimetableScope = { sectionId: number } | { academicYearId: number };
 
+function timetableScopeWhere(scope: ClearTimetableScope): Prisma.TimetablePeriodWhereInput {
+  return "sectionId" in scope
+    ? { sectionId: scope.sectionId }
+    : { section: { academicYearId: scope.academicYearId } };
+}
+
+/// What clearTimetable would delete, without deleting it — the toolbar shows
+/// this count and requires confirmation before the write ever runs, and the
+/// two share this one where clause so the preview and the delete cannot
+/// disagree about what "the scope" means.
+export async function countTimetableRows(scope: ClearTimetableScope): Promise<number> {
+  return prisma.timetablePeriod.count({ where: timetableScopeWhere(scope) });
+}
+
 /// Deletes every TimetablePeriod row in the given scope and reports how many
 /// went. A single deleteMany is already atomic, so there is nothing further
 /// to wrap in a transaction. Callers behind manage:timetable are expected to
@@ -152,11 +166,8 @@ export type ClearTimetableScope = { sectionId: number } | { academicYearId: numb
 export async function clearTimetable(
   scope: ClearTimetableScope,
 ): Promise<{ deleted: number }> {
-  const where: Prisma.TimetablePeriodWhereInput =
-    "sectionId" in scope
-      ? { sectionId: scope.sectionId }
-      : { section: { academicYearId: scope.academicYearId } };
-
-  const { count } = await prisma.timetablePeriod.deleteMany({ where });
+  const { count } = await prisma.timetablePeriod.deleteMany({
+    where: timetableScopeWhere(scope),
+  });
   return { deleted: count };
 }

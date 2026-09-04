@@ -1,11 +1,12 @@
 "use client";
 
-import { AlertTriangle, Coffee, Info, Plus } from "lucide-react";
+import { AlertTriangle, CalendarDays, Coffee, Info, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { FieldSelect } from "@/components/ui/select";
 import {
   DAY_NAMES,
+  buildDayColumn,
   formatMinute,
   periodIsCurrent,
   periodProgress,
@@ -54,13 +55,16 @@ export function useSchoolNow(everyMs = 30_000) {
 
 export type CellAddress = { dayOfWeek: number; schoolPeriodId: number };
 
-/// The week as a matrix: bell periods down, working days across. A grid rather
-/// than a DataTable — days and periods are coordinates, not sortable columns.
+/// The week as columns, one per working day, each holding only the periods
+/// its own shape carries — not a shared row set (see day-shapes-design.md
+/// section 5: an HTML table cannot vary its row count per column, which is
+/// exactly why a day running a narrower shape used to render an inert cell
+/// instead of simply ending). A short day's column is just shorter.
 ///
-/// A cell rests as a subject chip and only shows its select furniture on hover
-/// or focus. The control underneath is still a real select, so nothing is lost
-/// for the keyboard or a screen reader; only the resting skin changes, because
-/// a timetable is read far more often than it is edited.
+/// A lesson cell rests as a subject chip and only shows its select furniture
+/// on hover or focus. The control underneath is still a real select, so
+/// nothing is lost for the keyboard or a screen reader; only the resting skin
+/// changes, because a timetable is read far more often than it is edited.
 export function WeekGrid({
   periodsByDay,
   workingDays,
@@ -73,10 +77,9 @@ export function WeekGrid({
   otherSectionBookings,
   flash,
 }: {
-  /// Each working day's own periods (see SectionGrid.periodsByDay). Every
-  /// weekday runs the same shape today, so this reads as one list — but the
-  /// rows below are still built per period id, not assumed shared, so a day
-  /// running a narrower shape is not offered a period it does not have.
+  /// Each working day's own periods (see SectionGrid.periodsByDay), resolved
+  /// through the shape it runs. A day on a narrower shape simply carries
+  /// fewer entries here — nothing pads it back out to match a longer day.
   periodsByDay: Record<number, BellPeriod[]>;
   workingDays: number[];
   cells: GridCell[];
@@ -93,174 +96,138 @@ export function WeekGrid({
   const reduce = useReducedMotion();
   const now = useSchoolNow();
 
-  const filled = new Map(
-    cells.map((cell) => [`${cell.dayOfWeek}:${cell.schoolPeriodId}`, cell]),
-  );
-
-  // The rows a table can show are shared across every day column, so the row
-  // set is the union of periods any working day actually runs, ordered by
-  // clock time. A day that does not run a given period is handled per-cell
-  // below, not by leaving it out of the union — the table still needs a row
-  // to put the other days' cells in.
-  const idsByDay = new Map<number, Set<number>>();
-  for (const day of workingDays) {
-    idsByDay.set(day, new Set((periodsByDay[day] ?? []).map((p) => p.id)));
+  const cellsByDay = new Map<number, GridCell[]>();
+  for (const cell of cells) {
+    const list = cellsByDay.get(cell.dayOfWeek);
+    if (list) list.push(cell);
+    else cellsByDay.set(cell.dayOfWeek, [cell]);
   }
-  const bell = [
-    ...new Map(
-      workingDays.flatMap((day) => (periodsByDay[day] ?? []).map((p) => [p.id, p] as const)),
-    ).values(),
-  ].sort((a, b) => a.startMinute - b.startMinute || a.id - b.id);
 
   return (
-    <div className="min-h-0 flex-1 overflow-auto">
-      <table
-        role="grid"
-        aria-label={`Weekly timetable for ${sectionLabel}`}
-        aria-rowcount={bell.length + 1}
-        aria-colcount={workingDays.length + 1}
-        className="w-full border-separate border-spacing-0 text-[13px]"
+    <div
+      className="min-h-0 flex-1 overflow-auto"
+      role="table"
+      aria-label={`Weekly timetable for ${sectionLabel}`}
+    >
+      {/* Keyed on the class, so switching tabs replays the stagger and the
+          week reads as a new document rather than swapped text. */}
+      <div
+        key={sectionLabel}
+        role="rowgroup"
+        className="grid items-start gap-px bg-line"
+        style={{ gridTemplateColumns: `repeat(${workingDays.length}, minmax(168px, 1fr))` }}
       >
-        <thead>
-          <tr aria-rowindex={1}>
-            <th
-              scope="col"
-              aria-colindex={1}
-              className="bg-surface-2 border-line text-ink-3 sticky top-0 left-0 z-20 w-[100px] border-r border-b px-3 py-2 text-left text-[11px] font-medium tracking-[0.1em] uppercase"
-            >
-              Period
-            </th>
-            {workingDays.map((day, i) => {
-              const today = now?.dayOfWeek === day;
-              return (
-                <th
-                  key={day}
-                  scope="col"
-                  aria-colindex={i + 2}
-                  className={cn(
-                    "bg-surface-2 border-line sticky top-0 z-10 border-b px-3 py-2 text-left font-medium",
-                    today && "text-brand-text",
-                  )}
-                >
-                  {DAY_NAMES[day]}
-                  {/* Colour is never the only signal, so today says so. */}
-                  {today ? (
-                    <span className="text-brand-text ml-1.5 text-[11px] font-normal">
-                      today
-                    </span>
-                  ) : null}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
+        {workingDays.map((day) => {
+          const today = now?.dayOfWeek === day;
+          // Each day's own column, from its own shape's periods only — the
+          // exact boundary buildDayColumn keeps pure and unit tested.
+          const column = buildDayColumn(periodsByDay[day] ?? [], cellsByDay.get(day) ?? []);
 
-        {/* Keyed on the class, so switching tabs replays the stagger and the
-            week reads as a new document rather than swapped text. */}
-        <tbody key={sectionLabel}>
-          {bell.map((period, rowIndex) => {
-            const isNow = now !== null && periodIsCurrent(period, now.minuteOfDay);
+          return (
+            <div key={day} role="row" className="bg-surface flex min-w-0 flex-col">
+              <div
+                role="rowheader"
+                className={cn(
+                  "bg-surface-2 border-line sticky top-0 z-10 border-b px-3 py-2 text-left font-medium",
+                  today && "text-brand-text",
+                )}
+              >
+                {DAY_NAMES[day]}
+                {/* Colour is never the only signal, so today says so. */}
+                {today ? (
+                  <span className="text-brand-text ml-1.5 text-[11px] font-normal">today</span>
+                ) : null}
+              </div>
 
-            const rise = reduce
-              ? {}
-              : {
-                  initial: { opacity: 0, y: 4 },
-                  animate: { opacity: 1, y: 0 },
-                  transition: {
-                    duration: 0.32,
-                    ease: [0.2, 0.8, 0.2, 1] as const,
-                    // Capped so a long day does not become a slow reveal.
-                    delay: Math.min(rowIndex, 12) * 0.02,
-                  },
-                };
+              <div className="flex flex-1 flex-col gap-1 p-1">
+                {column.length === 0 ? (
+                  <p className="text-ink-3 px-2 py-3 text-[12px]">No periods today.</p>
+                ) : null}
 
-            if (period.kind === "BREAK") {
-              return (
-                <motion.tr key={period.id} aria-rowindex={rowIndex + 2} {...rise}>
-                  <th
-                    scope="row"
-                    aria-colindex={1}
-                    className="bg-surface-2 border-line text-ink-3 sticky left-0 z-10 border-r border-b px-3 py-1.5 text-left font-normal"
-                  >
-                    <span className="font-mono text-[11px] tabular-nums">
-                      {formatMinute(period.startMinute)}
-                    </span>
-                  </th>
-                  <td
-                    colSpan={workingDays.length}
-                    className="border-line text-ink-3 border-b px-3 py-1.5"
-                  >
-                    <span className="inline-flex items-center gap-1.5">
-                      <Coffee className="size-3.5" aria-hidden="true" />
-                      {period.name}
-                    </span>
-                  </td>
-                </motion.tr>
-              );
-            }
+                {column.map(({ period, cell }, rowIndex) => {
+                  const isNow = now !== null && today && periodIsCurrent(period, now.minuteOfDay);
 
-            return (
-              <motion.tr key={period.id} aria-rowindex={rowIndex + 2} {...rise}>
-                <th
-                  scope="row"
-                  aria-colindex={1}
-                  className={cn(
-                    "bg-surface-2 border-line sticky left-0 z-10 border-r border-b px-3 py-2 text-left align-top font-medium",
-                    isNow && "bg-brand-tint",
-                  )}
-                >
-                  <span className="flex items-center gap-1.5">
-                    {period.name}
-                    {isNow ? (
-                      <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-[9.5px] font-semibold tracking-wide uppercase">
-                        Now
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="text-ink-3 block font-mono text-[11px] tabular-nums">
-                    {formatMinute(period.startMinute)}–{formatMinute(period.endMinute)}
-                  </span>
-                </th>
+                  const rise = reduce
+                    ? {}
+                    : {
+                        initial: { opacity: 0, y: 4 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: {
+                          duration: 0.28,
+                          ease: [0.2, 0.8, 0.2, 1] as const,
+                          // Capped so a long day does not become a slow reveal.
+                          delay: Math.min(rowIndex, 12) * 0.02,
+                        },
+                      };
 
-                {workingDays.map((day, i) => {
-                  // This day's own shape may not run this period at all —
-                  // rows are the union across the week (a table cannot vary
-                  // row count per column), so a narrower day gets an inert
-                  // cell here rather than an assignable "free" slot.
-                  if (!idsByDay.get(day)?.has(period.id)) {
+                  if (period.kind === "BREAK") {
                     return (
-                      <td
-                        key={day}
-                        aria-colindex={i + 2}
-                        className="border-line bg-surface-2/40 border-b p-1 align-top"
+                      <motion.div
+                        key={period.id}
+                        role="cell"
+                        {...rise}
+                        className="border-line bg-surface-2/60 text-ink-3 flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px]"
                       >
-                        <span className="sr-only">
-                          {DAY_NAMES[day]} does not run {period.name}.
+                        <Coffee className="size-3.5 shrink-0" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 truncate">{period.name}</span>
+                        <span className="font-mono text-[10.5px] tabular-nums">
+                          {formatMinute(period.startMinute)}
                         </span>
-                      </td>
+                      </motion.div>
+                    );
+                  }
+
+                  // An event carries no teacher or subject and is not part of
+                  // the assignable grid — a labelled band, distinct from both
+                  // a lesson and a break, and nothing here is clickable.
+                  if (period.kind === "EVENT") {
+                    return (
+                      <motion.div
+                        key={period.id}
+                        role="cell"
+                        {...rise}
+                        className="border-brand-tint-2 bg-brand-tint text-brand-text flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px] font-medium"
+                      >
+                        <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />
+                        <span className="min-w-0 flex-1 truncate">
+                          {period.label || period.name}
+                        </span>
+                        <span className="font-mono text-[10.5px] font-normal tabular-nums">
+                          {formatMinute(period.startMinute)}
+                        </span>
+                      </motion.div>
                     );
                   }
 
                   const key = `${day}:${period.id}`;
-                  const cell = filled.get(key) ?? null;
                   const busy = otherSectionBookings.get(key) ?? new Map();
                   const isSelected =
-                    selected?.dayOfWeek === day &&
-                    selected?.schoolPeriodId === period.id;
-                  const today = now?.dayOfWeek === day;
+                    selected?.dayOfWeek === day && selected?.schoolPeriodId === period.id;
                   const tone = cell ? cell.tone : null;
 
                   return (
-                    <td
-                      key={day}
-                      aria-colindex={i + 2}
-                      aria-selected={isSelected}
+                    <motion.div
+                      key={period.id}
+                      role="cell"
+                      {...rise}
                       className={cn(
-                        "border-line relative border-b p-1 align-top",
-                        today && "bg-brand-tint/35",
+                        "border-line relative rounded-lg border p-1.5",
+                        today && "bg-brand-tint/25",
                         isSelected && "bg-brand-tint",
                       )}
                     >
+                      <div className="text-ink-3 mb-1 flex items-center gap-1.5 text-[10.5px]">
+                        <span className="text-ink font-medium">{period.name}</span>
+                        {isNow ? (
+                          <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-[9px] font-semibold tracking-wide uppercase">
+                            Now
+                          </span>
+                        ) : null}
+                        <span className="ml-auto font-mono tabular-nums">
+                          {formatMinute(period.startMinute)}–{formatMinute(period.endMinute)}
+                        </span>
+                      </div>
+
                       <div className="group/cell relative">
                         {/* The subject's own colour, carried across every class
                             it is taught in. A 3px rule, not a fill: the grid
@@ -355,9 +322,7 @@ export function WeekGrid({
                           type="button"
                           onClick={() =>
                             onSelect(
-                              isSelected
-                                ? null
-                                : { dayOfWeek: day, schoolPeriodId: period.id },
+                              isSelected ? null : { dayOfWeek: day, schoolPeriodId: period.id },
                             )
                           }
                           aria-label={`Details for ${DAY_NAMES[day]}, ${period.name}`}
@@ -399,14 +364,14 @@ export function WeekGrid({
                           }
                         />
                       ) : null}
-                    </td>
+                    </motion.div>
                   );
                 })}
-              </motion.tr>
-            );
-          })}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

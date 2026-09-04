@@ -18,10 +18,12 @@ import { Segmented } from "@/components/ui/segmented";
 import { FieldSelect } from "@/components/ui/select";
 import { useToastedActionState } from "@/components/ui/toast";
 import { shortGrade } from "@/lib/registry/grade-label";
+import type { DayShapeSummary } from "@/lib/timetable/day-shapes";
 import { DAY_NAMES, cellAt, type BellPeriod } from "@/lib/timetable/schedule";
 import type { Booking, SectionGrid } from "@/lib/timetable/grid";
 import type { Clash, WeekPeriod } from "@/lib/timetable/teacher-week";
 import { setCell, type ActionState } from "../actions";
+import { ClearTimetableButton, WeekdayShapeBar } from "./day-shape-controls";
 import { SchoolDayForm } from "./timetable-forms";
 import {
   ClashBanner,
@@ -47,7 +49,9 @@ type ClientSectionGrid = Omit<SectionGrid, "periodsByDay"> & {
 
 export function TimetableWorkspace({
   yearLabel,
+  academicYearId,
   dayShapeId,
+  shapes,
   bell,
   workingDays,
   sections,
@@ -61,9 +65,11 @@ export function TimetableWorkspace({
   lessonsByPeriod,
 }: {
   yearLabel: string;
-  /// The shape the School day editor works on — always the default shape
-  /// until the shape switcher ships.
+  academicYearId: number;
+  /// The shape the School day editor is currently showing. Comes from the
+  /// URL (?shape=), same as the section and teacher below.
   dayShapeId: number;
+  shapes: DayShapeSummary[];
   bell: BellPeriod[];
   workingDays: number[];
   sections: SectionRow[];
@@ -120,9 +126,11 @@ export function TimetableWorkspace({
   // Summed per day rather than teaching.length * workingDays.length: a day
   // running a shorter shape has fewer assignable slots, and the meter should
   // read that rather than a figure padded to the longest day of the week.
+  // Neither a break nor an event is assignable, so both are excluded — only
+  // TEACHING periods count towards the total.
   const totalSlots = workingDays.reduce((sum, day) => {
     const dayPeriods = grid?.periodsByDay[day] ?? [];
-    return sum + dayPeriods.filter((p) => p.kind !== "BREAK").length;
+    return sum + dayPeriods.filter((p) => p.kind === "TEACHING").length;
   }, 0);
   const filledHere = grid?.cells.length ?? 0;
 
@@ -248,7 +256,9 @@ export function TimetableWorkspace({
       {view === "day" ? (
         <PageFrame.Body>
           <SchoolDayForm
+            shapes={shapes}
             dayShapeId={dayShapeId}
+            onSelectShape={(id) => go({ shape: String(id) })}
             bell={bell}
             workingDays={workingDays}
             lessonsByPeriod={lessonsByPeriod}
@@ -325,6 +335,17 @@ export function TimetableWorkspace({
               panelId={panelId}
             />
           </PageFrame.Tabs>
+
+          <PageFrame.Toolbar>
+            <WeekdayShapeBar shapes={shapes} workingDays={workingDays} />
+            <span className="flex-1" />
+            <ClearTimetableButton
+              sectionId={selectedId}
+              sectionLabel={grid?.section.label ?? "This class"}
+              academicYearId={academicYearId}
+              yearLabel={yearLabel}
+            />
+          </PageFrame.Toolbar>
 
           <PageFrame.Toolbar>
             <ClashBanner clashes={clashes} />
