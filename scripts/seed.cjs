@@ -660,10 +660,20 @@ async function seedBell(c) {
     console.log(`bell schedule: ${existing.rows[0].n} period(s) already set`);
     return;
   }
+  // Periods belong to a day shape now, so the school can run a shorter Friday.
+  // The day_shapes migration creates the default shape, so it is always there
+  // by the time the seed runs.
+  const shape = await c.query('SELECT id FROM "DayShape" WHERE "isDefault" = true LIMIT 1');
+  if (!shape.rowCount) {
+    console.log("no default day shape — run migrations first; skipping bell schedule");
+    return;
+  }
+  const shapeId = shape.rows[0].id;
+
   for (const [i, [name, start, end, isBreak]] of BELL.entries()) {
     await c.query(
-      'INSERT INTO "SchoolPeriod" ("order", name, "startMinute", "endMinute", "isBreak") VALUES ($1,$2,$3,$4,$5)',
-      [i, name, start, end, isBreak],
+      'INSERT INTO "SchoolPeriod" ("order", name, "startMinute", "endMinute", kind, "dayShapeId") VALUES ($1,$2,$3,$4,$5,$6)',
+      [i, name, start, end, isBreak ? "BREAK" : "TEACHING", shapeId],
     );
   }
   console.log(`bell schedule: ${BELL.length} periods added`);
@@ -696,8 +706,9 @@ async function seedTimetable(c) {
     console.log(`cleared ${cleared.rowCount} scheduled lesson(s)`);
   }
 
+  // Only teaching periods take lessons; breaks and event blocks do not.
   const periods = await c.query(
-    'SELECT id FROM "SchoolPeriod" WHERE "isBreak" = false ORDER BY "order"',
+    `SELECT id FROM "SchoolPeriod" WHERE kind = 'TEACHING' ORDER BY "order"`,
   );
   if (!periods.rowCount) {
     console.log("no bell schedule — skipping timetable");
