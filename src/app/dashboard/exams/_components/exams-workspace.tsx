@@ -283,7 +283,14 @@ export function ExamsWorkspace({
           ) : sheetError ? (
             <p className="text-warn text-sm">{sheetError}</p>
           ) : sheet && sheet.rows.length > 0 ? (
-            <MarksGrid {...sheet} />
+            // Keyed on what is being marked. MarksGrid seeds its draft from
+            // `rows` in a useState initializer, which runs once per mount —
+            // and changing exam, section or subject re-renders without
+            // remounting. Unkeyed, every subject showed the first subject's
+            // numbers and a new section showed blanks, and the draft is what
+            // gets saved, so a save would have written them to the wrong
+            // subject.
+            <MarksGrid key={`${examId}-${sectionId}-${offeringId}`} {...sheet} />
           ) : (
             <EmptyState
               icon={ClipboardCheck}
