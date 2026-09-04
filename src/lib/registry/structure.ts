@@ -136,3 +136,58 @@ export async function normaliseGradeOrder() {
 export function getSection(id: number) {
   return prisma.section.findUnique({ where: { id } });
 }
+
+/// Split out from `reorderGrades` so the rejection rules can be unit-tested
+/// without a database: a partial or malformed list would leave some grades
+/// with stale orders and others colliding, so every problem is caught before
+/// the transaction below writes anything.
+export function validateGradeOrder(ids: number[], existingIds: number[]): void {
+  if (ids.length === 0) throw new Error("The grade list is empty.");
+
+  const seen = new Set<number>();
+  for (const id of ids) {
+    if (seen.has(id)) throw new Error(`Grade ${id} is listed more than once.`);
+    seen.add(id);
+  }
+
+  const existing = new Set(existingIds);
+  for (const id of ids) {
+    if (!existing.has(id)) throw new Error(`Grade ${id} does not exist.`);
+  }
+
+  const missing = existingIds.filter((id) => !seen.has(id));
+  if (missing.length > 0) {
+    throw new Error(
+      `The list is missing existing grade(s): ${missing.join(", ")}.`,
+    );
+  }
+}
+
+/// Rewrites every grade's `order` to match `ids`, 0…n-1 in that sequence —
+/// the whole-board counterpart to `moveGrade`'s single swap. `order` is
+/// @unique, so the new values cannot be written directly; each row is parked
+/// below every existing order first, the same park-then-write shape
+/// `normaliseGradeOrder` uses, then given its real value, all inside one
+/// transaction.
+export async function reorderGrades(ids: number[]) {
+  const existing = await prisma.grade.findMany({ select: { id: true } });
+  validateGradeOrder(ids, existing.map((g) => g.id));
+
+  const lowest = await prisma.grade.aggregate({ _min: { order: true } });
+  // Below every existing order *and* below the 0…ids.length-1 range this
+  // writes next — the current minimum alone is not enough of a floor when it
+  // is already a small positive number (e.g. after grade 0 was deleted),
+  // which would otherwise let a still-parked row collide with a value the
+  // second loop below is about to write.
+  let parking = Math.min(lowest._min.order ?? 0, 0) - 1;
+
+  return prisma.$transaction(async (tx) => {
+    for (const id of ids) {
+      await tx.grade.update({ where: { id }, data: { order: parking-- } });
+    }
+    for (const [index, id] of ids.entries()) {
+      await tx.grade.update({ where: { id }, data: { order: index } });
+    }
+    return ids.length;
+  });
+}

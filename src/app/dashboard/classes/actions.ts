@@ -19,6 +19,7 @@ import {
   moveGrade,
   normaliseGradeOrder,
   renameSection,
+  reorderGrades,
   updateGrade,
 } from "@/lib/registry/structure";
 import { reorderRolls, resequenceRolls } from "@/lib/registry/students";
@@ -289,6 +290,37 @@ export async function reorderGrade(
 
   revalidatePath(PATH);
   return { success: "Order updated." };
+}
+
+/// Writes the whole new order in one go, for the drag-and-drop reorder panel
+/// — the up/down arrows above still move one grade at a time. The list comes
+/// in as JSON because it is an arbitrary-length array, not a single field a
+/// plain form input can carry.
+export async function setGradeOrder(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireSession();
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(formData.get("ids") ?? ""));
+  } catch {
+    return { error: "Could not read the new order." };
+  }
+  if (!Array.isArray(parsed) || !parsed.every((id) => Number.isInteger(id))) {
+    return { error: "Could not read the new order." };
+  }
+
+  try {
+    await reorderGrades(parsed as number[]);
+  } catch (e) {
+    if (e instanceof Error) return { error: e.message };
+    throw e;
+  }
+
+  revalidatePath(PATH);
+  return { success: "Grade order updated." };
 }
 
 export async function tidyGradeOrder(

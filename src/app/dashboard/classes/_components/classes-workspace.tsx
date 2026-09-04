@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookOpen, Layers, Pencil, Plus, Search } from "lucide-react";
+import { ArrowUpDown, BookOpen, Layers, Pencil, Plus, Search } from "lucide-react";
 import { startTransition, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
@@ -36,6 +36,7 @@ import {
   type SectionRow,
   type YearRow,
 } from "./classes-view";
+import { ReorderGradesDialog } from "./reorder-grades";
 
 const ALL = "all";
 
@@ -69,6 +70,7 @@ export function ClassesWorkspace({
   const [query, setQuery] = useState("");
   const [editingGrade, setEditingGrade] = useState<GradeRow | null>(null);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);
+  const [reorderingGrades, setReorderingGrades] = useState(false);
   const [, assignAction] = useToastedActionState(assignClassTeacher, {});
 
   // Controlled, so revalidation feeding a new teacher down cannot fight an
@@ -260,6 +262,15 @@ export function ClassesWorkspace({
                 Edit {grade.name}
               </Button>
             ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setReorderingGrades(true)}
+            >
+              <ArrowUpDown data-icon="inline-start" aria-hidden="true" />
+              Reorder grades
+            </Button>
             <span className="flex-1" />
             <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
               {visible.length} section{visible.length === 1 ? "" : "s"}
@@ -300,6 +311,12 @@ export function ClassesWorkspace({
           />
         ) : null}
       </Modal>
+
+      <ReorderGradesDialog
+        grades={ordered}
+        open={reorderingGrades}
+        onClose={() => setReorderingGrades(false)}
+      />
 
       <Modal
         open={editingSection !== null}
