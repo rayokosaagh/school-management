@@ -77,6 +77,13 @@ export async function getWorkingDays(): Promise<number[]> {
   return days.length === 0 ? DEFAULT_WORKING_DAYS : [...days].sort((a, b) => a - b);
 }
 
+/// Refuses to create the profile row: it needs a school name, which this form
+/// does not have. Save the school details first. A read (getWorkingDays,
+/// above) can fall back to a default because nothing is lost by guessing; a
+/// write cannot fall back the same way, since silently accepting the days
+/// without a row to hold them would tell the admin they saved something that
+/// was in fact discarded — same reasoning as saveWeights() in
+/// lib/honours/weights.ts.
 export async function setWorkingDays(days: number[]): Promise<void> {
   const clean = [...new Set(days)].sort((a, b) => a - b);
   if (clean.length === 0) {
@@ -84,6 +91,11 @@ export async function setWorkingDays(days: number[]): Promise<void> {
   }
   if (clean.some((day) => !Number.isInteger(day) || day < 0 || day > 6)) {
     throw new BellScheduleError("That is not a day of the week.");
+  }
+
+  const exists = await prisma.schoolProfile.findUnique({ where: { id: 1 }, select: { id: true } });
+  if (!exists) {
+    throw new BellScheduleError("Save the school details before setting the working days.");
   }
 
   await prisma.schoolProfile.update({

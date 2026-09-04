@@ -5,6 +5,20 @@ import { motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+/// A stable, per-character fingerprint of a string: 4 hex digits per UTF-16
+/// code unit, concatenated. Fixed width per unit makes this injective — the
+/// only way two different strings can produce the same fingerprint is if they
+/// are the same string — so it is used below to guarantee that two distinct
+/// tab ids never slug to the same DOM id, even when they share no ASCII
+/// characters (e.g. two different Devanagari designations).
+function fingerprint(value: string): string {
+  let out = "";
+  for (let i = 0; i < value.length; i++) {
+    out += value.charCodeAt(i).toString(16).padStart(4, "0");
+  }
+  return out;
+}
+
 /// The DOM id of one tab button. A page that wants its panel labelled by the
 /// active tab passes its own `baseId` to `RegisterTabs` and calls this with the
 /// same `baseId` to name the tab.
@@ -12,8 +26,24 @@ import { cn } from "@/lib/utils";
 /// `tabId` is slugified because it is a data key, not an identifier: staff tabs
 /// are free-text designations ("Vice Principal"), and a raw one would put a
 /// space into an `id` and into the panel's `aria-labelledby`.
+///
+/// Staff designations, and student/staff names generally, are bilingual — a
+/// designation may be written entirely in Devanagari. Stripping non-ASCII
+/// characters (the old behaviour) collapsed every such designation to the
+/// same empty slug, so two different designations produced the same DOM id.
+/// The fix: keep the readable ASCII-only slug when the input is pure ASCII
+/// (unchanged from before, so existing ids stay stable and legible), and
+/// otherwise append a `fingerprint()` of the *whole* raw tabId behind a "_"
+/// that cannot occur in the ASCII slug (the slug alphabet is only
+/// `[a-z0-9-]`; `_` always gets folded into `-`). Because that marker can
+/// never appear inside the ASCII slug and never appears inside a fingerprint
+/// (hex digits only), a slug carrying "_" cannot collide with one that
+/// doesn't, and among slugs that do carry it, the fingerprint is injective —
+/// so distinct tabIds can never produce the same slug.
 export function registerTabId(baseId: string, tabId: string): string {
-  const slug = tabId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const isAscii = /^[\x00-\x7F]*$/.test(tabId);
+  const ascii = tabId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const slug = isAscii ? ascii : `${ascii}_${fingerprint(tabId)}`;
   return `${baseId}-tab-${slug}`;
 }
 
