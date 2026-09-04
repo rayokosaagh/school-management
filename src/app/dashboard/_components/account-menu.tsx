@@ -52,7 +52,11 @@ export function AccountMenu({
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label={`Account menu: ${username}, ${roleLabel}`}
-          className="bg-brand-tint-2 text-brand-text focus-visible:ring-ring/50 ml-1 grid size-[30px] place-items-center rounded-full text-xs font-semibold uppercase focus-visible:ring-3 focus-visible:outline-none"
+          // Only earns its place on narrow screens, where it is the sole way to
+          // reach the rail items the bottom bar cannot fit. From `shell` up the
+          // rail shows Settings and the top bar has its own theme toggle and
+          // sign-out, so the avatar would be a third route to nothing new.
+          className="bg-brand-tint-2 text-brand-text focus-visible:ring-ring/50 ml-1 grid size-[30px] place-items-center rounded-full text-xs font-semibold uppercase focus-visible:ring-3 focus-visible:outline-none shell:hidden"
         >
           {username.slice(0, 2)}
         </DropdownMenuTrigger>
