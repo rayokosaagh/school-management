@@ -15,7 +15,7 @@ import { FieldSelect } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { StatusDot } from "@/components/ui/status-dot";
 import { useToastedActionState } from "@/components/ui/toast";
-import { sectionCode } from "@/lib/register-codes";
+import { initialRegisterTab, sectionCode } from "@/lib/register-codes";
 import type { StudentSummary } from "@/lib/registry/students";
 import { removeStudent, type ActionState } from "../actions";
 import { StudentPane, StudentPaneSkeleton, STATUS_LABEL, STATUS_TONE } from "./student-pane";
@@ -76,10 +76,11 @@ export function StudentsWorkspace({
   const panelId = `${baseId}-panel`;
 
   // A deep link lands on the linked student's own section and status, so the
-  // pane never opens over a table that has filtered its row away.
+  // pane never opens over a table that has filtered its row away. With
+  // nothing selected — the normal way this page is opened — the table shows
+  // every section rather than an arbitrary first one.
   const linked = selectedId == null ? undefined : rows.find((r) => r.studentId === selectedId);
-  const initialTab = selectedId != null ? (linked?.sectionId ?? ALL) : (sections[0]?.id ?? ALL);
-  const [tab, setTab] = useState<string>(String(initialTab));
+  const [tab, setTab] = useState<string>(() => initialRegisterTab(linked?.sectionId, ALL));
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState(linked?.status ?? "ACTIVE");
   const [addOpen, setAddOpen] = useState(false);

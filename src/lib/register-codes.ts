@@ -12,3 +12,12 @@ export function sectionCode(gradeName: string, sectionName: string) {
 export function designationCode(d: string) {
   return d.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).join("").slice(0, 3) || "?";
 }
+
+/// The tab a register lands on when it mounts. A deep link to a specific row
+/// switches to that row's own tab so the pane never opens over a table that
+/// has filtered the row away; anything else — no selection, or a selection
+/// that names no row — opens the broadest view rather than an arbitrary
+/// first slice, so a fresh visit shows the whole school instead of one tab.
+export function initialRegisterTab(linkedTabId: number | string | null | undefined, all: string): string {
+  return linkedTabId != null ? String(linkedTabId) : all;
+}

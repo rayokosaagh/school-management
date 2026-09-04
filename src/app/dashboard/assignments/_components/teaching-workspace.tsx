@@ -51,7 +51,9 @@ export function TeachingWorkspace({
   const baseId = useId();
   const panelId = `${baseId}-panel`;
 
-  const [tab, setTab] = useState(sections[0] ? String(sections[0].id) : ALL);
+  // No deep link exists for this page, so the table always lands showing
+  // every section's slots rather than an arbitrary first one.
+  const [tab, setTab] = useState(ALL);
   const [query, setQuery] = useState("");
   const [showLoad, setShowLoad] = useState(false);
   const [, assignAction] = useToastedActionState(assignSubjectTeacher, EMPTY);

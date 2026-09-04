@@ -66,7 +66,9 @@ export function ClassesWorkspace({
   );
 
   const [view, setView] = useState<"structure" | "years">("structure");
-  const [tab, setTab] = useState(ordered[0] ? String(ordered[0].id) : ALL);
+  // No deep link exists for this page, so the table always lands showing
+  // every grade's sections rather than an arbitrary first grade.
+  const [tab, setTab] = useState(ALL);
   const [query, setQuery] = useState("");
   const [editingGrade, setEditingGrade] = useState<GradeRow | null>(null);
   const [editingSection, setEditingSection] = useState<SectionRow | null>(null);

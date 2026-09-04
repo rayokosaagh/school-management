@@ -9,6 +9,8 @@ import type { Honours } from "@/lib/honours/honours";
 import { sectionCode } from "@/lib/register-codes";
 import { SectionCard } from "./section-card";
 
+const ALL = "all";
+
 export function HonoursWorkspace({ honours }: { honours: Honours }) {
   const baseId = useId();
   const panelId = `${baseId}-panel`;
@@ -24,25 +26,30 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
     return [...seen.values()];
   }, [honours.sections]);
 
-  const [tab, setTab] = useState<string>(String(grades[0]?.id ?? ""));
+  // Every section card ranks within itself, so stacking every grade's cards
+  // together is a coherent view, not a cross-grade average — the podium page
+  // lands on it rather than an arbitrary first grade.
+  const [tab, setTab] = useState<string>(ALL);
   const [query, setQuery] = useState("");
 
   const tabs = useMemo<RegisterTab[]>(
-    () =>
-      grades.map((g) => ({
+    () => [
+      { id: ALL, code: "ALL", label: "All grades", count: honours.sections.reduce((n, s) => n + s.students.length, 0) },
+      ...grades.map((g) => ({
         id: String(g.id),
         code: sectionCode(g.name, ""),
         label: g.name,
         count: g.students,
         empty: g.students === 0,
       })),
-    [grades],
+    ],
+    [grades, honours.sections],
   );
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return honours.sections
-      .filter((s) => String(s.gradeId) === tab)
+      .filter((s) => tab === ALL || String(s.gradeId) === tab)
       .map((s) =>
         q
           ? {
