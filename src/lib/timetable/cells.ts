@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getWorkingDays } from "./bell";
 import { DAY_NAMES } from "./schedule";
@@ -135,4 +136,27 @@ export async function setTimetableCell(input: CellInput): Promise<void> {
       },
     });
   });
+}
+
+/// One section's whole week, or every section's whole week in one academic
+/// year — never both meanings at once, so a caller cannot widen the blast
+/// radius by accident. See docs/superpowers/specs/2026-09-04-day-shapes-
+/// design.md section 6: destructive, no restore point, because a timetable is
+/// rebuilt from the assignments it already has.
+export type ClearTimetableScope = { sectionId: number } | { academicYearId: number };
+
+/// Deletes every TimetablePeriod row in the given scope and reports how many
+/// went. A single deleteMany is already atomic, so there is nothing further
+/// to wrap in a transaction. Callers behind manage:timetable are expected to
+/// have shown a confirmation naming the count before this is ever called.
+export async function clearTimetable(
+  scope: ClearTimetableScope,
+): Promise<{ deleted: number }> {
+  const where: Prisma.TimetablePeriodWhereInput =
+    "sectionId" in scope
+      ? { sectionId: scope.sectionId }
+      : { section: { academicYearId: scope.academicYearId } };
+
+  const { count } = await prisma.timetablePeriod.deleteMany({ where });
+  return { deleted: count };
 }

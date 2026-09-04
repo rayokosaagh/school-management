@@ -12,12 +12,13 @@ import {
 
 export type { BellInput, BellPeriod } from "./schedule";
 
-/// Compile-level accommodation, same as saveBellSchedule below: BellPeriod
-/// still carries isBreak, derived here from kind, until this function is made
-/// shape-scoped.
-export async function listBellPeriods(): Promise<BellPeriod[]> {
-  const rows = await prisma.schoolPeriod.findMany({ orderBy: { order: "asc" } });
-  return rows.map((row) => ({ ...row, isBreak: row.kind === "BREAK" }));
+/// One shape's periods, in bell order. The School day editor works on one
+/// shape at a time — see day-shapes.ts for how a weekday resolves to one.
+export async function listBellPeriods(dayShapeId: number): Promise<BellPeriod[]> {
+  return prisma.schoolPeriod.findMany({
+    where: { dayShapeId },
+    orderBy: { order: "asc" },
+  });
 }
 
 /// How many lessons each bell period currently carries. The School day form
@@ -31,16 +32,14 @@ export async function countLessonsByPeriod(): Promise<Map<number, number>> {
   return new Map(rows.map((row) => [row.schoolPeriodId, row._count._all]));
 }
 
-/// Replaces the schedule. Rows carrying an id are updated in place and keep
-/// their lessons; rows the editor removed are deleted, and their lessons
-/// cascade away with them — which is why the form confirms the count first.
-///
-/// Compile-level accommodation for the day-shapes migration (see
-/// day-shapes.ts): SchoolPeriod now requires a dayShapeId, and this function
-/// has not yet been made shape-scoped — that is the timetable UI task. Until
-/// then every row this writes lands on the default shape, which is exactly
-/// where the only shape that exists today already puts it.
+/// Replaces one shape's schedule. Rows carrying an id are updated in place
+/// and keep their lessons; rows the editor removed are deleted, and their
+/// lessons cascade away with them — which is why the form confirms the count
+/// first. The delete is scoped to dayShapeId, not just to "whatever id is not
+/// in keep": two shapes can otherwise each be mid-edit, and an empty `rows`
+/// on one must never reach into the other's periods.
 export async function saveBellSchedule(
+  dayShapeId: number,
   rows: (BellInput & { id?: number })[],
 ): Promise<void> {
   validateBell(rows);
@@ -48,12 +47,7 @@ export async function saveBellSchedule(
   const keep = rows.flatMap((row) => (row.id === undefined ? [] : [row.id]));
 
   await prisma.$transaction(async (tx) => {
-    const defaultShape = await tx.dayShape.findFirstOrThrow({
-      where: { isDefault: true },
-      select: { id: true },
-    });
-
-    await tx.schoolPeriod.deleteMany({ where: { id: { notIn: keep } } });
+    await tx.schoolPeriod.deleteMany({ where: { dayShapeId, id: { notIn: keep } } });
 
     for (const row of rows) {
       const data = {
@@ -61,8 +55,9 @@ export async function saveBellSchedule(
         name: row.name.trim(),
         startMinute: row.startMinute,
         endMinute: row.endMinute,
-        kind: row.isBreak ? ("BREAK" as const) : ("TEACHING" as const),
-        dayShapeId: defaultShape.id,
+        kind: row.kind,
+        label: row.label.trim(),
+        dayShapeId,
       };
       if (row.id === undefined) await tx.schoolPeriod.create({ data });
       else await tx.schoolPeriod.update({ where: { id: row.id }, data });

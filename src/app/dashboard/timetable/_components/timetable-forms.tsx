@@ -5,7 +5,12 @@ import { startTransition, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToastedActionState } from "@/components/ui/toast";
-import { DAY_NAMES, DEFAULT_BELL, type BellPeriod } from "@/lib/timetable/schedule";
+import {
+  DAY_NAMES,
+  DEFAULT_BELL,
+  type BellPeriod,
+  type PeriodKind,
+} from "@/lib/timetable/schedule";
 import { saveBell, saveDays, type ActionState } from "../actions";
 
 const EMPTY: ActionState = {};
@@ -16,7 +21,12 @@ type Row = {
   name: string;
   startMinute: number;
   endMinute: number;
-  isBreak: boolean;
+  kind: PeriodKind;
+  /// Always "" here: this editor only ever creates TEACHING and BREAK rows.
+  /// An EVENT row can still arrive from another shape's data and round-trip
+  /// through unedited, but nothing in this form writes one — see the
+  /// shape-management UI task.
+  label: string;
 };
 
 function toTime(minute: number) {
@@ -33,10 +43,14 @@ function fromTime(value: string) {
 /// Settings, so the whole feature sits behind one capability: an Office user who
 /// may build the timetable can define the day it is built on.
 export function SchoolDayForm({
+  dayShapeId,
   bell,
   workingDays,
   lessonsByPeriod,
 }: {
+  /// The shape being edited. Until the shape switcher ships, this is always
+  /// the default shape — the only one the page resolves today.
+  dayShapeId: number;
   bell: BellPeriod[];
   workingDays: number[];
   lessonsByPeriod: Record<number, number>;
@@ -96,10 +110,13 @@ export function SchoolDayForm({
         ...prev,
         {
           order: prev.length,
-          name: isBreak ? "Break" : `Period ${prev.filter((r) => !r.isBreak).length + 1}`,
+          name: isBreak
+            ? "Break"
+            : `Period ${prev.filter((r) => r.kind !== "BREAK").length + 1}`,
           startMinute: start,
           endMinute: Math.min(start + (isBreak ? 30 : 45), 1440),
-          isBreak,
+          kind: isBreak ? "BREAK" : "TEACHING",
+          label: "",
         },
       ];
     });
@@ -107,6 +124,7 @@ export function SchoolDayForm({
 
   function submitBell() {
     const data = new FormData();
+    data.set("dayShapeId", String(dayShapeId));
     data.set("rows", JSON.stringify(rows.map((row, i) => ({ ...row, order: i }))));
     startTransition(() => bellAction(data));
   }
@@ -195,12 +213,14 @@ export function SchoolDayForm({
                 />
                 <button
                   type="button"
-                  aria-pressed={row.isBreak}
+                  aria-pressed={row.kind === "BREAK"}
                   aria-label={`${row.name} is a break`}
                   title="Mark as a break"
-                  onClick={() => edit(i, { isBreak: !row.isBreak })}
+                  onClick={() =>
+                    edit(i, { kind: row.kind === "BREAK" ? "TEACHING" : "BREAK" })
+                  }
                   className={
-                    row.isBreak
+                    row.kind === "BREAK"
                       ? "bg-brand-tint text-brand-text border-brand-tint-2 grid size-8 shrink-0 place-items-center rounded-lg border"
                       : "border-line text-ink-3 hover:text-ink grid size-8 shrink-0 place-items-center rounded-lg border"
                   }

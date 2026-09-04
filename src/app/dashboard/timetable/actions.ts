@@ -73,6 +73,9 @@ export async function saveBell(
 ): Promise<ActionState> {
   await requireSession();
 
+  const dayShapeId = Number(formData.get("dayShapeId"));
+  if (!Number.isInteger(dayShapeId)) return { error: "That day shape no longer exists." };
+
   // The form owns a whole schedule, not a field at a time: the rules are about
   // how the rows sit together, so they can only be checked as a set.
   let rows: unknown;
@@ -85,13 +88,15 @@ export async function saveBell(
 
   try {
     await saveBellSchedule(
+      dayShapeId,
       rows.map((row) => ({
         id: typeof row.id === "number" ? row.id : undefined,
         order: Number(row.order),
         name: String(row.name ?? ""),
         startMinute: Number(row.startMinute),
         endMinute: Number(row.endMinute),
-        isBreak: Boolean(row.isBreak),
+        kind: row.kind === "BREAK" || row.kind === "EVENT" ? row.kind : "TEACHING",
+        label: String(row.label ?? ""),
       })),
     );
   } catch (e) {
@@ -103,7 +108,7 @@ export async function saveBell(
   // Re-read rather than trust the submitted rows: ids assigned by create() are
   // otherwise never reported back, and the form must adopt them before the
   // next save or it deletes-and-recreates the very row it just added.
-  return { success: "School day saved.", rows: await listBellPeriods() };
+  return { success: "School day saved.", rows: await listBellPeriods(dayShapeId) };
 }
 
 export async function saveDays(

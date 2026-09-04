@@ -9,6 +9,7 @@ import {
   getWorkingDays,
   listBellPeriods,
 } from "@/lib/timetable/bell";
+import { listDayShapes } from "@/lib/timetable/day-shapes";
 import {
   countFilledBySection,
   getSectionGrid,
@@ -36,11 +37,22 @@ export default async function TimetablePage({
     );
   }
 
+  // The School day editor works on one shape at a time (see day-shapes.ts),
+  // and until the shape switcher ships (a later task) that is always the
+  // default one — the same shape the whole school ran before shapes existed.
+  const shapes = await listDayShapes();
+  const defaultShape = shapes.find((s) => s.isDefault);
+  if (!defaultShape) {
+    // listDayShapes() already throws if this invariant breaks; this is here
+    // only so the type checker knows defaultShape.id below is safe.
+    throw new Error("No default day shape is configured.");
+  }
+
   const [sections, staff, bell, workingDays, filled, clashes, lessonsByPeriod] =
     await Promise.all([
       listSectionsWithAssignmentCounts(currentYear.id),
       listActiveStaffForSelect(),
-      listBellPeriods(),
+      listBellPeriods(defaultShape.id),
       getWorkingDays(),
       countFilledBySection(currentYear.id),
       listTeacherClashes(currentYear.id),
@@ -67,6 +79,7 @@ export default async function TimetablePage({
   return (
     <TimetableWorkspace
       yearLabel={currentYear.nameBS}
+      dayShapeId={defaultShape.id}
       bell={bell}
       workingDays={workingDays}
       sections={sections.map((s) => ({
@@ -76,7 +89,10 @@ export default async function TimetablePage({
         filled: filled.get(s.id) ?? 0,
       }))}
       selectedId={selectedId}
-      grid={grid}
+      // Client components cannot receive a Map as a prop straight from a
+      // server component (see lessonsByPeriod below, the existing instance
+      // of the same rule), so periodsByDay crosses the boundary as a Record.
+      grid={grid ? { ...grid, periodsByDay: Object.fromEntries(grid.periodsByDay) } : null}
       clashes={clashes}
       teachers={staff}
       selectedTeacherId={Number.isInteger(askedTeacher) ? askedTeacher : null}

@@ -38,8 +38,16 @@ const EMPTY: ActionState = {};
 type SectionRow = { id: number; name: string; gradeName: string; filled: number };
 type View = "week" | "teacher" | "day";
 
+/// SectionGrid as it exists once a server component has serialised it for a
+/// client one: periodsByDay crosses that boundary as a Record, not the Map
+/// grid.ts computes it as (see the same treatment of lessonsByPeriod below).
+type ClientSectionGrid = Omit<SectionGrid, "periodsByDay"> & {
+  periodsByDay: Record<number, BellPeriod[]>;
+};
+
 export function TimetableWorkspace({
   yearLabel,
+  dayShapeId,
   bell,
   workingDays,
   sections,
@@ -53,11 +61,14 @@ export function TimetableWorkspace({
   lessonsByPeriod,
 }: {
   yearLabel: string;
+  /// The shape the School day editor works on — always the default shape
+  /// until the shape switcher ships.
+  dayShapeId: number;
   bell: BellPeriod[];
   workingDays: number[];
   sections: SectionRow[];
   selectedId: number | null;
-  grid: SectionGrid | null;
+  grid: ClientSectionGrid | null;
   clashes: Clash[];
   teachers: { id: number; fullName: string }[];
   selectedTeacherId: number | null;
@@ -106,8 +117,13 @@ export function TimetableWorkspace({
   /// those are the cell being replaced, not a clash with itself.
   const elsewhere = useMemo(() => bookedTeachers(bookings), [bookings]);
 
-  const teaching = bell.filter((p) => !p.isBreak);
-  const totalSlots = teaching.length * workingDays.length;
+  // Summed per day rather than teaching.length * workingDays.length: a day
+  // running a shorter shape has fewer assignable slots, and the meter should
+  // read that rather than a figure padded to the longest day of the week.
+  const totalSlots = workingDays.reduce((sum, day) => {
+    const dayPeriods = grid?.periodsByDay[day] ?? [];
+    return sum + dayPeriods.filter((p) => p.kind !== "BREAK").length;
+  }, 0);
   const filledHere = grid?.cells.length ?? 0;
 
   function write(address: CellAddress, subjectOfferingId: string, nextRoom?: string) {
@@ -137,7 +153,9 @@ export function TimetableWorkspace({
   const currentPeriod =
     selectedCell === null
       ? null
-      : (bell.find((p) => p.id === selectedCell.schoolPeriodId) ?? null);
+      : ((grid?.periodsByDay[selectedCell.dayOfWeek] ?? []).find(
+          (p) => p.id === selectedCell.schoolPeriodId,
+        ) ?? null);
 
   const aside =
     view !== "week" || selectedCell === null || currentPeriod === null ? undefined : (
@@ -230,6 +248,7 @@ export function TimetableWorkspace({
       {view === "day" ? (
         <PageFrame.Body>
           <SchoolDayForm
+            dayShapeId={dayShapeId}
             bell={bell}
             workingDays={workingDays}
             lessonsByPeriod={lessonsByPeriod}
@@ -322,7 +341,7 @@ export function TimetableWorkspace({
             <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, String(selectedId))}>
               {grid ? (
                 <WeekGrid
-                  bell={bell}
+                  periodsByDay={grid.periodsByDay}
                   workingDays={workingDays}
                   cells={grid.cells}
                   options={grid.options}

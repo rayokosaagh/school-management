@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { toneForRank } from "./schedule";
+import { listDayShapes } from "./day-shapes";
+import { toneForRank, type BellPeriod } from "./schedule";
 
 // Reads for the section-first editor. A cell is (section, day, bell period);
 // what fills it is a subject, and the teacher follows from the assignment the
@@ -32,6 +33,11 @@ export type GridCell = {
 
 export type SectionGrid = {
   section: { id: number; name: string; gradeName: string; label: string };
+  /// Sunday = 0 through Saturday = 6 -> that weekday's own periods, resolved
+  /// through the shape it runs (an explicit WeekdayShape, else the default
+  /// shape — see day-shapes.ts). A day running a shorter shape carries fewer
+  /// periods here rather than being padded out to match the longest day.
+  periodsByDay: Map<number, BellPeriod[]>;
   cells: GridCell[];
   options: GridOption[];
 };
@@ -62,7 +68,7 @@ export async function getSectionGrid(
   });
   if (!section) return null;
 
-  const [offerings, assignments, lessons, tones] = await Promise.all([
+  const [offerings, assignments, lessons, tones, shapes] = await Promise.all([
     prisma.subjectOffering.findMany({
       where: { gradeId: section.gradeId, academicYearId: section.academicYearId },
       orderBy: { subject: { name: "asc" } },
@@ -95,9 +101,18 @@ export async function getSectionGrid(
       },
     }),
     subjectTones(),
+    listDayShapes(),
   ]);
 
   const teacherFor = new Map(assignments.map((a) => [a.subjectOfferingId, a.staff]));
+
+  // listDayShapes() already resolves the fallback (explicit WeekdayShape,
+  // else the default shape) for every day of the week, so inverting shape ->
+  // weekdays into weekday -> periods is all that is left to do here.
+  const periodsByDay = new Map<number, BellPeriod[]>();
+  for (const shape of shapes) {
+    for (const day of shape.weekdays) periodsByDay.set(day, shape.periods);
+  }
 
   return {
     section: {
@@ -106,6 +121,7 @@ export async function getSectionGrid(
       gradeName: section.grade.name,
       label: `${section.grade.name} ${section.name}`,
     },
+    periodsByDay,
     options: offerings.map((offering) => {
       const staff = teacherFor.get(offering.id) ?? null;
       return {

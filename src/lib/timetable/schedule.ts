@@ -17,14 +17,23 @@ export const DAY_NAMES = [
   "Saturday",
 ];
 
+/// Deliberately not imported from the generated Prisma client: this file runs
+/// in the browser (see the file header), and that import drags node:module
+/// into the bundle. The three values are pinned to the PeriodKind enum in
+/// schema.prisma by day-shapes.test.ts and bell.test.ts exercising both sides.
+export type PeriodKind = "TEACHING" | "BREAK" | "EVENT";
+
 export type BellInput = {
   /// Position in the day, contiguous from 0. Not the period's number: a break
-  /// takes an order too, so "Period 4" may sit at order 4.
+  /// or an event takes an order too, so "Period 4" may sit at order 4.
   order: number;
   name: string;
   startMinute: number;
   endMinute: number;
-  isBreak: boolean;
+  kind: PeriodKind;
+  /// Shown in the grid for an EVENT period. Empty for TEACHING and BREAK —
+  /// validateBell refuses the two states from disagreeing.
+  label: string;
 };
 
 export type BellPeriod = BellInput & { id: number };
@@ -35,14 +44,14 @@ const MINUTES_IN_DAY = 1440;
 
 /// A starting point the school edits, not a constant anything depends on.
 export const DEFAULT_BELL: BellInput[] = [
-  { order: 0, name: "Period 1", startMinute: 600, endMinute: 645, isBreak: false },
-  { order: 1, name: "Period 2", startMinute: 645, endMinute: 690, isBreak: false },
-  { order: 2, name: "Period 3", startMinute: 690, endMinute: 735, isBreak: false },
-  { order: 3, name: "Tiffin", startMinute: 735, endMinute: 765, isBreak: true },
-  { order: 4, name: "Period 4", startMinute: 765, endMinute: 810, isBreak: false },
-  { order: 5, name: "Period 5", startMinute: 810, endMinute: 855, isBreak: false },
-  { order: 6, name: "Period 6", startMinute: 855, endMinute: 900, isBreak: false },
-  { order: 7, name: "Period 7", startMinute: 900, endMinute: 945, isBreak: false },
+  { order: 0, name: "Period 1", startMinute: 600, endMinute: 645, kind: "TEACHING", label: "" },
+  { order: 1, name: "Period 2", startMinute: 645, endMinute: 690, kind: "TEACHING", label: "" },
+  { order: 2, name: "Period 3", startMinute: 690, endMinute: 735, kind: "TEACHING", label: "" },
+  { order: 3, name: "Tiffin", startMinute: 735, endMinute: 765, kind: "BREAK", label: "" },
+  { order: 4, name: "Period 4", startMinute: 765, endMinute: 810, kind: "TEACHING", label: "" },
+  { order: 5, name: "Period 5", startMinute: 810, endMinute: 855, kind: "TEACHING", label: "" },
+  { order: 6, name: "Period 6", startMinute: 855, endMinute: 900, kind: "TEACHING", label: "" },
+  { order: 7, name: "Period 7", startMinute: 900, endMinute: 945, kind: "TEACHING", label: "" },
 ];
 
 /// Pure, so the form can check a draft without a round trip and the rules can
@@ -52,7 +61,7 @@ export function validateBell(rows: BellInput[]): void {
   if (rows.length === 0) {
     throw new BellScheduleError("A school day needs at least one period.");
   }
-  if (rows.every((row) => row.isBreak)) {
+  if (rows.every((row) => row.kind === "BREAK")) {
     throw new BellScheduleError(
       "A school day needs at least one period that is not a break.",
     );
@@ -71,6 +80,14 @@ export function validateBell(rows: BellInput[]): void {
     }
     if (row.startMinute >= row.endMinute) {
       throw new BellScheduleError(`${name} ends before it starts.`);
+    }
+    // Mirrors validatePeriodKind in day-shapes.ts, not imported from it: that
+    // module pulls in prisma, which this browser-safe file cannot carry.
+    if (row.kind === "EVENT" && row.label.trim() === "") {
+      throw new BellScheduleError(`${name} is an event and needs a label.`);
+    }
+    if (row.kind !== "EVENT" && row.label.trim() !== "") {
+      throw new BellScheduleError(`${name} is not an event and cannot carry a label.`);
     }
   }
 

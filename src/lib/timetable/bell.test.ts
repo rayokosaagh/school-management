@@ -10,8 +10,9 @@ const p = (
   name: string,
   startMinute: number,
   endMinute: number,
-  isBreak = false,
-) => ({ order, name, startMinute, endMinute, isBreak });
+  kind: "TEACHING" | "BREAK" | "EVENT" = "TEACHING",
+  label = "",
+) => ({ order, name, startMinute, endMinute, kind, label });
 
 describe("validateBell", () => {
   it("accepts a plain three-period morning", () => {
@@ -90,21 +91,55 @@ describe("validateBell", () => {
   });
 
   it("rejects a schedule with no teaching period", () => {
-    expect(() => validateBell([p(0, "Tiffin", 600, 645, true)])).toThrow(
+    expect(() => validateBell([p(0, "Tiffin", 600, 645, "BREAK")])).toThrow(
       /at least one/i,
     );
+  });
+
+  it("rejects an event period with no label", () => {
+    expect(() => validateBell([p(0, "Assembly", 600, 645, "EVENT")])).toThrow(
+      /needs a label/i,
+    );
+  });
+
+  it("rejects a teaching period carrying a label", () => {
+    expect(() =>
+      validateBell([p(0, "Period 1", 600, 645, "TEACHING", "Assembly")]),
+    ).toThrow(/cannot carry a label/i);
+  });
+
+  it("rejects a break carrying a label", () => {
+    expect(() =>
+      validateBell([
+        p(0, "Period 1", 600, 645),
+        p(1, "Tiffin", 645, 690, "BREAK", "Assembly"),
+      ]),
+    ).toThrow(/cannot carry a label/i);
+  });
+
+  it("accepts an event period with a label, alongside a teaching period", () => {
+    expect(() =>
+      validateBell([
+        p(0, "Period 1", 600, 645),
+        p(1, "Assembly", 645, 690, "EVENT", "Assembly"),
+      ]),
+    ).not.toThrow();
   });
 });
 
 describe("DEFAULT_BELL", () => {
   it("is a seven-period day around one break", () => {
-    expect(DEFAULT_BELL.filter((row) => !row.isBreak)).toHaveLength(7);
-    expect(DEFAULT_BELL.filter((row) => row.isBreak)).toHaveLength(1);
+    expect(DEFAULT_BELL.filter((row) => row.kind === "TEACHING")).toHaveLength(7);
+    expect(DEFAULT_BELL.filter((row) => row.kind === "BREAK")).toHaveLength(1);
   });
 
   it("is numbered from zero without gaps", () => {
     expect(DEFAULT_BELL.map((row) => row.order)).toEqual([
       0, 1, 2, 3, 4, 5, 6, 7,
     ]);
+  });
+
+  it("validates cleanly", () => {
+    expect(() => validateBell(DEFAULT_BELL)).not.toThrow();
   });
 });

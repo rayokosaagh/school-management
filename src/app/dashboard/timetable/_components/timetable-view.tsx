@@ -62,7 +62,7 @@ export type CellAddress = { dayOfWeek: number; schoolPeriodId: number };
 /// for the keyboard or a screen reader; only the resting skin changes, because
 /// a timetable is read far more often than it is edited.
 export function WeekGrid({
-  bell,
+  periodsByDay,
   workingDays,
   cells,
   options,
@@ -73,7 +73,11 @@ export function WeekGrid({
   otherSectionBookings,
   flash,
 }: {
-  bell: BellPeriod[];
+  /// Each working day's own periods (see SectionGrid.periodsByDay). Every
+  /// weekday runs the same shape today, so this reads as one list — but the
+  /// rows below are still built per period id, not assumed shared, so a day
+  /// running a narrower shape is not offered a period it does not have.
+  periodsByDay: Record<number, BellPeriod[]>;
   workingDays: number[];
   cells: GridCell[];
   options: GridOption[];
@@ -92,6 +96,21 @@ export function WeekGrid({
   const filled = new Map(
     cells.map((cell) => [`${cell.dayOfWeek}:${cell.schoolPeriodId}`, cell]),
   );
+
+  // The rows a table can show are shared across every day column, so the row
+  // set is the union of periods any working day actually runs, ordered by
+  // clock time. A day that does not run a given period is handled per-cell
+  // below, not by leaving it out of the union — the table still needs a row
+  // to put the other days' cells in.
+  const idsByDay = new Map<number, Set<number>>();
+  for (const day of workingDays) {
+    idsByDay.set(day, new Set((periodsByDay[day] ?? []).map((p) => p.id)));
+  }
+  const bell = [
+    ...new Map(
+      workingDays.flatMap((day) => (periodsByDay[day] ?? []).map((p) => [p.id, p] as const)),
+    ).values(),
+  ].sort((a, b) => a.startMinute - b.startMinute || a.id - b.id);
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">
@@ -155,7 +174,7 @@ export function WeekGrid({
                   },
                 };
 
-            if (period.isBreak) {
+            if (period.kind === "BREAK") {
               return (
                 <motion.tr key={period.id} aria-rowindex={rowIndex + 2} {...rise}>
                   <th
@@ -204,6 +223,24 @@ export function WeekGrid({
                 </th>
 
                 {workingDays.map((day, i) => {
+                  // This day's own shape may not run this period at all —
+                  // rows are the union across the week (a table cannot vary
+                  // row count per column), so a narrower day gets an inert
+                  // cell here rather than an assignable "free" slot.
+                  if (!idsByDay.get(day)?.has(period.id)) {
+                    return (
+                      <td
+                        key={day}
+                        aria-colindex={i + 2}
+                        className="border-line bg-surface-2/40 border-b p-1 align-top"
+                      >
+                        <span className="sr-only">
+                          {DAY_NAMES[day]} does not run {period.name}.
+                        </span>
+                      </td>
+                    );
+                  }
+
                   const key = `${day}:${period.id}`;
                   const cell = filled.get(key) ?? null;
                   const busy = otherSectionBookings.get(key) ?? new Map();
@@ -388,7 +425,7 @@ export function TeacherWeek({
   const reduce = useReducedMotion();
   const now = useSchoolNow();
   const bySlot = new Map(week.map((p) => [`${p.dayOfWeek}:${p.schoolPeriodId}`, p]));
-  const teaching = bell.filter((period) => !period.isBreak);
+  const teaching = bell.filter((period) => period.kind !== "BREAK");
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">

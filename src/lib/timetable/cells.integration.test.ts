@@ -5,7 +5,12 @@ import { setSubjectTeacher } from "@/lib/registry/assignments";
 import { createStaff } from "@/lib/registry/staff";
 import { createGrade, createSection } from "@/lib/registry/structure";
 import { createOffering, createSubject } from "@/lib/registry/subjects";
-import { TimetableCellError, TimetableClashError, setTimetableCell } from "./cells";
+import {
+  TimetableCellError,
+  TimetableClashError,
+  clearTimetable,
+  setTimetableCell,
+} from "./cells";
 import { getSectionGrid } from "./grid";
 
 // Two sections of one grade, two subjects, two teachers, and a two-period day.
@@ -281,5 +286,129 @@ describe.skipIf(!process.env.DB_TESTS)("getSectionGrid", () => {
 
   it("returns null for a section that does not exist", async () => {
     await expect(getSectionGrid(-1)).resolves.toBeNull();
+  });
+
+  it("resolves every weekday to the periods of the shape it runs", async () => {
+    // No WeekdayShape row exists for this suite's days, so every one of them
+    // falls back to the default shape — the same one made.bellIds sits on,
+    // alongside whatever real periods the school already has there.
+    const grid = await getSectionGrid(made.sectionIds[0]);
+    for (let day = 0; day <= 6; day++) {
+      const ids = (grid?.periodsByDay.get(day) ?? []).map((p) => p.id);
+      expect(ids).toEqual(expect.arrayContaining(made.bellIds));
+    }
+  });
+});
+
+describe.skipIf(!process.env.DB_TESTS)("clearTimetable", () => {
+  // A second year, grade, section and bell period, entirely outside `made`,
+  // so the year-scoped case has something real to prove it did not reach.
+  const other = {
+    yearId: 0,
+    gradeId: 0,
+    sectionId: 0,
+    staffId: 0,
+    subjectId: 0,
+    offeringId: 0,
+    bellId: 0,
+  };
+
+  beforeAll(async () => {
+    const stamp = Date.now() % 100000;
+    other.yearId = (
+      await createAcademicYear({ nameBS: String(2000 + (stamp % 100)) })
+    ).id;
+    other.gradeId = (
+      await createGrade({ name: `__clear Other ${stamp}`, order: 990000 + stamp })
+    ).id;
+    other.sectionId = (
+      await createSection({ name: "A", gradeId: other.gradeId, academicYearId: other.yearId })
+    ).id;
+    other.staffId = (
+      await createStaff({
+        designation: "Teacher",
+        joinedOn: new Date(Date.UTC(2020, 3, 14)),
+        firstName: "__clear",
+        lastName: "Outside",
+        phone: `6${String(stamp).padStart(9, "0")}`,
+      })
+    ).id;
+    other.subjectId = (await createSubject({ name: `__clear Subject ${stamp}` })).id;
+    other.offeringId = (
+      await createOffering({
+        subjectId: other.subjectId,
+        gradeId: other.gradeId,
+        academicYearId: other.yearId,
+        hasPractical: false,
+        fullMarksTheory: 100,
+        passMarksTheory: 40,
+      })
+    ).id;
+    const defaultShape = await prisma.dayShape.findFirstOrThrow({ where: { isDefault: true } });
+    other.bellId = (
+      await prisma.schoolPeriod.create({
+        data: {
+          order: 995,
+          name: `__clear P1 ${stamp}`,
+          startMinute: 600,
+          endMinute: 645,
+          kind: "TEACHING",
+          dayShapeId: defaultShape.id,
+        },
+      })
+    ).id;
+    await setSubjectTeacher(other.sectionId, other.offeringId, other.staffId);
+  });
+
+  afterAll(async () => {
+    await prisma.timetablePeriod.deleteMany({ where: { schoolPeriodId: other.bellId } });
+    await prisma.schoolPeriod.deleteMany({ where: { id: other.bellId } });
+    await prisma.teacherAssignment.deleteMany({ where: { sectionId: other.sectionId } });
+    await prisma.section.deleteMany({ where: { id: other.sectionId } });
+    await prisma.subjectOffering.deleteMany({ where: { id: other.offeringId } });
+    await prisma.subject.deleteMany({ where: { id: other.subjectId } });
+    await prisma.staff.deleteMany({ where: { id: other.staffId } });
+    await prisma.grade.deleteMany({ where: { id: other.gradeId } });
+    await prisma.academicYear.deleteMany({ where: { id: other.yearId } });
+  });
+
+  it("deletes only the named section's lessons, leaving the other section in the same year untouched", async () => {
+    await setTimetableCell(cell({ sectionId: made.sectionIds[0] }));
+    // A different day: 5A and 5B share a Maths teacher (Sharma), so the same
+    // slot for both would be a clash rather than the two lessons this needs.
+    await setTimetableCell(cell({ sectionId: made.sectionIds[1], dayOfWeek: 1 }));
+
+    const result = await clearTimetable({ sectionId: made.sectionIds[0] });
+    expect(result.deleted).toBe(1);
+
+    expect((await getSectionGrid(made.sectionIds[0]))?.cells).toEqual([]);
+    expect((await getSectionGrid(made.sectionIds[1]))?.cells).toHaveLength(1);
+  });
+
+  it("clearing a section with nothing booked deletes nothing", async () => {
+    const result = await clearTimetable({ sectionId: made.sectionIds[0] });
+    expect(result.deleted).toBe(0);
+  });
+
+  it("deletes every section's lessons in the named year, and none from another year", async () => {
+    await setTimetableCell(cell({ sectionId: made.sectionIds[0] }));
+    await setTimetableCell(cell({ sectionId: made.sectionIds[1], dayOfWeek: 1 }));
+    await setTimetableCell({
+      sectionId: other.sectionId,
+      schoolPeriodId: other.bellId,
+      dayOfWeek: SUNDAY,
+      subjectOfferingId: other.offeringId,
+    });
+
+    const result = await clearTimetable({ academicYearId: made.yearId });
+    expect(result.deleted).toBe(2);
+
+    expect((await getSectionGrid(made.sectionIds[0]))?.cells).toEqual([]);
+    expect((await getSectionGrid(made.sectionIds[1]))?.cells).toEqual([]);
+    expect((await getSectionGrid(other.sectionId))?.cells).toHaveLength(1);
+
+    // The untouched lesson is this test's own; clean it up so it cannot leak
+    // into a rerun of this suite against the same database.
+    await clearTimetable({ sectionId: other.sectionId });
   });
 });
