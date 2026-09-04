@@ -2,7 +2,6 @@ import {
   BookOpen,
   CalendarCheck,
   CalendarPlus,
-  CalendarRange,
   ClipboardCheck,
   ClipboardList,
   GraduationCap,
@@ -31,7 +30,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "classes", label: "Classes", href: "/dashboard/classes", icon: BookOpen },
       { id: "subjects", label: "Subjects", href: "/dashboard/subjects", icon: NotebookPen },
       { id: "assignments", label: "Teaching", href: "/dashboard/assignments", icon: ClipboardList },
-      { id: "timetable", label: "Timetable", href: "/dashboard/timetable", icon: CalendarRange },
+      // Timetable lives inside Classes now (?view=timetable); /dashboard/timetable
+      // still redirects there for bookmarks.
       { id: "rollover", label: "Next year", href: "/dashboard/rollover", icon: CalendarPlus },
     ],
   },

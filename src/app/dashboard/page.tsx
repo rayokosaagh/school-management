@@ -121,9 +121,13 @@ function TeacherScheduleToday({ periods }: { periods: TodayPeriod[] }) {
     <Panel
       title="My classes today"
       meta={
-        periods.length > 0
-          ? `${periods.length} period${periods.length === 1 ? "" : "s"}`
-          : undefined
+        <Link
+          href="/dashboard/classes?view=timetable"
+          className="text-brand inline-flex items-center gap-1 font-medium"
+        >
+          Full week
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
       }
     >
       {periods.length === 0 ? (

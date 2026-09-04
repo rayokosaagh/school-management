@@ -20,7 +20,7 @@ import {
   saveBell,
   saveDays,
   type ActionState,
-} from "../actions";
+} from "../timetable-actions";
 
 const EMPTY: ActionState = {};
 

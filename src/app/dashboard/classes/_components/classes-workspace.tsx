@@ -1,10 +1,20 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, BookOpen, Layers, Pencil, Plus, Search } from "lucide-react";
+import {
+  ArrowUpDown,
+  BookOpen,
+  CalendarRange,
+  Layers,
+  Pencil,
+  Plus,
+  Search,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { startTransition, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { PageFrame } from "@/components/ui/page-frame";
@@ -13,7 +23,7 @@ import {
   registerTabId,
   type RegisterTab,
 } from "@/components/ui/register-tabs";
-import { Segmented } from "@/components/ui/segmented";
+import { Segmented, type SegmentedOption } from "@/components/ui/segmented";
 import { FieldSelect } from "@/components/ui/select";
 import {
   Sheet,
@@ -37,10 +47,18 @@ import {
   type YearRow,
 } from "./classes-view";
 import { ReorderGradesDialog } from "./reorder-grades";
+import { TeacherWeekView, TimetableEditView, type TimetableSlot } from "./timetable-embed";
+
+export type { TimetableSlot } from "./timetable-embed";
 
 const ALL = "all";
 
+type View = "structure" | "years" | "timetable";
+
 export function ClassesWorkspace({
+  view,
+  showStructure,
+  showTimetable,
   years,
   grades,
   sections,
@@ -48,7 +66,18 @@ export function ClassesWorkspace({
   exams,
   academicYearId,
   yearLabel,
+  timetable,
 }: {
+  /// From `?view=`; "structure" is the default so a bare visit is unchanged.
+  /// Already resolved against what this actor may see — see classes/page.tsx
+  /// — so it is never a view that would need hiding.
+  view: View;
+  /// manage:registry — gates Structure and Years together, as before.
+  showStructure: boolean;
+  /// manage:timetable, or a teacher's own week — see roles.ts's
+  /// canOpenTimetableView. Independent of showStructure: a school that has
+  /// customised the matrix could grant one without the other.
+  showTimetable: boolean;
   years: YearRow[];
   grades: GradeRow[];
   sections: SectionRow[];
@@ -56,17 +85,29 @@ export function ClassesWorkspace({
   exams: { id: number; name: string }[];
   academicYearId: number | null;
   yearLabel: string;
+  timetable: TimetableSlot;
 }) {
   const baseId = useId();
   const panelId = `${baseId}-panel`;
+  const router = useRouter();
 
   const ordered = useMemo(
     () => [...grades].sort((a, b) => a.order - b.order),
     [grades],
   );
 
-  const [view, setView] = useState<"structure" | "years">("structure");
-  // No deep link exists for this page, so the table always lands showing
+  // The view lives in the URL, not local state, so it survives a reload and
+  // is what the old /dashboard/timetable now redirects to. Switching drops
+  // every other param — ?section=, ?teacher=, ?shape= — the same as Honours
+  // dropping ?student= when Students switches away from the register.
+  function switchView(next: View) {
+    if (next === view) return;
+    startTransition(() => {
+      router.replace(next === "structure" ? "?" : `?view=${next}`, { scroll: false });
+    });
+  }
+
+  // No deep link exists into Structure, so the table always lands showing
   // every grade's sections rather than an arbitrary first grade.
   const [tab, setTab] = useState(ALL);
   const [query, setQuery] = useState("");
@@ -175,6 +216,20 @@ export function ClassesWorkspace({
     [chosen, teacherOptions],
   );
 
+  // Only the tabs this actor can use: a school that has customised the matrix
+  // could hold manage:registry without manage:timetable, a teacher's own
+  // week without manage:registry, or both — see the props' own comments.
+  // With one tab there is nothing to switch, so the strip does not show.
+  const viewOptions: SegmentedOption<View>[] = [
+    ...(showStructure
+      ? [
+          { value: "structure" as const, label: "Structure", count: sections.length },
+          { value: "years" as const, label: "Years", count: years.length },
+        ]
+      : []),
+    ...(showTimetable ? [{ value: "timetable" as const, label: "Timetable" }] : []),
+  ];
+
   return (
     <PageFrame
       eyebrow="Structure"
@@ -182,49 +237,74 @@ export function ClassesWorkspace({
       meta={`${grades.length} grades · ${sections.length} sections · ${yearLabel}`}
       actions={
         <div className="flex items-center gap-2">
-          <Segmented
-            ariaLabel="View"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "structure" as const, label: "Structure", count: sections.length },
-              { value: "years" as const, label: "Years", count: years.length },
-            ]}
-          />
-          <Sheet>
-            <SheetTrigger render={<Button size="sm" />}>
-              <Plus data-icon="inline-start" aria-hidden="true" />
-              Add
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
-              <SheetHeader>
-                <SheetTitle>Add to the structure</SheetTitle>
-                <SheetDescription>
-                  A grade is school-wide; its sections belong to one year.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="space-y-6 px-4 pb-6">
-                <div className="space-y-3">
-                  <p className="text-sm font-medium">New academic year</p>
-                  <AddYearForm />
-                </div>
-                <div className="border-line space-y-3 border-t pt-5">
-                  <p className="text-sm font-medium">New grade</p>
-                  <AddGradeForm />
-                </div>
-                {academicYearId ? (
-                  <div className="border-line space-y-3 border-t pt-5">
-                    <p className="text-sm font-medium">New section in {yearLabel}</p>
-                    <AddSectionForm grades={grades} academicYearId={academicYearId} />
+          {viewOptions.length > 1 ? (
+            <Segmented ariaLabel="View" value={view} onChange={switchView} options={viewOptions} />
+          ) : null}
+          {showStructure ? (
+            <Sheet>
+              <SheetTrigger render={<Button size="sm" />}>
+                <Plus data-icon="inline-start" aria-hidden="true" />
+                Add
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+                <SheetHeader>
+                  <SheetTitle>Add to the structure</SheetTitle>
+                  <SheetDescription>
+                    A grade is school-wide; its sections belong to one year.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-6 px-4 pb-6">
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">New academic year</p>
+                    <AddYearForm />
                   </div>
-                ) : null}
-              </div>
-            </SheetContent>
-          </Sheet>
+                  <div className="border-line space-y-3 border-t pt-5">
+                    <p className="text-sm font-medium">New grade</p>
+                    <AddGradeForm />
+                  </div>
+                  {academicYearId ? (
+                    <div className="border-line space-y-3 border-t pt-5">
+                      <p className="text-sm font-medium">New section in {yearLabel}</p>
+                      <AddSectionForm grades={grades} academicYearId={academicYearId} />
+                    </div>
+                  ) : null}
+                </div>
+              </SheetContent>
+            </Sheet>
+          ) : null}
         </div>
       }
     >
-      {view === "years" ? (
+      {view === "timetable" ? (
+        timetable.state === "edit" ? (
+          <TimetableEditView {...timetable} />
+        ) : timetable.state === "readonly" ? (
+          <TeacherWeekView {...timetable} />
+        ) : timetable.state === "no-year" ? (
+          <PageFrame.Body>
+            <EmptyState
+              icon={CalendarRange}
+              title="No academic year is current"
+              description={
+                showStructure
+                  ? "Set one on the Years tab before building a timetable."
+                  : "Nothing is scheduled until the school sets a current academic year."
+              }
+              action={
+                showStructure ? (
+                  <Button type="button" size="sm" onClick={() => switchView("years")}>
+                    Go to Years
+                  </Button>
+                ) : undefined
+              }
+            />
+          </PageFrame.Body>
+        ) : // "unavailable": unreachable — page.tsx only resolves view to
+          // "timetable" once canTimetable is true, and timetable is always
+          // populated whenever canTimetable is true. Kept rather than
+          // asserted so a future bug here fails quietly, not with a crash.
+          null
+      ) : view === "years" ? (
         <PageFrame.Body>
           <YearsView rows={years} />
         </PageFrame.Body>

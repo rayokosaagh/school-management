@@ -34,7 +34,9 @@ export type ActionState = {
   shapeId?: number;
 };
 
-const PATH = "/dashboard/timetable";
+// The Timetable view now lives inside Classes (?view=timetable), not on its
+// own route — see nav-model.ts and the redirect in dashboard/timetable/page.tsx.
+const PATH = "/dashboard/classes";
 
 /// Every action below is a public HTTP endpoint, so the check lives here rather
 /// than in the page that renders the grid.

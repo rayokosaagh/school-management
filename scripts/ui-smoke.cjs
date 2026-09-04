@@ -35,9 +35,11 @@ const ROUTES = [
   "dashboard/teachers",
   "dashboard/teachers?staff=1",
   "dashboard/classes",
+  // Timetable as a view inside Classes, and the old page redirecting to it.
+  "dashboard/classes?view=timetable",
+  "dashboard/timetable",
   "dashboard/subjects",
   "dashboard/assignments",
-  "dashboard/timetable",
   "dashboard/rollover",
   "dashboard/attendance",
   "dashboard/exams",

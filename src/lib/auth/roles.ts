@@ -100,12 +100,18 @@ export const ROLE_DESCRIPTION: Record<Role, string> = {
 
 /// Which dashboard sections a role may open. Used for both the navigation and
 /// the route guard, so the two cannot disagree.
+///
+/// /dashboard/timetable is deliberately absent: it is now a bare redirect
+/// into /dashboard/classes?view=timetable (see that page), and the Timetable
+/// view there is guarded per-view — manage:timetable for the full grid, or a
+/// teacher's own read-only week, see canOpenTimetableView below — rather than
+/// by one capability on the whole /dashboard/classes prefix. Adding a row here
+/// for either path would wrongly gate the other.
 export const ROUTE_CAPABILITY: { prefix: string; capability: Capability }[] = [
   { prefix: "/dashboard/settings", capability: "manage:settings" },
   { prefix: "/dashboard/classes", capability: "manage:registry" },
   { prefix: "/dashboard/subjects", capability: "manage:registry" },
   { prefix: "/dashboard/assignments", capability: "manage:registry" },
-  { prefix: "/dashboard/timetable", capability: "manage:timetable" },
   { prefix: "/dashboard/teachers", capability: "manage:registry" },
   { prefix: "/dashboard/rollover", capability: "manage:registry" },
   { prefix: "/dashboard/students", capability: "view:records" },
@@ -121,4 +127,26 @@ export function capabilityFor(pathname: string): Capability | null {
   )[0];
   // Anything unlisted, such as the dashboard home, is open to any signed-in user.
   return rule ? rule.capability : null;
+}
+
+/// Whether an actor may open the Timetable view inside Classes at all: full
+/// control under manage:timetable, or — making the note above true — their
+/// own week, read-only, if they are a teacher with a linked staff record.
+/// `isTeacherWithStaff` should already account for both: role === "TEACHER"
+/// and a non-null staffId, since an unlinked teacher login has no week of
+/// their own to show.
+export function canOpenTimetableView(
+  hasManageTimetable: boolean,
+  isTeacherWithStaff: boolean,
+): boolean {
+  return hasManageTimetable || isTeacherWithStaff;
+}
+
+/// Given that the Timetable view is open at all (canOpenTimetableView above),
+/// whether it shows the full editing grid — shape switching, the bell editor,
+/// clear timetable, every class's week — or just the signed-in teacher's own
+/// week, read-only. manage:timetable is the only thing that unlocks editing;
+/// being a teacher never does, even for their own week.
+export function timetableViewIsEditable(hasManageTimetable: boolean): boolean {
+  return hasManageTimetable;
 }

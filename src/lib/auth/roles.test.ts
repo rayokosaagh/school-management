@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CAPABILITIES, canByDefault, capabilityFor } from "./roles";
+import {
+  CAPABILITIES,
+  canByDefault,
+  canOpenTimetableView,
+  capabilityFor,
+  timetableViewIsEditable,
+} from "./roles";
 
 describe("default grants", () => {
   it("gives an administrator every capability", () => {
@@ -47,6 +53,13 @@ describe("capabilityFor", () => {
     expect(capabilityFor("/dashboard")).toBeNull();
   });
 
+  it("leaves the old timetable URL needing only a session — the redirect target guards itself", () => {
+    // /dashboard/timetable is now a bare redirect into
+    // /dashboard/classes?view=timetable; the real check happens there, per
+    // view, via canOpenTimetableView below.
+    expect(capabilityFor("/dashboard/timetable")).toBeNull();
+  });
+
   it("covers every capability it can grant", () => {
     // A capability nothing routes to would be unreachable from the navigation.
     expect(CAPABILITIES).toContain("view:records");
@@ -79,5 +92,29 @@ describe("year teardown", () => {
     expect(canByDefault("ADMIN", "manage:settings")).toBe(true);
     expect(canByDefault("OFFICE", "manage:settings")).toBe(false);
     expect(canByDefault("TEACHER", "manage:settings")).toBe(false);
+  });
+});
+
+describe("Timetable view inside Classes", () => {
+  it("lets office open the view, with the full editing grid, by default", () => {
+    const hasManageTimetable = canByDefault("OFFICE", "manage:timetable");
+    expect(canOpenTimetableView(hasManageTimetable, false)).toBe(true);
+    expect(timetableViewIsEditable(hasManageTimetable)).toBe(true);
+  });
+
+  it("keeps a registry-only user out — manage:registry alone is not manage:timetable", () => {
+    // A school that has customised the matrix could grant manage:registry
+    // (Structure, Years) without manage:timetable: they must not see the tab.
+    expect(canOpenTimetableView(false, false)).toBe(false);
+  });
+
+  it("gives a teacher their own week, read-only, whether or not manage:timetable is granted", () => {
+    const hasManageTimetable = canByDefault("TEACHER", "manage:timetable");
+    expect(canOpenTimetableView(hasManageTimetable, true)).toBe(true);
+    expect(timetableViewIsEditable(hasManageTimetable)).toBe(false);
+  });
+
+  it("shuts out a teacher with no linked staff record — there is no week to show", () => {
+    expect(canOpenTimetableView(false, false)).toBe(false);
   });
 });

@@ -11,7 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import type { DayShapeSummary, OrphanedLessons } from "@/lib/timetable/day-shapes";
 import { DAY_NAMES, describeClear, describeOrphanedLessons, shapeIdByDay } from "@/lib/timetable/schedule";
 import type { ClearTimetableScope } from "@/lib/timetable/cells";
-import { changeWeekdayShape, previewClearTimetable, previewWeekdayChange, runClearTimetable } from "../actions";
+import { changeWeekdayShape, previewClearTimetable, previewWeekdayChange, runClearTimetable } from "../timetable-actions";
 
 // The two destructive controls the timetable page's toolbar carries: which
 // shape each weekday runs (spec section 4 — reassigning one can strand

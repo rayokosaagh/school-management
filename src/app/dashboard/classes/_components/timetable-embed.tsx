@@ -1,5 +1,21 @@
 "use client";
 
+// The Timetable view, embedded inside Classes rather than owning its own
+// route. Two shapes:
+//
+// - TimetableEditView: everything the old /dashboard/timetable page rendered
+//   — Week / By teacher / School day, the shape switcher, the per-shape bell
+//   editor, clear timetable — unchanged in behaviour. Only its chrome moved:
+//   it no longer owns a PageFrame (Classes' one PageFrame covers both views
+//   now, same as Honours folding into Students), so the Week/By
+//   teacher/School day Segmented that used to sit in the page's title row
+//   now sits in a toolbar row instead. manage:timetable only.
+// - TeacherWeekView: a teacher's own week, read-only. No shape switcher, no
+//   class picker, no clear-timetable control, no other section's grid — just
+//   the same TeacherWeek grid the admin "By teacher" view already uses,
+//   pointed at the signed-in teacher's own lessons. See roles.ts's note on
+//   manage:timetable, which this makes true.
+
 import { CalendarRange, Clock, Eraser } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,7 +38,7 @@ import type { DayShapeSummary } from "@/lib/timetable/day-shapes";
 import { DAY_NAMES, cellAt, type BellPeriod } from "@/lib/timetable/schedule";
 import type { Booking, SectionGrid } from "@/lib/timetable/grid";
 import type { Clash, WeekPeriod } from "@/lib/timetable/teacher-week";
-import { setCell, type ActionState } from "../actions";
+import { setCell, type ActionState } from "../timetable-actions";
 import { ClearTimetableButton, WeekdayShapeBar } from "./day-shape-controls";
 import { SchoolDayForm } from "./timetable-forms";
 import {
@@ -38,7 +54,7 @@ import {
 const EMPTY: ActionState = {};
 
 type SectionRow = { id: number; name: string; gradeName: string; filled: number };
-type View = "week" | "teacher" | "day";
+type SubView = "week" | "teacher" | "day";
 
 /// SectionGrid as it exists once a server component has serialised it for a
 /// client one: periodsByDay crosses that boundary as a Record, not the Map
@@ -47,7 +63,46 @@ type ClientSectionGrid = Omit<SectionGrid, "periodsByDay"> & {
   periodsByDay: Record<number, BellPeriod[]>;
 };
 
-export function TimetableWorkspace({
+/// What page.tsx hands the Timetable view, decided server-side from
+/// canOpenTimetableView / timetableViewIsEditable (roles.ts) so the client
+/// never has to re-derive who gets what:
+/// - "unavailable": this actor cannot open the view at all (the tab itself is
+///   hidden — see ClassesWorkspace).
+/// - "no-year": the view is open, but there is no current academic year, so
+///   there is nothing to build a grid or a week from yet.
+/// - "edit": manage:timetable — the full grid, same as the old page.
+/// - "readonly": a teacher's own week, nothing else.
+export type TimetableSlot =
+  | { state: "unavailable" }
+  | { state: "no-year" }
+  | ({ state: "edit" } & TimetableEditProps)
+  | ({ state: "readonly" } & TimetableReadOnlyProps);
+
+type TimetableEditProps = {
+  yearLabel: string;
+  academicYearId: number;
+  dayShapeId: number;
+  shapes: DayShapeSummary[];
+  bell: BellPeriod[];
+  workingDays: number[];
+  sections: SectionRow[];
+  selectedId: number | null;
+  grid: ClientSectionGrid | null;
+  clashes: Clash[];
+  teachers: { id: number; fullName: string }[];
+  selectedTeacherId: number | null;
+  teacherWeek: WeekPeriod[];
+  bookings: Booking[];
+  lessonsByPeriod: Record<number, number>;
+};
+
+type TimetableReadOnlyProps = {
+  bell: BellPeriod[];
+  workingDays: number[];
+  teacherWeek: WeekPeriod[];
+};
+
+export function TimetableEditView({
   yearLabel,
   academicYearId,
   dayShapeId,
@@ -63,32 +118,14 @@ export function TimetableWorkspace({
   teacherWeek,
   bookings,
   lessonsByPeriod,
-}: {
-  yearLabel: string;
-  academicYearId: number;
-  /// The shape the School day editor is currently showing. Comes from the
-  /// URL (?shape=), same as the section and teacher below.
-  dayShapeId: number;
-  shapes: DayShapeSummary[];
-  bell: BellPeriod[];
-  workingDays: number[];
-  sections: SectionRow[];
-  selectedId: number | null;
-  grid: ClientSectionGrid | null;
-  clashes: Clash[];
-  teachers: { id: number; fullName: string }[];
-  selectedTeacherId: number | null;
-  teacherWeek: WeekPeriod[];
-  bookings: Booking[];
-  lessonsByPeriod: Record<number, number>;
-}) {
+}: TimetableEditProps) {
   const baseId = useId();
   const panelId = `${baseId}-panel`;
   const router = useRouter();
   const params = useSearchParams();
 
   const reduce = useReducedMotion();
-  const [view, setView] = useState<View>(bell.length === 0 ? "day" : "week");
+  const [view, setView] = useState<SubView>(bell.length === 0 ? "day" : "week");
   const [selectedCell, setSelectedCell] = useState<CellAddress | null>(null);
   const [room, setRoom] = useState("");
   /// The cell most recently written. The nonce makes a repeat write to the same
@@ -97,14 +134,17 @@ export function TimetableWorkspace({
   const [, cellAction] = useToastedActionState(setCell, EMPTY);
 
   /// Selection lives in the URL so the grid is server rendered and a link opens
-  /// the class it names, matching ?student= and ?staff= elsewhere.
+  /// the class it names, matching ?student= and ?staff= elsewhere. Always
+  /// keeps ?view=timetable, since this is a view inside Classes now, not a
+  /// route of its own.
   function go(next: Record<string, string | null>) {
     const query = new URLSearchParams(params.toString());
+    query.set("view", "timetable");
     for (const [key, value] of Object.entries(next)) {
       if (value === null) query.delete(key);
       else query.set(key, value);
     }
-    router.replace(`/dashboard/timetable?${query.toString()}`, { scroll: false });
+    router.replace(`/dashboard/classes?${query.toString()}`, { scroll: false });
   }
 
   const tabs = useMemo<RegisterTab[]>(
@@ -221,19 +261,10 @@ export function TimetableWorkspace({
     );
 
   return (
-    <PageFrame
-      eyebrow="Timetable"
-      title={
-        view === "day"
-          ? "School day"
-          : view === "teacher"
-            ? "By teacher"
-            : (grid?.section.label ?? "Timetable")
-      }
-      meta={yearLabel}
-      actions={
+    <>
+      <PageFrame.Toolbar>
         <Segmented
-          ariaLabel="View"
+          ariaLabel="Timetable view"
           value={view}
           onChange={setView}
           options={[
@@ -242,8 +273,8 @@ export function TimetableWorkspace({
             { value: "day" as const, label: "School day", count: bell.length },
           ]}
         />
-      }
-    >
+      </PageFrame.Toolbar>
+
       <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={view}
@@ -317,7 +348,7 @@ export function TimetableWorkspace({
           <EmptyState
             icon={CalendarRange}
             title="No sections this year"
-            description="Add a section on the Classes page before building its week."
+            description="Add a section on the Structure view before building its week."
           />
         </PageFrame.Body>
       ) : (
@@ -388,6 +419,47 @@ export function TimetableWorkspace({
       )}
       </motion.div>
       </AnimatePresence>
-    </PageFrame>
+    </>
+  );
+}
+
+/// A teacher's own week, read-only: no shape switcher, no teacher picker
+/// (there is only ever one teacher to show), no clash banner (a diagnostic
+/// for whoever builds the timetable, not for the teacher reading their own),
+/// and no editing — TeacherWeek itself renders a plain table, nothing more.
+export function TeacherWeekView({
+  bell,
+  workingDays,
+  teacherWeek,
+}: TimetableReadOnlyProps) {
+  return (
+    <>
+      <PageFrame.Toolbar>
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+          Your week · read-only
+        </span>
+        <span className="flex-1" />
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+          {teacherWeek.length} period{teacherWeek.length === 1 ? "" : "s"}
+        </span>
+      </PageFrame.Toolbar>
+      <PageFrame.Body>
+        {bell.length === 0 ? (
+          <EmptyState
+            icon={Clock}
+            title="The school day is not set yet"
+            description="Nothing is on the timetable until an administrator sets the school's periods."
+          />
+        ) : teacherWeek.length === 0 ? (
+          <EmptyState
+            icon={CalendarRange}
+            title="No lessons booked yet"
+            description="Your week will show here once the timetable assigns you a class."
+          />
+        ) : (
+          <TeacherWeek week={teacherWeek} workingDays={workingDays} bell={bell} />
+        )}
+      </PageFrame.Body>
+    </>
   );
 }
