@@ -59,8 +59,26 @@ export function RollCallWorkspace({
   const router = useRouter();
   const baseId = useId();
   const panelId = `${baseId}-panel`;
-  const [, startNavigation] = useTransition();
+  const [isPending, startNavigation] = useTransition();
   const [dateInput, setDateInput] = useState(dateLabel);
+  // A route change re-renders this component without remounting it, so
+  // `dateInput` needs its own resync back to `dateLabel` once a navigation
+  // settles. Keyed off `isPending`'s falling edge rather than off comparing
+  // `dateLabel` to its previous value: a rejected date can fall back to the
+  // day already on screen (e.g. typing garbage while viewing today), where
+  // `dateLabel` reads the same before and after, so a value comparison would
+  // never fire and the box would keep showing the rejected text. Every
+  // `goToDate` call is a transition, so its completion is instead what
+  // triggers the resync — regardless of whether the resolved date changed.
+  // Adjusted during render rather than in an effect: see
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-when-a-prop-changes.
+  const [awaitingSync, setAwaitingSync] = useState(false);
+  if (isPending && !awaitingSync) {
+    setAwaitingSync(true);
+  } else if (!isPending && awaitingSync) {
+    setAwaitingSync(false);
+    setDateInput(dateLabel);
+  }
   const [showRegister, setShowRegister] = useState(false);
   const [sectionId, setSectionId] = useState(initialSectionId);
 
@@ -224,9 +242,12 @@ export function RollCallWorkspace({
             <p className="mb-3 font-medium">
               {current ? `${current.grade.name} ${current.name}` : "Section"}
             </p>
-            {sheetError ? (
-              <p className="text-warn text-sm">{sheetError}</p>
-            ) : sheet && sheet.rows.length === 0 ? (
+            {/* A rejected `date` still has a sheet underneath it (the
+                fallback day loaded fine), so the warning sits above the
+                roll call rather than replacing it — only a genuine fetch
+                failure (no `sheet`) leaves the message on its own. */}
+            {sheetError && <p className="text-warn mb-3 text-sm">{sheetError}</p>}
+            {sheet && sheet.rows.length === 0 ? (
               <p className="text-ink-3 text-sm">
                 No active students are enrolled in this section.
               </p>

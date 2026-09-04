@@ -7,9 +7,10 @@ import {
   sectionsMissingAttendance,
   todayBsLabel,
 } from "@/lib/attendance/attendance";
-import { adToBs, parseBsInput, BS_MONTHS } from "@/lib/date/bs";
+import { adToBs, BS_MONTHS } from "@/lib/date/bs";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { listSections } from "@/lib/registry/structure";
+import { resolveRollCallDate } from "./_components/roll-call-date";
 import { RollCallWorkspace } from "./_components/rollcall-workspace";
 
 import { requirePage } from "@/lib/auth/guard";
@@ -46,21 +47,16 @@ export default async function AttendancePage({
     );
   }
 
-  // Default to today, clamped into the academic year so the sheet is never
-  // asked for a date the year does not contain.
+  // Defaults to today, clamped into the academic year so the sheet is never
+  // asked for a date the year does not contain. An unparseable `date` param
+  // falls back the same way, but — unlike the old silent substitution — says
+  // so via `dateError`, which becomes the page's `sheetError` below: the box
+  // and the register are both driven from `date`, so they can't disagree.
   const now = new Date();
   const todayUtc = new Date(
     Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
   );
-  const clampedToday =
-    todayUtc < currentYear.startsOn
-      ? currentYear.startsOn
-      : todayUtc > currentYear.endsOn
-        ? currentYear.endsOn
-        : todayUtc;
-
-  const requestedDate = params.date ? parseBsInput(params.date) : null;
-  const date = requestedDate ?? clampedToday;
+  const { date, error: dateError } = resolveRollCallDate(params.date, currentYear, todayUtc);
   const dateLabel = todayBsLabel(date);
 
   const requestedSection = Number(params.section);
@@ -89,8 +85,10 @@ export default async function AttendancePage({
     }),
   );
   const sheets = Object.fromEntries(loaded.map((l) => [l.id, l.sheet]));
-  // Only the section on screen gets to report its failure.
-  const sheetError = loaded.find((l) => l.id === sectionId)?.error ?? null;
+  // Only the section on screen gets to report its failure. A rejected `date`
+  // param takes priority: it explains why every section is showing the
+  // fallback day, not just this one.
+  const sheetError = dateError ?? loaded.find((l) => l.id === sectionId)?.error ?? null;
 
   const bs = adToBs(date);
   const [missing, register] = await Promise.all([
