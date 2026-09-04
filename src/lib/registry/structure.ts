@@ -116,10 +116,20 @@ export async function moveGrade(id: number, direction: "up" | "down") {
 
 /// Rewrites orders to 0,1,2,… in their current sequence, closing any gaps left
 /// by deletions so the move buttons always have a neighbour to swap with.
+/// Where to park rows while `order` is rewritten. `order` is unique, so every
+/// row moves out of the way before any real value is written. The floor has to
+/// sit below every existing order *and* below the 0…n-1 range about to be
+/// written: the current minimum alone is not low enough when it is already a
+/// small positive number (say the grades sit at 3,4,5 after earlier deletions),
+/// because parking at 2,1,0 collides with the values the rewrite then uses.
+export function parkingFloor(lowestOrder: number | null): number {
+  return Math.min(lowestOrder ?? 0, 0) - 1;
+}
+
 export async function normaliseGradeOrder() {
   const grades = await prisma.grade.findMany({ orderBy: { order: "asc" } });
   const lowest = await prisma.grade.aggregate({ _min: { order: true } });
-  let parking = (lowest._min.order ?? 0) - 1;
+  let parking = parkingFloor(lowest._min.order);
 
   return prisma.$transaction(async (tx) => {
     // Park everything out of the way first, or the rewrite collides with itself.
@@ -174,12 +184,7 @@ export async function reorderGrades(ids: number[]) {
   validateGradeOrder(ids, existing.map((g) => g.id));
 
   const lowest = await prisma.grade.aggregate({ _min: { order: true } });
-  // Below every existing order *and* below the 0…ids.length-1 range this
-  // writes next — the current minimum alone is not enough of a floor when it
-  // is already a small positive number (e.g. after grade 0 was deleted),
-  // which would otherwise let a still-parked row collide with a value the
-  // second loop below is about to write.
-  let parking = Math.min(lowest._min.order ?? 0, 0) - 1;
+  let parking = parkingFloor(lowest._min.order);
 
   return prisma.$transaction(async (tx) => {
     for (const id of ids) {
