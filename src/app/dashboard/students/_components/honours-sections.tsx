@@ -38,13 +38,19 @@ function Pillar({ label, value, weight }: { label: string; value: number | null;
 }
 
 /// Closes an inline form once its action reports success, and leaves it open
-/// with the message when it does not.
+/// with the message when it does not. `saveConduct`/`saveActivity` return the
+/// same `success` text ("Merit recorded.") on every call, so the message
+/// alone can't tell two saves apart — a second merit recorded back to back
+/// would look like the same event as the first and never re-close the form.
+/// `token` (the new entry's id) is what actually changes each time; the
+/// effect depends on both so a first save with no prior state still closes.
 function useCloseOnSuccess(state: ActionState, close: () => void) {
   useEffect(() => {
     if (state.success) close();
-    // `close` is a stable setter call; only the success message matters.
+    // `close` is a stable setter call; only the outcome of this particular
+    // save matters, not its identity across renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.success]);
+  }, [state.success, state.token]);
 }
 
 /// Standing, conduct and activities for the read view of the pane. Forms are

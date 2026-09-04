@@ -30,7 +30,12 @@ import {
   updateStudent,
 } from "@/lib/registry/students";
 
-export type ActionState = { error?: string; success?: string };
+// `token` is not shown anywhere; it exists so a UI that needs to recognise
+// *this particular* success — closing a form, say — can tell it apart from
+// an earlier one that happened to carry the same `success` text (e.g. two
+// merits recorded back to back both read "Merit recorded."). Actions whose
+// message is already unique per call (a person's name, say) can leave it out.
+export type ActionState = { error?: string; success?: string; token?: number };
 
 const PATH = "/dashboard/students";
 
@@ -341,8 +346,9 @@ export async function saveConduct(_prev: ActionState, formData: FormData): Promi
   const when = readDate(formData, context.year);
   if ("error" in when) return { error: when.error };
 
+  let entry;
   try {
-    await addConduct({
+    entry = await addConduct({
       studentId,
       academicYearId: context.year.id,
       kind,
@@ -357,7 +363,10 @@ export async function saveConduct(_prev: ActionState, formData: FormData): Promi
   }
 
   revalidatePath(PATH);
-  return { success: kind === "MERIT" ? "Merit recorded." : "Demerit recorded." };
+  return {
+    success: kind === "MERIT" ? "Merit recorded." : "Demerit recorded.",
+    token: entry.id,
+  };
 }
 
 export async function removeConduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -399,8 +408,9 @@ export async function saveActivity(_prev: ActionState, formData: FormData): Prom
   const when = readDate(formData, context.year);
   if ("error" in when) return { error: when.error };
 
+  let entry;
   try {
-    await addActivity({
+    entry = await addActivity({
       studentId,
       academicYearId: context.year.id,
       name: String(formData.get("name") ?? ""),
@@ -415,7 +425,7 @@ export async function saveActivity(_prev: ActionState, formData: FormData): Prom
   }
 
   revalidatePath(PATH);
-  return { success: "Activity recorded." };
+  return { success: "Activity recorded.", token: entry.id };
 }
 
 export async function removeActivity(_prev: ActionState, formData: FormData): Promise<ActionState> {

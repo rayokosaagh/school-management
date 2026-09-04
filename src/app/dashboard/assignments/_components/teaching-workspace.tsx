@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { ClipboardList, Search, Users, X } from "lucide-react";
-import { startTransition, useId, useMemo, useState } from "react";
+import { startTransition, useId, useMemo, useOptimistic, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
@@ -61,10 +61,31 @@ export function TeachingWorkspace({
   const [showLoad, setShowLoad] = useState(false);
   const [, assignAction] = useToastedActionState(assignSubjectTeacher, EMPTY);
 
-  // Controlled, so revalidation feeding a new teacher down cannot fight an
-  // uncontrolled select's initial value.
-  const [chosen, setChosen] = useState<Record<string, string>>({});
   const slotKey = (row: TeachingRow) => `${row.sectionId}:${row.offeringId}`;
+
+  // The server's own answer for every slot — what a dropdown shows once
+  // nothing is in flight for it, and what an optimistic change reverts to if
+  // `assignSubjectTeacher` rejects it (a stale offering, a staff row deleted
+  // out from under the request). Recomputed from `rows`, so a revalidation
+  // that actually changes a teacher is picked straight up.
+  const baseAssignments = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const r of rows) map[slotKey(r)] = r.staffId ? String(r.staffId) : "";
+    return map;
+  }, [rows]);
+
+  // `useOptimistic` rather than a plain `useState`: a plain "written on
+  // change, cleared on success" store still has nothing that runs on
+  // *failure*, so a rejected assignment just sits there — the dropdown keeps
+  // the teacher the server refused, the unassigned count and the load panel
+  // both agree with the wrong picture, and nothing about a later revalidation
+  // clears it. Optimistic state reverts to `baseAssignments` on its own once
+  // the transition it was set in settles, success or not, which is exactly
+  // "show the guess, then trust the server" without a manual undo path.
+  const [chosen, setOptimisticChosen] = useOptimistic(
+    baseAssignments,
+    (state, patch: { key: string; value: string }) => ({ ...state, [patch.key]: patch.value }),
+  );
 
   const teacherOptions = useMemo(
     () => [
@@ -76,12 +97,14 @@ export function TeachingWorkspace({
 
   /// Saved on change: one dropdown per subject, and a toast already confirms.
   function assign(row: TeachingRow, next: string | null) {
-    setChosen((prev) => ({ ...prev, [slotKey(row)]: next ?? "" }));
     const data = new FormData();
     data.set("sectionId", String(row.sectionId));
     data.set("subjectOfferingId", String(row.offeringId));
     data.set("staffId", next ?? "");
-    startTransition(() => assignAction(data));
+    startTransition(() => {
+      setOptimisticChosen({ key: slotKey(row), value: next ?? "" });
+      assignAction(data);
+    });
   }
 
   const tabs = useMemo<RegisterTab[]>(() => {

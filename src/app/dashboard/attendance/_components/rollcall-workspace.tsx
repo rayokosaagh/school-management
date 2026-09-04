@@ -75,23 +75,45 @@ export function RollCallWorkspace({
   // Adjusted during render rather than in an effect: see
   // https://react.dev/learn/you-might-not-need-an-effect#adjusting-state-when-a-prop-changes.
   const [awaitingSync, setAwaitingSync] = useState(false);
+  // The section tab strip navigates too (see `goToSection`): `sheets` holds
+  // every section's roll call for the day, but `register`, `daysTaken` and
+  // `sheetError` are only ever computed server-side for the section in the
+  // URL. A local-only `sectionId` let the heading and the sheet move to a
+  // section the server never picked those three props for — the month
+  // register would show a different section's numbers under this section's
+  // name, and a section whose sheet failed to load could render blank with
+  // no message if `sheetError` belonged to whichever section the URL still
+  // named. `pendingSectionId` exists only so the tab highlights and the
+  // heading update immediately, ahead of the navigation; it resyncs to
+  // `null` on the same falling edge as `dateInput`, once `initialSectionId`
+  // (from the server) already agrees.
+  const [pendingSectionId, setPendingSectionId] = useState<number | null>(null);
   if (isPending && !awaitingSync) {
     setAwaitingSync(true);
   } else if (!isPending && awaitingSync) {
     setAwaitingSync(false);
     setDateInput(dateLabel);
+    setPendingSectionId(null);
   }
   const [showRegister, setShowRegister] = useState(false);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
-  const [sectionId, setSectionId] = useState(initialSectionId);
+  const sectionId = pendingSectionId ?? initialSectionId;
 
   const sheet = sheets[sectionId] ?? null;
 
-  // Only the date needs the server: every section's sheet for this day is
-  // already here, so the tabs are local state and the URL stays put.
   function goToDate(date: string) {
     startNavigation(() => {
       router.replace(`?section=${sectionId}&date=${date}`, { scroll: false });
+    });
+  }
+
+  /// Switches sections through the URL, so `register`, `daysTaken` and
+  /// `sheetError` — each computed for a single section server-side — never
+  /// disagree with the tab that is actually selected.
+  function goToSection(id: number) {
+    setPendingSectionId(id);
+    startNavigation(() => {
+      router.replace(`?section=${id}&date=${dateLabel}`, { scroll: false });
     });
   }
 
@@ -143,7 +165,7 @@ export function RollCallWorkspace({
         <RegisterTabs
           tabs={tabs}
           value={String(sectionId)}
-          onChange={(id) => setSectionId(Number(id))}
+          onChange={(id) => goToSection(Number(id))}
           ariaLabel="Sections"
           baseId={baseId}
           panelId={panelId}

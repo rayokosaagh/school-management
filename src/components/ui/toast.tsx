@@ -125,8 +125,13 @@ export function useToast() {
 }
 
 /// Mirrors a server action result into a toast. Fires once per distinct result,
-/// so a re-render caused by revalidation does not repeat the message.
-export function useActionToast(state: { error?: string; success?: string }) {
+/// so a re-render caused by revalidation does not repeat the message. Distinct
+/// means distinct *event*, not distinct text: an action can carry an optional
+/// `token` (e.g. the id of the row it just wrote) for when the same message —
+/// "Merit recorded.", the next time round — is expected to happen again on a
+/// genuinely new submission. Two states with the same text and no token are
+/// still treated as one event, which is what keeps a plain revalidation quiet.
+export function useActionToast(state: { error?: string; success?: string; token?: number }) {
   const push = useToast();
   const seen = useRef<string | null>(null);
 
@@ -134,7 +139,7 @@ export function useActionToast(state: { error?: string; success?: string }) {
     const key = state.error
       ? `e:${state.error}`
       : state.success
-        ? `s:${state.success}`
+        ? `s:${state.success}${state.token != null ? `#${state.token}` : ""}`
         : null;
     if (!key || key === seen.current) return;
     seen.current = key;
@@ -144,7 +149,9 @@ export function useActionToast(state: { error?: string; success?: string }) {
 
 /// Drop-in replacement for useActionState that also surfaces the result as a
 /// toast, so every create, update and delete confirms itself the same way.
-export function useToastedActionState<S extends { error?: string; success?: string }>(
+export function useToastedActionState<
+  S extends { error?: string; success?: string; token?: number },
+>(
   action: (state: Awaited<S>, payload: FormData) => S | Promise<S>,
   initialState: Awaited<S>,
 ) {
