@@ -18,7 +18,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { FieldSelect } from "@/components/ui/select";
 import { useToastedActionState } from "@/components/ui/toast";
 import { shortGrade } from "@/lib/registry/grade-label";
-import { DAY_NAMES, type BellPeriod } from "@/lib/timetable/schedule";
+import { DAY_NAMES, cellAt, type BellPeriod } from "@/lib/timetable/schedule";
 import type { Booking, SectionGrid } from "@/lib/timetable/grid";
 import type { Clash, WeekPeriod } from "@/lib/timetable/teacher-week";
 import { setCell, type ActionState } from "../actions";
@@ -330,7 +330,12 @@ export function TimetableWorkspace({
                   selected={selectedCell}
                   onSelect={(address) => {
                     setSelectedCell(address);
-                    setRoom("");
+                    // Seed from the lesson already in that slot, not "": the
+                    // room otherwise only ever showed as the input's
+                    // placeholder, which reads as a value but Save never
+                    // sent, wiping the room on an unedited save.
+                    const cell = cellAt(grid?.cells ?? [], address);
+                    setRoom(cell?.room ?? "");
                   }}
                   onChange={(address, value) => write(address, value)}
                   otherSectionBookings={elsewhere}

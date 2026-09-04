@@ -45,8 +45,27 @@ export function SchoolDayForm({
     bell.length > 0 ? bell.map((p) => ({ ...p })) : DEFAULT_BELL.map((p) => ({ ...p })),
   );
   const [days, setDays] = useState<number[]>(workingDays);
-  const [, bellAction, bellPending] = useToastedActionState(saveBell, EMPTY);
+  const [bellState, bellAction, bellPending] = useToastedActionState(saveBell, EMPTY);
   const [, daysAction] = useToastedActionState(saveDays, EMPTY);
+
+  // The server is the only place ids are assigned. Adopting its rows the
+  // instant a save resolves — rather than trusting local state, or the `bell`
+  // prop that only updates through a revalidate a beat later — is what stops
+  // a second save in the same visit from re-sending id: undefined for a row
+  // the first save already created, which would delete and recreate it,
+  // cascading away every lesson booked in that slot.
+  //
+  // This adjusts state during render (React's documented escape hatch for
+  // "derive state from a prop/value that just changed") rather than in a
+  // useEffect, so the adoption is not a second, separately-committed render.
+  // `seenBellState` only tracks the state's own identity, which changes once
+  // per completed save and never as a side effect of setRows below, so this
+  // cannot loop.
+  const [seenBellState, setSeenBellState] = useState(bellState);
+  if (bellState !== seenBellState) {
+    setSeenBellState(bellState);
+    if (bellState.rows) setRows(bellState.rows.map((row) => ({ ...row })));
+  }
 
   function edit(index: number, patch: Partial<Row>) {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));

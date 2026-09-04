@@ -168,6 +168,28 @@ export function periodIsCurrent(
   return period.startMinute <= minuteOfDay && minuteOfDay < period.endMinute;
 }
 
+/// Address of one grid cell: a day and a bell period.
+export type CellAddress = { dayOfWeek: number; schoolPeriodId: number };
+
+/// The lesson at an address, or null when nothing is selected or nothing is
+/// booked there. Pulled out so the room field can be seeded from the real
+/// lesson rather than left blank — a field left blank looked identical to one
+/// carrying the room only as a placeholder, and Save then wiped the room
+/// silently. This function is what a unit test can pin down without a browser.
+export function cellAt<T extends CellAddress>(
+  cells: T[],
+  address: CellAddress | null,
+): T | null {
+  if (address === null) return null;
+  return (
+    cells.find(
+      (cell) =>
+        cell.dayOfWeek === address.dayOfWeek &&
+        cell.schoolPeriodId === address.schoolPeriodId,
+    ) ?? null
+  );
+}
+
 /// How far through a period the clock is, 0 to 1. Drives the line that tracks
 /// the current lesson down its cell.
 export function periodProgress(

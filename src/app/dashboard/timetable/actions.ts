@@ -2,11 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { requireCapability } from "@/lib/auth/guard";
-import { saveBellSchedule, setWorkingDays } from "@/lib/timetable/bell";
-import { BellScheduleError } from "@/lib/timetable/schedule";
+import { listBellPeriods, saveBellSchedule, setWorkingDays } from "@/lib/timetable/bell";
+import { BellScheduleError, type BellPeriod } from "@/lib/timetable/schedule";
 import { TimetableCellError, setTimetableCell } from "@/lib/timetable/cells";
 
-export type ActionState = { error?: string; success?: string };
+export type ActionState = {
+  error?: string;
+  success?: string;
+  // Only saveBell sets this. The client adopts it as the new local rows so a
+  // second save in the same visit sends the real ids the server just assigned
+  // — see the comment on SchoolDayForm's rows state.
+  rows?: BellPeriod[];
+};
 
 const PATH = "/dashboard/timetable";
 
@@ -93,7 +100,10 @@ export async function saveBell(
   }
 
   revalidate();
-  return { success: "School day saved." };
+  // Re-read rather than trust the submitted rows: ids assigned by create() are
+  // otherwise never reported back, and the form must adopt them before the
+  // next save or it deletes-and-recreates the very row it just added.
+  return { success: "School day saved.", rows: await listBellPeriods() };
 }
 
 export async function saveDays(
