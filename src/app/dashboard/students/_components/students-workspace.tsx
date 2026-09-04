@@ -217,6 +217,8 @@ export function StudentsWorkspace({
 
   return (
     <PageFrame
+      icon={GraduationCap}
+      tint="green"
       eyebrow="People"
       title="Students"
       meta={`${rows.length} enrolled · ${yearLabel}`}
@@ -316,6 +318,7 @@ export function StudentsWorkspace({
                 initialSort={[{ id: "recordId", desc: false }]}
                 empty={{
                   icon: rows.length === 0 ? UserPlus : GraduationCap,
+                  tint: "green",
                   title: rows.length === 0 ? "No students admitted yet" : "No students match",
                   description: rows.length === 0 ? "Admit the first student to start the roll." : "Try another section, status or search.",
                   action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" />Admit student</Button> : undefined,

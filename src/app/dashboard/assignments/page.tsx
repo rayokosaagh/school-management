@@ -5,6 +5,7 @@ import {
   listTeachingLoad,
 } from "@/lib/registry/assignments";
 import { listActiveStaffForSelect } from "@/lib/registry/staff";
+import { subjectTones } from "@/lib/timetable/grid";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClipboardList } from "lucide-react";
 import {
@@ -23,17 +24,21 @@ export default async function AssignmentsPage() {
     return (
       <EmptyState
         icon={ClipboardList}
+        tint="green"
         title="No academic year is current"
         description="Set one on the Classes page before assigning teachers."
       />
     );
   }
 
-  const [sections, staff, offerings, load] = await Promise.all([
+  const [sections, staff, offerings, load, tones] = await Promise.all([
     listSectionsWithAssignmentCounts(currentYear.id),
     listActiveStaffForSelect(),
     listOfferings(currentYear.id),
     listTeachingLoad(currentYear.id),
+    // Same tone lookup the timetable grid uses, so a subject carries the
+    // same colour here as it does on the Classes timetable.
+    subjectTones(),
   ]);
 
   // Every section teaches its grade's offerings, so the slots are the product
@@ -51,6 +56,7 @@ export default async function AssignmentsPage() {
         offeringId: o.id,
         sectionLabel: `${section.grade.name} ${section.name}`,
         subjectName: o.subject.name,
+        tone: tones.get(o.subjectId) ?? 0,
         hasPractical: o.hasPractical,
         staffId: assigned.get(`${section.id}:${o.id}`) ?? null,
       })),

@@ -143,6 +143,8 @@ export function StaffWorkspace({
 
   return (
     <PageFrame
+      icon={Users}
+      tint="amber"
       eyebrow="People"
       title="Staff"
       meta={`${rows.length} on record · ${rows.filter((r) => r.isActive).length} active`}
@@ -188,6 +190,7 @@ export function StaffWorkspace({
             initialSort={[{ id: "fullName", desc: false }]}
             empty={{
               icon: rows.length === 0 ? UserPlus : Users,
+              tint: "amber",
               title: rows.length === 0 ? "No staff on record" : "No one matches",
               description: rows.length === 0 ? "Add the first staff member." : "Try another designation, status or search.",
               action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" />Add staff</Button> : undefined,

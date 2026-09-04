@@ -4,6 +4,7 @@ import { formatBs, toBsInput } from "@/lib/date/bs";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { listSections } from "@/lib/registry/structure";
 import { listOfferings } from "@/lib/registry/subjects";
+import { subjectTones } from "@/lib/timetable/grid";
 import {
   AssessmentError,
   getLedger,
@@ -38,6 +39,7 @@ export default async function ExamsPage({
     return (
       <EmptyState
         icon={ClipboardCheck}
+        tint="amber"
         title="No academic year is current"
         description="Set one on the Classes page before creating exams."
       />
@@ -69,6 +71,7 @@ export default async function ExamsPage({
     return (
       <EmptyState
         icon={ClipboardCheck}
+        tint="amber"
         title={terms.length === 0 ? "No exams yet" : "No sections yet"}
         description={
           terms.length === 0
@@ -139,13 +142,21 @@ export default async function ExamsPage({
       ? await getLedger(selectedExam.id, selectedSection.id).catch(() => null)
       : null;
 
+  // Same tone lookup the timetable grid and the Teaching table use, so a
+  // subject's column reads as the same subject here too.
+  const tones = raw ? await subjectTones() : null;
+
   const ledger: LedgerView | null = raw
     ? {
         termId: raw.term.id,
         sectionId: raw.section.id,
         termName: raw.term.name,
         sectionLabel: `${raw.section.grade.name} ${raw.section.name}`,
-        offerings: raw.offerings.map((o) => ({ id: o.id, subject: o.name })),
+        offerings: raw.offerings.map((o) => ({
+          id: o.id,
+          subject: o.name,
+          tone: tones?.get(o.subjectId) ?? 0,
+        })),
         students: raw.students.map((s) => ({
           studentId: s.studentId,
           rollNo: s.rollNo,

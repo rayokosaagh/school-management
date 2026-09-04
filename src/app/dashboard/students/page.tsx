@@ -1,4 +1,4 @@
-import { Info } from "lucide-react";
+import { GraduationCap, Info } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,10 @@ export default async function StudentsPage({
   const currentYear = await getCurrentAcademicYear();
   if (!currentYear) {
     return (
-      <PageFrame eyebrow="People" title="Students">
+      <PageFrame icon={GraduationCap} tint="green" eyebrow="People" title="Students">
         <EmptyState
           icon={Info}
+          tint="green"
           title="No current academic year"
           description="Enrolments belong to a year. Set the current year on the Classes page first."
           action={<Button nativeButton={false} render={<Link href="/dashboard/classes" />}>Go to Classes</Button>}

@@ -30,6 +30,7 @@ export default async function AttendancePage({
     return (
       <EmptyState
         icon={CalendarCheck}
+        tint="green"
         title="No academic year is current"
         description="Set one on the Classes page before taking a roll call."
       />
@@ -41,6 +42,7 @@ export default async function AttendancePage({
     return (
       <EmptyState
         icon={CalendarCheck}
+        tint="green"
         title="No sections yet"
         description="Add a section on the Classes page before taking a roll call."
       />

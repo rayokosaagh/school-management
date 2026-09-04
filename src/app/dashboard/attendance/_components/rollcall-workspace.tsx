@@ -1,11 +1,13 @@
 "use client";
 
-import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageFrame } from "@/components/ui/page-frame";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BsCalendar } from "@/components/ui/bs-calendar";
 import {
   RegisterTabs,
   registerTabId,
@@ -80,6 +82,7 @@ export function RollCallWorkspace({
     setDateInput(dateLabel);
   }
   const [showRegister, setShowRegister] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [sectionId, setSectionId] = useState(initialSectionId);
 
   const sheet = sheets[sectionId] ?? null;
@@ -118,6 +121,8 @@ export function RollCallWorkspace({
 
   return (
     <PageFrame
+      icon={CalendarCheck}
+      tint="green"
       eyebrow="Daily"
       title="Roll call"
       meta={`${dateLabel} · ${yearLabel}`}
@@ -166,6 +171,25 @@ export function RollCallWorkspace({
             aria-label="Date in Bikram Sambat"
             className="h-8 w-32 text-center font-mono"
           />
+          <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+            <PopoverTrigger
+              aria-label="Choose attendance date"
+              title="Choose attendance date"
+              className="border-line bg-surface text-ink-2 hover:bg-surface-2 focus-visible:ring-ring/50 grid size-7 place-items-center rounded-md border transition-colors focus-visible:ring-3 focus-visible:outline-none"
+            >
+              <CalendarDays className="size-3.5" aria-hidden="true" />
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto border-0 bg-transparent p-0 shadow-none">
+              <BsCalendar
+                value={dateInput}
+                onChange={(next) => {
+                  setDateInput(next);
+                  setDatePickerOpen(false);
+                  goToDate(next);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
           <Button
             type="button"
             variant="outline"

@@ -298,6 +298,7 @@ export function TimetableEditView({
       ) : bell.length === 0 ? (
         <PageFrame.Body>
           <EmptyState
+            tint="violet"
             icon={Clock}
             title="Set the school day first"
             description="A timetable is built from the school's periods, so those come before the grid."
@@ -330,6 +331,7 @@ export function TimetableEditView({
           <PageFrame.Body>
             {selectedTeacherId === null ? (
               <EmptyState
+                tint="violet"
                 icon={CalendarRange}
                 title="Pick a teacher"
                 description="Their week is built from the same lessons the class grids hold."
@@ -346,6 +348,7 @@ export function TimetableEditView({
       ) : sections.length === 0 ? (
         <PageFrame.Body>
           <EmptyState
+            tint="violet"
             icon={CalendarRange}
             title="No sections this year"
             description="Add a section on the Structure view before building its week."
@@ -446,12 +449,14 @@ export function TeacherWeekView({
       <PageFrame.Body>
         {bell.length === 0 ? (
           <EmptyState
+            tint="violet"
             icon={Clock}
             title="The school day is not set yet"
             description="Nothing is on the timetable until an administrator sets the school's periods."
           />
         ) : teacherWeek.length === 0 ? (
           <EmptyState
+            tint="violet"
             icon={CalendarRange}
             title="No lessons booked yet"
             description="Your week will show here once the timetable assigns you a class."

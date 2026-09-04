@@ -1,6 +1,8 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { IconTile, type Tint } from "@/components/ui/page-shell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
@@ -11,7 +13,14 @@ const SPLIT_QUERY = "(min-width: 74rem)";
 
 /// The one page skeleton every dashboard route renders. Owns padding, the
 /// split-view grid, and the Sheet fallback for the aside below `split`.
+///
+/// `icon`/`tint` are the section's own identity — the same pair `IconRail`
+/// paints its active item with — so a page's header, its rail entry and its
+/// empty states all read as the same place. Omit `icon` for a page that has
+/// none (there is none today, but a page contract should not require one).
 export function PageFrame({
+  icon,
+  tint = "violet",
   eyebrow,
   title,
   meta,
@@ -19,6 +28,8 @@ export function PageFrame({
   children,
   className,
 }: {
+  icon?: LucideIcon;
+  tint?: Tint;
   eyebrow: string;
   title: string;
   meta?: React.ReactNode;
@@ -29,12 +40,15 @@ export function PageFrame({
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-3">
-        <div className="min-w-0">
-          <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
-          <h1 className="mt-0.5 flex flex-wrap items-baseline gap-x-2.5">
-            {title}
-            {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{meta}</span> : null}
-          </h1>
+        <div className="flex min-w-0 items-center gap-3">
+          {icon ? <IconTile icon={icon} tint={tint} size="md" /> : null}
+          <div className="min-w-0">
+            <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
+            <h1 className="mt-0.5 flex flex-wrap items-baseline gap-x-2.5">
+              {title}
+              {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{meta}</span> : null}
+            </h1>
+          </div>
         </div>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
       </div>

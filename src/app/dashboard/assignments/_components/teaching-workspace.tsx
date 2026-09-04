@@ -23,6 +23,9 @@ export type TeachingRow = {
   offeringId: number;
   sectionLabel: string;
   subjectName: string;
+  /// Which --subject-N this row's subject paints with — the same tone the
+  /// Classes timetable assigns it, from subjectTones().
+  tone: number;
   hasPractical: boolean;
   staffId: number | null;
 };
@@ -139,7 +142,16 @@ export function TeachingWorkspace({
         header: "Subject",
         enableHiding: false,
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.subjectName}</span>
+          // The subject's own colour, carried across every table it appears
+          // in — same 3px rule the timetable grid paints it with, not a fill.
+          <span className="relative flex items-center gap-2 pl-3">
+            <span
+              aria-hidden="true"
+              className="absolute inset-y-0.5 left-0 w-[3px] rounded-full"
+              style={{ background: `var(--subject-${row.original.tone})` }}
+            />
+            <span className="font-medium">{row.original.subjectName}</span>
+          </span>
         ),
       },
       ...(tab === ALL
@@ -184,6 +196,8 @@ export function TeachingWorkspace({
 
   return (
     <PageFrame
+      icon={ClipboardList}
+      tint="green"
       eyebrow="Timetable"
       title="Teaching"
       meta={`${rows.length} slots · ${yearLabel}`}
@@ -290,6 +304,7 @@ export function TeachingWorkspace({
             initialSort={[{ id: "subject", desc: false }]}
             empty={{
               icon: ClipboardList,
+              tint: "green",
               title: rows.length === 0 ? "Nothing to assign yet" : "No subjects match",
               description:
                 rows.length === 0

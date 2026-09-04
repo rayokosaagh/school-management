@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { TINT_CLASSES } from "@/components/ui/page-shell";
 import { cn } from "@/lib/utils";
 import { MOBILE_IDS, SETTINGS, activeId, visibleGroups, type NavItem } from "./nav-model";
 
@@ -11,10 +12,15 @@ function RailLink({ item, active, className }: { item: NavItem; active: boolean;
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
+      title={item.label}
       className={cn(
-        "text-ink-3 hover:bg-page hover:text-ink flex h-13 flex-col items-center justify-center gap-1 rounded-[9px] text-[10.5px] font-medium tracking-[0.01em] no-underline transition-colors",
+        "text-ink-3 hover:bg-page hover:text-ink relative flex h-13 flex-col items-center justify-center gap-1 rounded-[9px] text-[10.5px] font-medium tracking-[0.01em] no-underline transition-colors",
         "focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none",
-        active && "bg-brand-tint text-brand-text",
+        // The tinted pill (icon + label) already says which section this is;
+        // the "you are here" underline stays the constant brand colour
+        // rather than doubling the tint signal on the same small item — one
+        // accent per element, not two saying the same thing.
+        active && [TINT_CLASSES[item.tint], "after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-brand"],
         className,
       )}
     >
@@ -59,7 +65,7 @@ export function IconRail({ allowed }: { allowed: string[] }) {
 
       <nav
         aria-label="Main"
-        className="bg-surface border-line shell:hidden fixed inset-x-0 bottom-0 z-20 flex border-t px-1 pt-1 pb-[max(4px,env(safe-area-inset-bottom))]"
+        className="bg-surface border-line shadow-popover shell:hidden fixed inset-x-0 bottom-0 z-20 flex border-t px-1 pt-1 pb-[max(4px,env(safe-area-inset-bottom))]"
       >
         {mobile.map((item) => (
           <RailLink key={item.id} item={item} active={current === item.id} className="flex-1" />

@@ -290,6 +290,7 @@ export async function getLedger(examTermId: number, sectionId: number) {
     section,
     offerings: offerings.map((o) => ({
       id: o.id,
+      subjectId: o.subjectId,
       name: o.subject.name,
       hasPractical: o.hasPractical,
       fullMarks: o.fullMarksTheory + (o.hasPractical ? (o.fullMarksPractical ?? 0) : 0),

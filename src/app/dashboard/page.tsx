@@ -1,14 +1,18 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  BookOpenCheck,
   CalendarCheck,
+  CalendarDays,
   CheckCircle2,
   Clock3,
   ClipboardCheck,
   ClipboardList,
   Download,
   FileText,
+  LayoutDashboard,
   MapPin,
+  TriangleAlert,
   UserCog,
   UserPlus,
   Users,
@@ -38,6 +42,7 @@ export default async function DashboardHome() {
     return (
       <EmptyState
         icon={CalendarCheck}
+        tint="violet"
         title="No academic year is current"
         description="Enrolments, attendance and exams all hang off a year. Set one on the Classes page."
         action={
@@ -68,7 +73,9 @@ export default async function DashboardHome() {
 
   return (
     <PageFrame
-      eyebrow="School"
+      icon={LayoutDashboard}
+      tint="violet"
+      eyebrow="School dashboard"
       title="Overview"
       meta={`${currentYear.nameBS} · ${formatBs(currentYear.startsOn)} to ${formatBs(currentYear.endsOn)}`}
     >
@@ -76,6 +83,7 @@ export default async function DashboardHome() {
         {empty ? (
           <EmptyState
             icon={CalendarCheck}
+            tint="violet"
             title={`Academic year ${currentYear.nameBS} has no classes yet`}
             description="Nothing is set up for this year, so students, attendance and exams are all empty. Add grades and sections, or switch year in the header."
             action={
@@ -86,11 +94,18 @@ export default async function DashboardHome() {
           />
         ) : (
           <>
+            <WelcomePanel
+              username={actor?.username ?? "there"}
+              overview={overview}
+              canAttendance={can("take:attendance")}
+              canMarks={can("enter:marks")}
+            />
+
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Kpi value={counts.students} label="Students" hint={`enrolled in ${currentYear.nameBS}`} />
-              <Kpi value={counts.staffTotal} label="Staff" hint={`${counts.staffActive} active`} />
-              <Kpi value={counts.sections} label="Sections" hint={`${counts.grades} grades`} />
-              <Kpi value={counts.offerings} label="Taught" hint={`${counts.subjects} subjects`} />
+              <Kpi value={counts.students} label="Students enrolled" hint={`in ${currentYear.nameBS}`} />
+              <Kpi value={counts.staffActive} label="Active staff" hint={`${counts.staffTotal} staff records`} />
+              <Kpi value={counts.sections} label="Class sections" hint={`${counts.grades} grades running`} />
+              <Kpi value={counts.offerings} label="Subjects taught" hint={`${counts.subjects} in the catalogue`} />
             </div>
 
             {todaySchedule ? <TeacherScheduleToday periods={todaySchedule} /> : null}
@@ -116,6 +131,110 @@ export default async function DashboardHome() {
   );
 }
 
+/// The overview starts with the school day's next useful task, rather than a
+/// generic summary. The detailed attendance, exam and setup panels remain
+/// below for people who need the full picture.
+function WelcomePanel({
+  username,
+  overview,
+  canAttendance,
+  canMarks,
+}: {
+  username: string;
+  overview: SchoolOverview;
+  canAttendance: boolean;
+  canMarks: boolean;
+}) {
+  const rollCallsLeft = overview.today.missingAttendance.length;
+  const examsToPublish = overview.gaps.unpublishedExams;
+  const task =
+    rollCallsLeft > 0
+      ? {
+          icon: CalendarCheck,
+          title: "Roll call is waiting",
+          detail: `${rollCallsLeft} ${rollCallsLeft === 1 ? "section still needs" : "sections still need"} attendance for today.`,
+          href: "/dashboard/attendance",
+          action: "Take roll call",
+          allowed: canAttendance,
+        }
+      : examsToPublish > 0
+        ? {
+            icon: BookOpenCheck,
+            title: "Exam results need review",
+            detail: `${examsToPublish} ${examsToPublish === 1 ? "exam is" : "exams are"} still awaiting publication.`,
+            href: "/dashboard/exams",
+            action: "Review exams",
+            allowed: canMarks,
+          }
+        : {
+            icon: CheckCircle2,
+            title: "The school day is on track",
+            detail: "Attendance is complete and there are no unpublished exams to review.",
+            href: "/dashboard/attendance",
+            action: "Review attendance",
+            allowed: canAttendance,
+          };
+  const TaskIcon = task.icon;
+
+  return (
+    <section className="bg-surface border-line rounded-[14px] border px-5 py-5 shadow-panel sm:px-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="max-w-2xl">
+          <p className="text-brand-text text-[11px] font-semibold tracking-[0.12em] uppercase">
+            Today’s focus
+          </p>
+          <h2 className="font-display mt-1 text-2xl font-semibold tracking-[-0.02em] sm:text-[28px]">
+            Welcome back, {username}.
+          </h2>
+          <p className="text-ink-3 mt-1.5 text-sm leading-6">
+            A clear view of your school day, with the next useful task ready when you are.
+          </p>
+        </div>
+
+        <div className="bg-brand-tint border-brand-tint-2 flex min-w-0 items-center gap-3 rounded-xl border px-3.5 py-3 sm:max-w-sm">
+          <TaskIcon className="text-brand-text size-5 shrink-0" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">{task.title}</p>
+            <p className="text-ink-3 mt-0.5 text-[12px] leading-4">{task.detail}</p>
+          </div>
+          {task.allowed ? (
+            <Link
+              href={task.href}
+              className="bg-brand text-brand-ink shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold whitespace-nowrap transition-opacity hover:opacity-90"
+            >
+              {task.action}
+            </Link>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="border-line mt-5 grid grid-cols-3 divide-x pt-4">
+        <WelcomeFact icon={Users} value={overview.counts.students} label="learners" />
+        <WelcomeFact icon={CalendarDays} value={overview.today.sectionsTotal} label="sections today" />
+        <WelcomeFact icon={TriangleAlert} value={rollCallsLeft + examsToPublish} label="items to review" />
+      </div>
+    </section>
+  );
+}
+
+function WelcomeFact({
+  icon: Icon,
+  value,
+  label,
+}: {
+  icon: LucideIcon;
+  value: number;
+  label: string;
+}) {
+  return (
+    <div className="min-w-0 px-3 first:pl-0 last:pr-0">
+      <Icon className="text-ink-3 mb-1 size-3.5" aria-hidden="true" />
+      <p className="font-display text-xl font-semibold leading-none tabular-nums">{value}</p>
+      <p className="text-ink-3 mt-1 truncate text-[11px]">{label}</p>
+    </div>
+  );
+}
+
 function TeacherScheduleToday({ periods }: { periods: TodayPeriod[] }) {
   return (
     <Panel
@@ -133,6 +252,7 @@ function TeacherScheduleToday({ periods }: { periods: TodayPeriod[] }) {
       {periods.length === 0 ? (
         <EmptyState
           icon={Clock3}
+          tint="violet"
           title="No classes today"
           description="Your timetable is clear for today."
           className="py-8"

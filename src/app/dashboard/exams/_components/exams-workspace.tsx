@@ -7,6 +7,7 @@ import { ClipboardCheck, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageFrame } from "@/components/ui/page-frame";
+import { cn } from "@/lib/utils";
 import {
   RegisterTabs,
   registerTabId,
@@ -39,7 +40,9 @@ export type LedgerView = {
   sectionLabel: string;
   termId: number;
   sectionId: number;
-  offerings: { id: number; subject: string }[];
+  /// tone: which --subject-N this column paints with — the same tone the
+  /// Classes timetable and the Teaching table give this subject.
+  offerings: { id: number; subject: string; tone: number }[];
   students: {
     studentId: number;
     rollNo: number;
@@ -84,7 +87,11 @@ export function ExamsWorkspace({
   const router = useRouter();
   const baseId = useId();
   const panelId = `${baseId}-panel`;
-  const [, startNavigation] = useTransition();
+  // Tab, section and view changes all re-fetch every subject's marks sheet
+  // for the section (see page.tsx), so this is a real wait, not a formality —
+  // `isPending` has to reach the body, or the old sheet just sits there
+  // looking answered while a new one is on the way.
+  const [isPending, startNavigation] = useTransition();
   const [chosenOfferingId, setOfferingId] = useState(initialOfferingId);
 
   /// Changing section navigates with `router.replace`, which re-renders without
@@ -118,6 +125,8 @@ export function ExamsWorkspace({
 
   return (
     <PageFrame
+      icon={ClipboardCheck}
+      tint="amber"
       eyebrow="Assessment"
       title="Exams"
       meta={`${terms.length} exam${terms.length === 1 ? "" : "s"} · ${yearLabel}`}
@@ -228,7 +237,13 @@ export function ExamsWorkspace({
       </PageFrame.Toolbar>
 
       <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, String(examId ?? ""))}>
-        <div className="bg-surface border-line min-h-0 flex-1 overflow-auto rounded-[10px] border p-4">
+        <div
+          aria-busy={isPending}
+          className={cn(
+            "bg-surface border-line min-h-0 flex-1 overflow-auto rounded-[10px] border p-4 transition-opacity",
+            isPending && "opacity-60",
+          )}
+        >
           {view === "exams" ? (
             <ExamsView rows={examRows} />
           ) : view === "ledger" ? (
@@ -239,7 +254,14 @@ export function ExamsWorkspace({
                     <th className="py-2 pr-3 font-medium">Roll</th>
                     <th className="py-2 pr-3 font-medium">Name</th>
                     {ledger.offerings.map((o) => (
-                      <th key={o.id} className="py-2 pr-3 font-medium whitespace-nowrap">
+                      <th key={o.id} className="relative py-2 pr-3 pl-3 font-medium whitespace-nowrap">
+                        {/* The subject's own colour, same as the timetable and
+                            Teaching tables: a 3px rule, not a fill. */}
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-y-1.5 left-0 w-[3px] rounded-full"
+                          style={{ background: `var(--subject-${o.tone})` }}
+                        />
                         {o.subject}
                       </th>
                     ))}
@@ -276,6 +298,7 @@ export function ExamsWorkspace({
             ) : (
               <EmptyState
                 icon={ClipboardCheck}
+                tint="amber"
                 title="Nothing to show yet"
                 description="Enter marks for this section before the ledger has anything to rank."
               />
@@ -294,6 +317,7 @@ export function ExamsWorkspace({
           ) : (
             <EmptyState
               icon={ClipboardCheck}
+              tint="amber"
               title="No students to mark"
               description="Pick an exam, a section and a subject that has students enrolled."
             />

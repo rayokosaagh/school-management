@@ -19,6 +19,7 @@ export default async function RolloverPage() {
     return (
       <EmptyState
         icon={CalendarCheck}
+        tint="rose"
         title="No academic year is current"
         description="A rollover moves one year into the next, so there has to be a year to move out of. Set one on the Classes page."
         action={

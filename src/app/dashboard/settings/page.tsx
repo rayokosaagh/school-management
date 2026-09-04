@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
-import { Building2, History, KeyRound, ShieldCheck, Trophy, Users } from "lucide-react";
+import { Building2, History, KeyRound, Settings as SettingsIcon, ShieldCheck, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
-import { PageHeader, SectionCard } from "@/components/ui/page-shell";
+import { SectionCard } from "@/components/ui/page-shell";
+import { PageFrame } from "@/components/ui/page-frame";
 import { getSchool } from "@/lib/registry/school";
 import { getWeights } from "@/lib/honours/weights";
 import { listAccounts } from "@/lib/auth/registration";
@@ -237,9 +238,14 @@ export default async function SettingsPage({
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader icon={Building2} tint="blue" title="Settings" />
+    <PageFrame
+      icon={SettingsIcon}
+      tint="violet"
+      eyebrow="Administration"
+      title="Settings"
+      meta="School, access and account controls"
+    >
       <SettingsWorkspace view={view} groups={groups} />
-    </div>
+    </PageFrame>
   );
 }

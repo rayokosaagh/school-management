@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarPlus } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
@@ -135,6 +136,8 @@ export function RolloverWorkspace({
 
   return (
     <PageFrame
+      icon={CalendarPlus}
+      tint="rose"
       eyebrow="School"
       title="Next year"
       meta={targetYear ? `${sourceYear.nameBS} → ${targetYear.nameBS}` : sourceYear.nameBS}

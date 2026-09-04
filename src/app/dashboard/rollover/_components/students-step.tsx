@@ -61,6 +61,7 @@ export function StudentsStep({
     return (
       <EmptyState
         icon={Search}
+        tint="rose"
         title="No students to move"
         description={`Academic year ${plan.sourceYear.nameBS} has no active enrolments, so this rollover only copies structure.`}
       />

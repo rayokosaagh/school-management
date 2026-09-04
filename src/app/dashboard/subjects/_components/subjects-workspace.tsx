@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { BookOpen, FlaskConical, Library, Plus, Search } from "lucide-react";
+import { BookOpen, FlaskConical, Library, NotebookPen, Plus, Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
@@ -189,6 +189,8 @@ export function SubjectsWorkspace({
 
   return (
     <PageFrame
+      icon={NotebookPen}
+      tint="amber"
       eyebrow="Timetable"
       title="Subjects"
       meta={`${subjects.length} subjects · ${offerings.length} taught · ${yearLabel}`}
@@ -293,6 +295,7 @@ export function SubjectsWorkspace({
             initialSort={[{ id: "subject", desc: false }]}
             empty={{
               icon: BookOpen,
+              tint: "amber",
               title: offerings.length === 0 ? "No curriculum yet" : "Nothing matches",
               description:
                 offerings.length === 0
@@ -310,6 +313,7 @@ export function SubjectsWorkspace({
             initialSort={[{ id: "name", desc: false }]}
             empty={{
               icon: Library,
+              tint: "amber",
               title: subjects.length === 0 ? "No subjects yet" : "Nothing matches",
               description:
                 subjects.length === 0

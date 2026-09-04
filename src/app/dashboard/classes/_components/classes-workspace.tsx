@@ -232,6 +232,8 @@ export function ClassesWorkspace({
 
   return (
     <PageFrame
+      icon={BookOpen}
+      tint="violet"
       eyebrow="Structure"
       title="Classes"
       meta={`${grades.length} grades · ${sections.length} sections · ${yearLabel}`}
@@ -284,6 +286,7 @@ export function ClassesWorkspace({
           <PageFrame.Body>
             <EmptyState
               icon={CalendarRange}
+              tint="violet"
               title="No academic year is current"
               description={
                 showStructure
@@ -369,6 +372,7 @@ export function ClassesWorkspace({
               initialSort={[{ id: "section", desc: false }]}
               empty={{
                 icon: sections.length === 0 ? Layers : BookOpen,
+                tint: "violet",
                 title: sections.length === 0 ? "No sections yet" : "No sections match",
                 description:
                   sections.length === 0

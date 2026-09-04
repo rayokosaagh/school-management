@@ -6,13 +6,16 @@ import { cn } from "@/lib/utils";
 // section so the eye can tell them apart while scrolling, not for decoration.
 export type Tint = "violet" | "blue" | "green" | "amber" | "rose";
 
-const TINTS: Record<Tint, string> = {
+// Exported so components outside this file (EmptyState, IconRail) can paint
+// the same tint without duplicating the class list.
+export const TINT_CLASSES: Record<Tint, string> = {
   violet: "bg-tint-violet text-tint-violet-fg",
   blue: "bg-tint-blue text-tint-blue-fg",
   green: "bg-tint-green text-tint-green-fg",
   amber: "bg-tint-amber text-tint-amber-fg",
   rose: "bg-tint-rose text-tint-rose-fg",
 };
+const TINTS = TINT_CLASSES;
 
 export function IconTile({
   icon: Icon,
