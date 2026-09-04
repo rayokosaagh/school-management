@@ -413,11 +413,17 @@ export async function reorderSectionRolls(
 export async function summariseYearAction(
   id: number,
 ): Promise<{ summary?: YearSummary; error?: string }> {
-  await requireCapability("manage:settings");
   try {
+    // requireCapability throws ForbiddenError rather than redirecting, and the
+    // "Delete year…" button renders for anyone who can open Classes at all
+    // (manage:registry) — without the try/catch a non-admin's click leaves the
+    // dialog stuck on "Loading…" while the rejection escapes to the error
+    // boundary instead of coming back as this action's own error result.
+    await requireCapability("manage:settings");
     return { summary: await summariseYear(id) };
   } catch (e) {
     if (e instanceof YearTeardownError) return { error: e.message };
+    if (e instanceof Error) return { error: e.message };
     throw e;
   }
 }
@@ -428,12 +434,14 @@ export async function deleteYearAction(input: {
   createRestorePoint: boolean;
   typedName: string;
 }): Promise<{ counts?: YearCounts; restorePointId?: number | null; error?: string }> {
-  const actor = await requireCapability("manage:settings");
   try {
+    const actor = await requireCapability("manage:settings");
     const summary = await summariseYear(input.id);
     // The typed name is re-checked here, not only in the browser: this action
     // is a public POST endpoint and the dialog's guard does not protect it.
-    if (summary.taught && input.typedName.trim() !== summary.year.nameBS) {
+    // Any data at all — not just attendance or marks — requires the typed
+    // name, matching the dialog's own gate.
+    if (summary.hasData && input.typedName.trim() !== summary.year.nameBS) {
       return { error: `Type ${summary.year.nameBS} exactly to confirm.` };
     }
     const result = await deleteYearWithData(input.id, {
@@ -444,6 +452,7 @@ export async function deleteYearAction(input: {
     return result;
   } catch (e) {
     if (e instanceof YearTeardownError) return { error: e.message };
+    if (e instanceof Error) return { error: e.message };
     throw e;
   }
 }

@@ -35,9 +35,17 @@ const made = {
   attendanceSessionId: 0,
   restorePointId: 0,
   fakeRestorePointId: 0,
+  /// A second, independent fixture year — built only to prove restoreYear
+  /// inserts with createMany rather than one row at a time.
+  bulkYearId: 0,
+  bulkGradeId: 0,
+  bulkSectionId: 0,
+  bulkStudentIds: [] as number[],
+  bulkRestorePointId: 0,
 };
 
 const YEAR = "2095";
+const BULK_YEAR = "2096";
 const stamp = Date.now() % 100000;
 
 afterAll(async () => {
@@ -53,6 +61,16 @@ afterAll(async () => {
   if (stillThere) {
     await deleteYearWithData(made.yearId, { createRestorePoint: false, actorUserId: null });
   }
+  if (made.bulkRestorePointId) {
+    await prisma.restorePoint.deleteMany({ where: { id: made.bulkRestorePointId } });
+  }
+  const bulkStillThere = await prisma.academicYear.findUnique({ where: { id: made.bulkYearId } });
+  if (bulkStillThere) {
+    await deleteYearWithData(made.bulkYearId, { createRestorePoint: false, actorUserId: null });
+  }
+  await prisma.student.deleteMany({ where: { id: { in: made.bulkStudentIds } } });
+  if (made.bulkSectionId) await prisma.section.deleteMany({ where: { id: made.bulkSectionId } });
+  if (made.bulkGradeId) await prisma.grade.deleteMany({ where: { id: made.bulkGradeId } });
   await prisma.guardian.deleteMany({ where: { studentId: { in: made.keepStudentIds } } });
   await prisma.student.deleteMany({ where: { id: { in: made.keepStudentIds } } });
   // goneStudentId was deleted mid-suite to simulate the skip; harmless if so.
@@ -347,6 +365,99 @@ describe.skipIf(!process.env.DB_TESTS)("restore-point: restore a year", () => {
   it("refuses to restore a restore point that does not exist", async () => {
     await expect(restoreYear(-1)).rejects.toThrow(RestoreError);
   });
+
+  it(
+    "restores a few hundred attendance records through the bulk-insert path",
+    async () => {
+      // Large enough that the old one-row-at-a-time restore would need
+      // hundreds of sequential round trips for this table alone — small
+      // enough to keep the suite fast. Proves createMany is actually taken,
+      // not just that a handful of rows happen to survive.
+      const STUDENT_COUNT = 20;
+      const SESSION_COUNT = 15;
+
+      const year = await createAcademicYear({ nameBS: BULK_YEAR });
+      made.bulkYearId = year.id;
+      const grade = await createGrade({ name: `__bulk Grade ${stamp}`, order: 89601 + stamp });
+      made.bulkGradeId = grade.id;
+      const section = await createSection({ name: "A", gradeId: grade.id, academicYearId: year.id });
+      made.bulkSectionId = section.id;
+
+      const students = await prisma.student.createManyAndReturn({
+        data: Array.from({ length: STUDENT_COUNT }, (_, i) => ({
+          admissionNo: `__bulk-${stamp}-${i}`,
+          firstName: "__bulk",
+          lastName: `Student${i}`,
+          fullName: `__bulk Student${i}`,
+          dob: new Date(Date.UTC(2012, 5, 1)),
+          gender: "MALE" as const,
+          admittedOn: year.startsOn,
+        })),
+        select: { id: true },
+      });
+      made.bulkStudentIds = students.map((s) => s.id);
+
+      await prisma.enrollment.createMany({
+        data: made.bulkStudentIds.map((studentId, i) => ({
+          studentId,
+          sectionId: section.id,
+          academicYearId: year.id,
+          rollNo: i + 1,
+          enrolledOn: year.startsOn,
+        })),
+      });
+
+      const sessions = await prisma.attendanceSession.createManyAndReturn({
+        data: Array.from({ length: SESSION_COUNT }, (_, i) => ({
+          sectionId: section.id,
+          academicYearId: year.id,
+          date: new Date(year.startsOn.getTime() + i * 86_400_000),
+        })),
+        select: { id: true },
+      });
+
+      await prisma.attendanceRecord.createMany({
+        data: sessions.flatMap((session) =>
+          made.bulkStudentIds.map((studentId) => ({
+            sessionId: session.id,
+            studentId,
+            status: "PRESENT" as const,
+          })),
+        ),
+      });
+
+      const recordTotal = STUDENT_COUNT * SESSION_COUNT;
+      expect(
+        await prisma.attendanceRecord.count({ where: { sessionId: { in: sessions.map((s) => s.id) } } }),
+      ).toBe(recordTotal);
+
+      const result = await deleteYearWithData(year.id, { createRestorePoint: true, actorUserId: null });
+      made.bulkRestorePointId = result.restorePointId ?? 0;
+      expect(made.bulkRestorePointId).toBeGreaterThan(0);
+      expect(result.counts.attendanceRecords).toBe(recordTotal);
+      expect(result.counts.attendanceSessions).toBe(SESSION_COUNT);
+      expect(result.counts.enrollments).toBe(STUDENT_COUNT);
+
+      const report = await restoreYear(made.bulkRestorePointId);
+
+      // Every one of them came back — the point of this test.
+      expect(report.tables.attendanceRecords).toEqual({ restored: recordTotal, skipped: 0 });
+      expect(report.tables.attendanceSessions).toEqual({ restored: SESSION_COUNT, skipped: 0 });
+      expect(report.tables.enrollments).toEqual({ restored: STUDENT_COUNT, skipped: 0 });
+
+      // Not just the report's own count — the rows are actually there.
+      expect(
+        await prisma.attendanceRecord.count({ where: { studentId: { in: made.bulkStudentIds } } }),
+      ).toBe(recordTotal);
+      expect(
+        await prisma.attendanceSession.count({ where: { academicYearId: made.bulkYearId } }),
+      ).toBe(SESSION_COUNT);
+      expect(
+        await prisma.enrollment.count({ where: { academicYearId: made.bulkYearId } }),
+      ).toBe(STUDENT_COUNT);
+    },
+    30_000,
+  );
 
   it("deletes a restore point as a plain delete", async () => {
     // A throwaway point of its own, so the earlier tests' restore point is

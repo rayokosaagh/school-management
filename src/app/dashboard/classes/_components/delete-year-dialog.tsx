@@ -81,7 +81,7 @@ export function DeleteYearDialog({
 
   const nameMatches = summary ? typedName.trim() === summary.year.nameBS : false;
   const canDelete =
-    summary !== null && !summary.year.isCurrent && (!summary.taught || nameMatches);
+    summary !== null && !summary.year.isCurrent && (!summary.hasData || nameMatches);
 
   function runDelete() {
     if (!summary || !canDelete) return;
@@ -161,7 +161,7 @@ export function DeleteYearDialog({
               Create a restore point first
             </label>
 
-            {summary.taught ? (
+            {summary.hasData ? (
               <div className="space-y-2">
                 <Label htmlFor="delete-year-confirm">
                   Type {summary.year.nameBS} to confirm
@@ -174,8 +174,7 @@ export function DeleteYearDialog({
                   inputMode="numeric"
                 />
                 <p className="text-muted-foreground text-xs">
-                  This year has attendance or marks recorded, so it needs a typed
-                  confirmation.
+                  This year holds data, so it needs a typed confirmation.
                 </p>
               </div>
             ) : null}

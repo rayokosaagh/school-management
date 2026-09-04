@@ -1,3 +1,4 @@
+import type { Prisma } from "@/generated/prisma/client";
 import type { ActivityLevel, AttendanceStatus, ConductKind } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { PAYLOAD_VERSION, type RestorePayload, type YearCounts } from "./year-teardown";
@@ -294,6 +295,13 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
   const existingSchoolPeriodIds = new Set(schoolPeriodRows.map((r) => r.id));
   const existingUserIds = new Set(userRows.map((r) => r.id));
 
+  // A row's insert is deferred into one of these arrays instead of running
+  // immediately — bulk inserts via createMany turn the transaction from
+  // 60k+ sequential round trips (a full taught year's attendance records
+  // alone) into one round trip per table, which is what keeps the whole
+  // restore inside the transaction's timeout. Skip decisions still happen
+  // row-by-row, in the original order, before anything is queued — only
+  // what survives every skip rule reaches its array.
   return prisma.$transaction(
     async (tx) => {
       await tx.academicYear.create({
@@ -309,9 +317,9 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
       });
 
       const skippedOfferingIds = new Set<number>();
-      let offeringsRestored = 0;
       let offeringsSkippedSubject = 0;
       let offeringsSkippedGrade = 0;
+      const offeringsToInsert: Prisma.SubjectOfferingCreateManyInput[] = [];
       for (const row of offerings) {
         if (!existingSubjectIds.has(row.subjectId)) {
           skippedOfferingIds.add(row.id);
@@ -323,25 +331,24 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           offeringsSkippedGrade++;
           continue;
         }
-        await tx.subjectOffering.create({
-          data: {
-            id: row.id,
-            subjectId: row.subjectId,
-            gradeId: row.gradeId,
-            academicYearId: payload.year.id,
-            hasPractical: row.hasPractical,
-            fullMarksTheory: row.fullMarksTheory,
-            passMarksTheory: row.passMarksTheory,
-            fullMarksPractical: row.fullMarksPractical,
-            passMarksPractical: row.passMarksPractical,
-          },
+        offeringsToInsert.push({
+          id: row.id,
+          subjectId: row.subjectId,
+          gradeId: row.gradeId,
+          academicYearId: payload.year.id,
+          hasPractical: row.hasPractical,
+          fullMarksTheory: row.fullMarksTheory,
+          passMarksTheory: row.passMarksTheory,
+          fullMarksPractical: row.fullMarksPractical,
+          passMarksPractical: row.passMarksPractical,
         });
-        offeringsRestored++;
       }
+      if (offeringsToInsert.length) await tx.subjectOffering.createMany({ data: offeringsToInsert });
+      const offeringsRestored = offeringsToInsert.length;
 
       const skippedSectionIds = new Set<number>();
-      let sectionsRestored = 0;
       let sectionsSkippedGrade = 0;
+      const sectionsToInsert: Prisma.SectionCreateManyInput[] = [];
       for (const row of sections) {
         if (!existingGradeIds.has(row.gradeId)) {
           skippedSectionIds.add(row.id);
@@ -352,17 +359,22 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
         // only the reference is nulled, so every enrolment under it survives.
         const classTeacherId =
           row.classTeacherId != null && existingStaffIds.has(row.classTeacherId) ? row.classTeacherId : null;
-        await tx.section.create({
-          data: { id: row.id, name: row.name, gradeId: row.gradeId, academicYearId: payload.year.id, classTeacherId },
+        sectionsToInsert.push({
+          id: row.id,
+          name: row.name,
+          gradeId: row.gradeId,
+          academicYearId: payload.year.id,
+          classTeacherId,
         });
-        sectionsRestored++;
       }
+      if (sectionsToInsert.length) await tx.section.createMany({ data: sectionsToInsert });
+      const sectionsRestored = sectionsToInsert.length;
 
       const skippedAssignmentIds = new Set<number>();
-      let assignmentsRestored = 0;
       let assignmentsSkippedStaff = 0;
       let assignmentsSkippedSection = 0;
       let assignmentsSkippedOffering = 0;
+      const assignmentsToInsert: Prisma.TeacherAssignmentCreateManyInput[] = [];
       for (const row of assignments) {
         if (!existingStaffIds.has(row.staffId)) {
           skippedAssignmentIds.add(row.id);
@@ -379,15 +391,19 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           assignmentsSkippedOffering++;
           continue;
         }
-        await tx.teacherAssignment.create({
-          data: { id: row.id, staffId: row.staffId, sectionId: row.sectionId, subjectOfferingId: row.subjectOfferingId },
+        assignmentsToInsert.push({
+          id: row.id,
+          staffId: row.staffId,
+          sectionId: row.sectionId,
+          subjectOfferingId: row.subjectOfferingId,
         });
-        assignmentsRestored++;
       }
+      if (assignmentsToInsert.length) await tx.teacherAssignment.createMany({ data: assignmentsToInsert });
+      const assignmentsRestored = assignmentsToInsert.length;
 
-      let periodsRestored = 0;
       let periodsSkippedPeriod = 0;
       let periodsSkippedLesson = 0;
+      const periodsToInsert: Prisma.TimetablePeriodCreateManyInput[] = [];
       for (const row of periods) {
         if (!existingSchoolPeriodIds.has(row.schoolPeriodId)) {
           periodsSkippedPeriod++;
@@ -397,22 +413,21 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           periodsSkippedLesson++;
           continue;
         }
-        await tx.timetablePeriod.create({
-          data: {
-            id: row.id,
-            teacherAssignmentId: row.teacherAssignmentId,
-            sectionId: row.sectionId,
-            schoolPeriodId: row.schoolPeriodId,
-            dayOfWeek: row.dayOfWeek,
-            room: row.room,
-          },
+        periodsToInsert.push({
+          id: row.id,
+          teacherAssignmentId: row.teacherAssignmentId,
+          sectionId: row.sectionId,
+          schoolPeriodId: row.schoolPeriodId,
+          dayOfWeek: row.dayOfWeek,
+          room: row.room,
         });
-        periodsRestored++;
       }
+      if (periodsToInsert.length) await tx.timetablePeriod.createMany({ data: periodsToInsert });
+      const periodsRestored = periodsToInsert.length;
 
-      let enrollmentsRestored = 0;
       let enrollmentsSkippedStudent = 0;
       let enrollmentsSkippedSection = 0;
+      const enrollmentsToInsert: Prisma.EnrollmentCreateManyInput[] = [];
       for (const row of enrollments) {
         if (!existingStudentIds.has(row.studentId)) {
           enrollmentsSkippedStudent++;
@@ -422,39 +437,35 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           enrollmentsSkippedSection++;
           continue;
         }
-        await tx.enrollment.create({
-          data: {
-            id: row.id,
-            studentId: row.studentId,
-            sectionId: row.sectionId,
-            academicYearId: payload.year.id,
-            rollNo: row.rollNo,
-            enrolledOn: new Date(row.enrolledOn),
-          },
+        enrollmentsToInsert.push({
+          id: row.id,
+          studentId: row.studentId,
+          sectionId: row.sectionId,
+          academicYearId: payload.year.id,
+          rollNo: row.rollNo,
+          enrolledOn: new Date(row.enrolledOn),
         });
-        enrollmentsRestored++;
       }
+      if (enrollmentsToInsert.length) await tx.enrollment.createMany({ data: enrollmentsToInsert });
+      const enrollmentsRestored = enrollmentsToInsert.length;
 
       // An exam term only ever points at the year being restored, so it can
       // never be skipped by anything outside it.
-      for (const row of examTerms) {
-        await tx.examTerm.create({
-          data: {
-            id: row.id,
-            academicYearId: payload.year.id,
-            name: row.name,
-            order: row.order,
-            startsOn: row.startsOn ? new Date(row.startsOn) : null,
-            endsOn: row.endsOn ? new Date(row.endsOn) : null,
-            isPublished: row.isPublished,
-            createdAt: new Date(row.createdAt),
-          },
-        });
-      }
+      const examTermsToInsert: Prisma.ExamTermCreateManyInput[] = examTerms.map((row) => ({
+        id: row.id,
+        academicYearId: payload.year.id,
+        name: row.name,
+        order: row.order,
+        startsOn: row.startsOn ? new Date(row.startsOn) : null,
+        endsOn: row.endsOn ? new Date(row.endsOn) : null,
+        isPublished: row.isPublished,
+        createdAt: new Date(row.createdAt),
+      }));
+      if (examTermsToInsert.length) await tx.examTerm.createMany({ data: examTermsToInsert });
 
-      let marksRestored = 0;
       let marksSkippedStudent = 0;
       let marksSkippedOffering = 0;
+      const marksToInsert: Prisma.MarkCreateManyInput[] = [];
       for (const row of marks) {
         if (!existingStudentIds.has(row.studentId)) {
           marksSkippedStudent++;
@@ -464,24 +475,23 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           marksSkippedOffering++;
           continue;
         }
-        await tx.mark.create({
-          data: {
-            id: row.id,
-            examTermId: row.examTermId,
-            studentId: row.studentId,
-            subjectOfferingId: row.subjectOfferingId,
-            theory: row.theory,
-            practical: row.practical,
-            isAbsent: row.isAbsent,
-            updatedAt: new Date(row.updatedAt),
-          },
+        marksToInsert.push({
+          id: row.id,
+          examTermId: row.examTermId,
+          studentId: row.studentId,
+          subjectOfferingId: row.subjectOfferingId,
+          theory: row.theory,
+          practical: row.practical,
+          isAbsent: row.isAbsent,
+          updatedAt: new Date(row.updatedAt),
         });
-        marksRestored++;
       }
+      if (marksToInsert.length) await tx.mark.createMany({ data: marksToInsert });
+      const marksRestored = marksToInsert.length;
 
       const skippedSessionIds = new Set<number>();
-      let sessionsRestored = 0;
       let sessionsSkippedSection = 0;
+      const sessionsToInsert: Prisma.AttendanceSessionCreateManyInput[] = [];
       for (const row of attendanceSessions) {
         if (skippedSectionIds.has(row.sectionId)) {
           skippedSessionIds.add(row.id);
@@ -489,22 +499,21 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           continue;
         }
         const takenById = row.takenById != null && existingStaffIds.has(row.takenById) ? row.takenById : null;
-        await tx.attendanceSession.create({
-          data: {
-            id: row.id,
-            sectionId: row.sectionId,
-            academicYearId: payload.year.id,
-            date: new Date(row.date),
-            takenById,
-            takenAt: new Date(row.takenAt),
-          },
+        sessionsToInsert.push({
+          id: row.id,
+          sectionId: row.sectionId,
+          academicYearId: payload.year.id,
+          date: new Date(row.date),
+          takenById,
+          takenAt: new Date(row.takenAt),
         });
-        sessionsRestored++;
       }
+      if (sessionsToInsert.length) await tx.attendanceSession.createMany({ data: sessionsToInsert });
+      const sessionsRestored = sessionsToInsert.length;
 
-      let recordsRestored = 0;
       let recordsSkippedStudent = 0;
       let recordsSkippedSession = 0;
+      const recordsToInsert: Prisma.AttendanceRecordCreateManyInput[] = [];
       for (const row of attendanceRecords) {
         if (!existingStudentIds.has(row.studentId)) {
           recordsSkippedStudent++;
@@ -514,59 +523,62 @@ export async function restoreYear(restorePointId: number): Promise<RestoreReport
           recordsSkippedSession++;
           continue;
         }
-        await tx.attendanceRecord.create({
-          data: { id: row.id, sessionId: row.sessionId, studentId: row.studentId, status: row.status, note: row.note },
+        recordsToInsert.push({
+          id: row.id,
+          sessionId: row.sessionId,
+          studentId: row.studentId,
+          status: row.status,
+          note: row.note,
         });
-        recordsRestored++;
       }
+      if (recordsToInsert.length) await tx.attendanceRecord.createMany({ data: recordsToInsert });
+      const recordsRestored = recordsToInsert.length;
 
-      let conductRestored = 0;
       let conductSkippedStudent = 0;
+      const conductToInsert: Prisma.ConductEntryCreateManyInput[] = [];
       for (const row of conduct) {
         if (!existingStudentIds.has(row.studentId)) {
           conductSkippedStudent++;
           continue;
         }
         const recordedById = row.recordedById != null && existingUserIds.has(row.recordedById) ? row.recordedById : null;
-        await tx.conductEntry.create({
-          data: {
-            id: row.id,
-            studentId: row.studentId,
-            academicYearId: payload.year.id,
-            kind: row.kind,
-            points: row.points,
-            date: new Date(row.date),
-            note: row.note,
-            recordedById,
-            createdAt: new Date(row.createdAt),
-          },
+        conductToInsert.push({
+          id: row.id,
+          studentId: row.studentId,
+          academicYearId: payload.year.id,
+          kind: row.kind,
+          points: row.points,
+          date: new Date(row.date),
+          note: row.note,
+          recordedById,
+          createdAt: new Date(row.createdAt),
         });
-        conductRestored++;
       }
+      if (conductToInsert.length) await tx.conductEntry.createMany({ data: conductToInsert });
+      const conductRestored = conductToInsert.length;
 
-      let activitiesRestored = 0;
       let activitiesSkippedStudent = 0;
+      const activitiesToInsert: Prisma.ActivityEntryCreateManyInput[] = [];
       for (const row of activities) {
         if (!existingStudentIds.has(row.studentId)) {
           activitiesSkippedStudent++;
           continue;
         }
         const recordedById = row.recordedById != null && existingUserIds.has(row.recordedById) ? row.recordedById : null;
-        await tx.activityEntry.create({
-          data: {
-            id: row.id,
-            studentId: row.studentId,
-            academicYearId: payload.year.id,
-            name: row.name,
-            level: row.level,
-            points: row.points,
-            date: new Date(row.date),
-            recordedById,
-            createdAt: new Date(row.createdAt),
-          },
+        activitiesToInsert.push({
+          id: row.id,
+          studentId: row.studentId,
+          academicYearId: payload.year.id,
+          name: row.name,
+          level: row.level,
+          points: row.points,
+          date: new Date(row.date),
+          recordedById,
+          createdAt: new Date(row.createdAt),
         });
-        activitiesRestored++;
       }
+      if (activitiesToInsert.length) await tx.activityEntry.createMany({ data: activitiesToInsert });
+      const activitiesRestored = activitiesToInsert.length;
 
       const tables: Record<keyof YearCounts, RestoreOutcome> = {
         sections: outcomeFrom(sectionsRestored, [

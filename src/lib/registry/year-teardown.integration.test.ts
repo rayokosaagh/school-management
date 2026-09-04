@@ -23,6 +23,7 @@ import {
 const made = {
   yearId: 0,
   bareYearId: 0,
+  emptyYearId: 0,
   gradeIds: [] as number[],
   sectionIds: [] as number[],
   bareSectionId: 0,
@@ -43,6 +44,7 @@ const made = {
 const YEAR = "2087";
 const BARE_YEAR = "2088";
 const GUARD_YEAR = "2089";
+const EMPTY_YEAR = "2090";
 const stamp = Date.now() % 100000;
 
 afterAll(async () => {
@@ -78,6 +80,7 @@ afterAll(async () => {
     await prisma.grade.deleteMany({ where: { id: { in: made.gradeIds } } });
   }
   if (made.staffId) await prisma.staff.deleteMany({ where: { id: made.staffId } });
+  if (made.emptyYearId) await prisma.academicYear.deleteMany({ where: { id: made.emptyYearId } });
   if (made.bareYearId) await prisma.academicYear.deleteMany({ where: { id: made.bareYearId } });
   if (made.yearId) await prisma.academicYear.deleteMany({ where: { id: made.yearId } });
   // Deleting the test years would otherwise leave the school with no current
@@ -244,7 +247,7 @@ describe.skipIf(!process.env.DB_TESTS)("year teardown: summarise and snapshot", 
     expect(made.studentIds).toHaveLength(2);
   });
 
-  it("counts every table exactly and marks the year as taught", async () => {
+  it("counts every table exactly and reports the year as holding data", async () => {
     const summary = await summariseYear(made.yearId);
 
     expect(summary.year.nameBS).toBe(YEAR);
@@ -261,17 +264,37 @@ describe.skipIf(!process.env.DB_TESTS)("year teardown: summarise and snapshot", 
       conduct: 1,
       activities: 1,
     });
-    expect(summary.taught).toBe(true);
+    expect(summary.hasData).toBe(true);
   });
 
-  it("marks an untaught year as not taught", async () => {
+  // The regression guard for the year-2084 incident: a year with only
+  // structure — sections and enrolments, zero attendance and zero marks —
+  // must still gate its delete behind a typed name. "taught" (attendance or
+  // marks) used to be the only trigger, and this bare year sailed through a
+  // single click, losing 14 sections, 91 offerings and 117 enrolments for
+  // good.
+  it("reports a year holding only sections and offerings — no attendance, no marks — as holding data", async () => {
     const summary = await summariseYear(made.bareYearId);
 
     expect(summary.counts.sections).toBe(1);
     expect(summary.counts.offerings).toBe(1);
     expect(summary.counts.attendanceSessions).toBe(0);
     expect(summary.counts.marks).toBe(0);
-    expect(summary.taught).toBe(false);
+    expect(summary.hasData).toBe(true);
+  });
+
+  it("reports a genuinely empty year as holding no data", async () => {
+    const emptyYear = await createAcademicYear({ nameBS: EMPTY_YEAR });
+    made.emptyYearId = emptyYear.id;
+
+    const summary = await summariseYear(emptyYear.id);
+
+    expect(summary.counts).toEqual({
+      sections: 0, offerings: 0, assignments: 0, periods: 0, enrollments: 0,
+      examTerms: 0, marks: 0, attendanceSessions: 0, attendanceRecords: 0,
+      conduct: 0, activities: 0,
+    });
+    expect(summary.hasData).toBe(false);
   });
 
   it("refuses to summarise a year that does not exist", async () => {

@@ -26,9 +26,13 @@ export type YearCounts = {
 export type YearSummary = {
   year: { id: number; nameBS: string; isCurrent: boolean };
   counts: YearCounts;
-  /// A year with attendance or marks has been taught in, so its delete needs
-  /// the operator to type the year's name.
-  taught: boolean;
+  /// True when the year holds any row at all — attendance and marks included,
+  /// but also a bare section or enrolment with nothing recorded against it
+  /// yet. Structure alone is worth protecting: a year can be deleted with a
+  /// single click only when it is genuinely empty, so this — not whether
+  /// teaching specifically happened — decides whether the operator must type
+  /// the year's name.
+  hasData: boolean;
 };
 
 export type RestorePayload = {
@@ -94,9 +98,9 @@ export async function summariseYear(academicYearId: number): Promise<YearSummary
 
   return {
     year: { id: year.id, nameBS: year.nameBS, isCurrent: year.isCurrent },
-    // Attendance or marks mean real teaching happened; copied structure alone
-    // does not.
-    taught: attendanceSessions > 0 || marks > 0,
+    // Any non-zero count is something a click could destroy permanently —
+    // sections and enrolments included, not just attendance and marks.
+    hasData: Object.values(counts).some((count) => count > 0),
     counts,
   };
 }
