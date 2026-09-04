@@ -1,6 +1,13 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
+import {
+  Building2,
+  History,
+  KeyRound,
+  ShieldCheck,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
@@ -8,16 +15,27 @@ import { IconTile, type Tint } from "@/components/ui/page-shell";
 import { FieldSelect } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-/// The five settings groups, ordered from the school's own identity down to
-/// the rarely-touched restore points. Kept as a const array (not just the
-/// type) so page.tsx and this file share one source of truth for validating
-/// `?view=`.
-export const SETTINGS_GROUP_IDS = ["school", "privacy", "academic", "account", "data"] as const;
-export type SettingsGroupId = (typeof SETTINGS_GROUP_IDS)[number];
+// The group ids live in a plain module rather than here: this file is a
+// client component, and a value it exports reaches a server component as a
+// client-reference proxy rather than the value itself.
+import { DEFAULT_SETTINGS_GROUP, type SettingsGroupId } from "./settings-groups";
+
+export type { SettingsGroupId };
 
 /// "school" needs no `?view=` at all, matching the Students register/honours
 /// switch where the default view leaves a bare URL.
-const DEFAULT_GROUP: SettingsGroupId = "school";
+const DEFAULT_GROUP: SettingsGroupId = DEFAULT_SETTINGS_GROUP;
+
+/// Icons live here rather than travelling with each group from the server
+/// page: a component is a function, and a function cannot be passed across the
+/// server/client boundary as a prop. The group's id is enough to look one up.
+const GROUP_ICONS: Record<SettingsGroupId, LucideIcon> = {
+  school: Building2,
+  privacy: ShieldCheck,
+  academic: Trophy,
+  account: KeyRound,
+  data: History,
+};
 
 export type SettingsGroup = {
   id: SettingsGroupId;
@@ -25,7 +43,6 @@ export type SettingsGroup = {
   /** One line, shown in the rail, the narrow dropdown's context, and the
    *  panel heading — so a group is never offered without saying what's in it. */
   description: string;
-  icon: LucideIcon;
   tint: Tint;
   content: ReactNode;
 };
@@ -33,7 +50,7 @@ export type SettingsGroup = {
 function GroupBlurb({ group, size }: { group: SettingsGroup; size: "sm" | "md" }) {
   return (
     <>
-      <IconTile icon={group.icon} tint={group.tint} size={size} />
+      <IconTile icon={GROUP_ICONS[group.id]} tint={group.tint} size={size} />
       <span className="min-w-0">
         <span className={cn("block", size === "sm" ? "text-sm font-medium" : "text-base font-semibold")}>
           {group.label}

@@ -14,12 +14,14 @@ import { HonoursWeightsForm } from "./_components/honours-weights-form";
 import { Accounts } from "./_components/accounts";
 import { PermissionMatrix } from "./_components/permission-matrix";
 import { RestorePoints } from "./_components/restore-points";
+import { SettingsWorkspace, type SettingsGroup } from "./_components/settings-workspace";
+// Imported from the plain module, not the client component: a constant crossing
+// that boundary arrives as a proxy and would have no `.includes`.
 import {
-  SETTINGS_GROUP_IDS,
-  SettingsWorkspace,
-  type SettingsGroup,
+  DEFAULT_SETTINGS_GROUP,
+  isSettingsGroupId,
   type SettingsGroupId,
-} from "./_components/settings-workspace";
+} from "./_components/settings-groups";
 import { loadGrants, granted } from "@/lib/auth/permissions";
 import {
   CAPABILITIES,
@@ -84,9 +86,7 @@ export default async function SettingsPage({
   // Students page's switch: a reload or a bookmarked link has to land back
   // on the right one. An unrecognised value falls back to the first group
   // rather than erroring, matching how Students treats a stray `?view=`.
-  const view: SettingsGroupId = (SETTINGS_GROUP_IDS as readonly string[]).includes(viewParam ?? "")
-    ? (viewParam as SettingsGroupId)
-    : "school";
+  const view: SettingsGroupId = isSettingsGroupId(viewParam) ? viewParam : DEFAULT_SETTINGS_GROUP;
 
   // Grouped the way Google's settings are: the school's own identity first,
   // then who can even get in and what they can do once they're in, then the
@@ -98,7 +98,6 @@ export default async function SettingsPage({
       id: "school",
       label: "School",
       description: "Identity used on the dashboard header and every printed marksheet.",
-      icon: Building2,
       tint: "violet",
       content: (
         <SectionCard
@@ -115,7 +114,6 @@ export default async function SettingsPage({
       id: "privacy",
       label: "Privacy & access",
       description: "Who can sign in, and what each role is allowed to do once they do.",
-      icon: ShieldCheck,
       tint: "blue",
       content: (
         <>
@@ -163,7 +161,6 @@ export default async function SettingsPage({
       id: "academic",
       label: "Academic",
       description: "How exams, attendance, conduct and activities combine into the Honours score.",
-      icon: Trophy,
       tint: "amber",
       content: (
         <SectionCard
@@ -180,7 +177,6 @@ export default async function SettingsPage({
       id: "account",
       label: "Your account",
       description: "Your own sign-in username, email and password.",
-      icon: KeyRound,
       tint: "green",
       content: (
         <SectionCard
@@ -210,7 +206,6 @@ export default async function SettingsPage({
       id: "data",
       label: "Data",
       description: "Restore points captured when an academic year is deleted.",
-      icon: History,
       tint: "rose",
       content: (
         <SectionCard
