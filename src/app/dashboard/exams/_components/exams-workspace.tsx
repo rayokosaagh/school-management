@@ -85,7 +85,16 @@ export function ExamsWorkspace({
   const baseId = useId();
   const panelId = `${baseId}-panel`;
   const [, startNavigation] = useTransition();
-  const [offeringId, setOfferingId] = useState(initialOfferingId);
+  const [chosenOfferingId, setOfferingId] = useState(initialOfferingId);
+
+  /// Changing section navigates with `router.replace`, which re-renders without
+  /// remounting — so the chosen subject survives into a grade that may not
+  /// teach it, leaving the select showing a bare id and the sheet empty. Derive
+  /// rather than sync: a subject the section does not sit for falls back to the
+  /// one the server picked.
+  const offeringId = offerings.some((o) => o.id === chosenOfferingId)
+    ? chosenOfferingId
+    : initialOfferingId;
 
   const sheet = offeringId == null ? null : (sheets[offeringId] ?? null);
 
@@ -159,7 +168,10 @@ export function ExamsWorkspace({
         <FieldSelect
           aria-label="Section"
           value={sectionId ? String(sectionId) : ""}
-          onValueChange={(next) => go({ section: Number(next), subject: "" })}
+          // No `subject` here: go() only carries exam, section and view, so a
+          // subject passed in was silently dropped. The subject is local state,
+          // and the derivation above resets it when the section changes.
+          onValueChange={(next) => go({ section: Number(next) })}
           className="h-8 w-48 shrink-0"
           options={sections.map((s) => ({
             value: String(s.id),

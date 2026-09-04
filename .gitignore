@@ -47,3 +47,4 @@ next-env.d.ts
 /artifacts/teardown-walk/
 /artifacts/ui-check/
 /artifacts/shapes-check/
+/artifacts/exams-repro/
