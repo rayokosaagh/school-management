@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { IconTile, type Tint } from "@/components/ui/page-shell";
@@ -73,7 +74,8 @@ export function SettingsWorkspace({
   groups: SettingsGroup[];
 }) {
   const router = useRouter();
-  const [, startNavigation] = useTransition();
+  const [isPending, startNavigation] = useTransition();
+  const reduce = useReducedMotion();
   const active = groups.find((g) => g.id === view) ?? groups[0];
 
   function switchGroup(next: SettingsGroupId) {
@@ -82,48 +84,88 @@ export function SettingsWorkspace({
   }
 
   return (
-    <div className="flex flex-col gap-4 shell:flex-row shell:items-start shell:gap-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 shell:flex-row shell:items-start shell:gap-6">
       {/* Below the shell breakpoint there's no room for a rail beside the
           panel, but every group still has to be one tap away — a dropdown
           costs nothing on the vertical axis a phone doesn't have. */}
-      <div className="shell:hidden">
+      <div className="bg-surface border-line rounded-[10px] border p-2 shadow-panel shell:hidden">
+        <p className="text-ink-3 mb-1 px-1 text-[11px] font-medium tracking-[0.1em] uppercase">
+          Settings area
+        </p>
         <FieldSelect
           aria-label="Settings section"
           className="w-full"
           value={active.id}
           onValueChange={(next) => next && switchGroup(next as SettingsGroupId)}
+          disabled={isPending}
           options={groups.map((g) => ({ value: g.id, label: g.label }))}
         />
       </div>
 
-      <nav aria-label="Settings sections" className="hidden shrink-0 shell:block shell:w-72">
+      <nav
+        aria-label="Settings sections"
+        className="bg-surface border-line hidden shrink-0 rounded-[10px] border p-2 shadow-panel shell:block shell:w-72"
+      >
+        <p className="text-ink-3 px-2 py-1.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+          Settings areas
+        </p>
         <ul className="flex flex-col gap-1">
           {groups.map((group) => {
             const isActive = group.id === active.id;
             return (
               <li key={group.id}>
-                <button
+                <motion.button
                   type="button"
                   aria-current={isActive ? "true" : undefined}
                   onClick={() => switchGroup(group.id)}
+                  disabled={isPending}
+                  whileHover={reduce ? undefined : { x: 2 }}
+                  whileTap={reduce ? undefined : { scale: 0.99 }}
+                  transition={{ duration: 0.16, ease: "easeOut" }}
                   className={cn(
-                    "flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                    isActive ? "bg-brand-tint text-brand-text" : "text-ink hover:bg-surface-2",
+                    "relative flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition-[background-color,border-color,box-shadow] disabled:cursor-wait disabled:opacity-60",
+                    isActive
+                      ? "border-brand-tint-2 bg-brand-tint text-brand-text shadow-sm"
+                      : "border-transparent text-ink hover:bg-surface-2",
                   )}
                 >
+                  {isActive ? (
+                    <motion.span
+                      layoutId={reduce ? undefined : "settings-active-indicator"}
+                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                      className="bg-brand absolute top-3 bottom-3 left-0 w-0.5 rounded-full"
+                    />
+                  ) : null}
                   <GroupBlurb group={group} size="sm" />
-                </button>
+                </motion.button>
               </li>
             );
           })}
         </ul>
       </nav>
 
-      <div className="min-w-0 flex-1 space-y-6">
-        <div className="flex items-start gap-3">
-          <GroupBlurb group={active} size="md" />
-        </div>
-        {active.content}
+      <div
+        aria-busy={isPending}
+        className={cn(
+          "min-w-0 flex-1 space-y-4 transition-opacity",
+          isPending && "opacity-60",
+        )}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={active.id}
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? undefined : { opacity: 0, y: -5 }}
+            transition={{ duration: 0.22, ease: [0.2, 0.8, 0.2, 1] }}
+            className="space-y-4"
+          >
+            <div className="bg-surface border-line flex items-start gap-3 rounded-[10px] border px-4 py-3 shadow-panel">
+              <GroupBlurb group={active} size="md" />
+            </div>
+            <div className="space-y-5">{active.content}</div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

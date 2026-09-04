@@ -9,6 +9,7 @@ import { Callout } from "@/components/ui/page-shell";
 import { FieldSelect } from "@/components/ui/select";
 import { Modal } from "@/components/ui/modal";
 import type { RolloverOptions, RolloverPlan, SectionKey, StageCount } from "@/lib/registry/rollover-plan";
+import { cn } from "@/lib/utils";
 
 function stage(count: StageCount) {
   return count.existing === 0 && count.skipped === 0
@@ -57,48 +58,54 @@ export function ReviewStep({
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi value={plan.sections.create} label="Sections" hint={stage(plan.sections)} />
-        <Kpi value={plan.offerings.create} label="Offerings" hint={stage(plan.offerings)} />
-        <Kpi value={plan.assignments.create} label="Assignments" hint={stage(plan.assignments)} />
-        <Kpi value={plan.timetable.create} label="Periods" hint={stage(plan.timetable)} />
-        <Kpi value={plan.students.promote.length} label="Promoting" />
-        <Kpi value={plan.students.retain.length} label="Retaining" />
-        <Kpi value={plan.students.graduate.length} label="Graduating" />
-        <Kpi value={plan.students.leave.length} label="Leaving" />
-      </div>
-
-      {plan.unplaceable.map((group) => (
-        <div key={group.sourceSectionId} className="border-line bg-surface rounded-[10px] border p-4">
-          <p className="text-sm">
-            {group.label} has {group.count} student(s) and no matching section in the grade above.
-            Choose where they go.
-          </p>
-          <div className="pt-2">
-            <FieldSelect
-              aria-label={`Where ${group.label} goes`}
-              value={options.placements[group.sourceSectionId] ?? ""}
-              onValueChange={(value) => {
-                if (value) onPlacement(group.sourceSectionId, value);
-              }}
-              placeholder={
-                group.choices.length === 0 ? "No sections in that grade yet" : "Choose a section"
-              }
-              options={group.choices.map((c) => ({ value: c.key, label: c.label }))}
-            />
-          </div>
+      {/* Toggling makeTargetCurrent or a placement below re-previews the plan
+          (see rollover-workspace's update()), so this whole read-out is
+          dimmed rather than left showing stale numbers with no sign a new
+          plan is on the way. */}
+      <div aria-busy={pending} className={cn("space-y-5 transition-opacity", pending && "opacity-60")}>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Kpi value={plan.sections.create} label="Sections" hint={stage(plan.sections)} />
+          <Kpi value={plan.offerings.create} label="Offerings" hint={stage(plan.offerings)} />
+          <Kpi value={plan.assignments.create} label="Assignments" hint={stage(plan.assignments)} />
+          <Kpi value={plan.timetable.create} label="Periods" hint={stage(plan.timetable)} />
+          <Kpi value={plan.students.promote.length} label="Promoting" />
+          <Kpi value={plan.students.retain.length} label="Retaining" />
+          <Kpi value={plan.students.graduate.length} label="Graduating" />
+          <Kpi value={plan.students.leave.length} label="Leaving" />
         </div>
-      ))}
 
-      {blocked ? (
-        <Callout icon={AlertTriangle} tint="rose">
-          <ul className="space-y-1">
-            {plan.blockers.map((b) => (
-              <li key={b}>{b}</li>
-            ))}
-          </ul>
-        </Callout>
-      ) : null}
+        {plan.unplaceable.map((group) => (
+          <div key={group.sourceSectionId} className="border-line bg-surface rounded-[10px] border p-4">
+            <p className="text-sm">
+              {group.label} has {group.count} student(s) and no matching section in the grade above.
+              Choose where they go.
+            </p>
+            <div className="pt-2">
+              <FieldSelect
+                aria-label={`Where ${group.label} goes`}
+                value={options.placements[group.sourceSectionId] ?? ""}
+                onValueChange={(value) => {
+                  if (value) onPlacement(group.sourceSectionId, value);
+                }}
+                placeholder={
+                  group.choices.length === 0 ? "No sections in that grade yet" : "Choose a section"
+                }
+                options={group.choices.map((c) => ({ value: c.key, label: c.label }))}
+              />
+            </div>
+          </div>
+        ))}
+
+        {blocked ? (
+          <Callout icon={AlertTriangle} tint="rose">
+            <ul className="space-y-1">
+              {plan.blockers.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ul>
+          </Callout>
+        ) : null}
+      </div>
 
       <label className="flex items-center gap-2.5 text-sm">
         <Checkbox

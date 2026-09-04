@@ -10,6 +10,7 @@ import { Callout } from "@/components/ui/page-shell";
 import { FieldSelect } from "@/components/ui/select";
 import { ROLL_ORDER_LABEL, isRollOrder } from "@/lib/registry/roll-order";
 import type { RolloverOptions, RolloverPlan } from "@/lib/registry/rollover-plan";
+import { cn } from "@/lib/utils";
 import { addTargetYear } from "../actions";
 import type { YearOption } from "./rollover-workspace";
 
@@ -140,23 +141,28 @@ export function YearStep({
         ) : null}
       </section>
 
-      {plan && plan.blockers.length > 0 ? (
-        <Callout icon={AlertTriangle} tint="rose">
-          <ul className="space-y-1">
-            {plan.blockers.map((b) => (
-              <li key={b}>{b}</li>
-            ))}
-          </ul>
-        </Callout>
-      ) : null}
+      {/* Every toggle above re-previews the plan, so the numbers here go
+          stale the instant one changes — dimmed rather than hidden, since
+          the old plan is still the best guess until the new one lands. */}
+      <div aria-busy={pending} className={cn("space-y-3 transition-opacity", pending && "opacity-60")}>
+        {plan && plan.blockers.length > 0 ? (
+          <Callout icon={AlertTriangle} tint="rose">
+            <ul className="space-y-1">
+              {plan.blockers.map((b) => (
+                <li key={b}>{b}</li>
+              ))}
+            </ul>
+          </Callout>
+        ) : null}
 
-      {plan && plan.blockers.length === 0 ? (
-        <Callout icon={Info} tint="blue">
-          {plan.sections.create} section(s), {plan.offerings.create} offering(s),{" "}
-          {plan.assignments.create} assignment(s) and {plan.timetable.create} timetable period(s)
-          would be created.
-        </Callout>
-      ) : null}
+        {plan && plan.blockers.length === 0 ? (
+          <Callout icon={Info} tint="blue">
+            {plan.sections.create} section(s), {plan.offerings.create} offering(s),{" "}
+            {plan.assignments.create} assignment(s) and {plan.timetable.create} timetable period(s)
+            would be created.
+          </Callout>
+        ) : null}
+      </div>
 
       {/* Step 2 renders only when plan is set — without this check a stale or
           in-flight preview would strand the operator on a blank panel. */}

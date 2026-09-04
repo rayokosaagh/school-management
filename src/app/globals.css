@@ -31,7 +31,10 @@
   --surface-3: oklch(1 0 0);
   --line: oklch(0.895 0.009 84);
   --line-strong: oklch(0.80 0.014 84);
-  --line-elevated: oklch(0.62 0.016 84);
+  /* Floating menus need a firmer edge than resting cards: on the near-white
+     page surface, a hairline makes an open dropdown look like part of the
+     document rather than a layer above it. */
+  --line-elevated: oklch(0.70 0.018 84);
 
   --ink: oklch(0.21 0.016 248);
   --ink-2: oklch(0.40 0.014 248);
@@ -69,7 +72,7 @@
   --shadow-panel: 0 1px 2px oklch(0.24 0.02 84 / 7%), 0 10px 28px -14px oklch(0.24 0.02 84 / 22%);
   /* Heavier than shadow-panel: floating layers need to read as cast above the
      page, not resting on it like a card. */
-  --shadow-popover: 0 2px 4px oklch(0.24 0.02 84 / 10%), 0 16px 40px -12px oklch(0.24 0.02 84 / 32%);
+  --shadow-popover: 0 3px 6px oklch(0.24 0.02 84 / 12%), 0 20px 48px -12px oklch(0.24 0.02 84 / 38%);
 
   --rail: 64px;
   --topbar: 56px;
@@ -96,7 +99,7 @@
   --surface-3: oklch(0.26 0.012 250);
   --line: oklch(0.29 0.011 250);
   --line-strong: oklch(0.38 0.013 250);
-  --line-elevated: oklch(0.57 0.015 250);
+  --line-elevated: oklch(0.50 0.018 250);
 
   --ink: oklch(0.95 0.006 250);
   --ink-2: oklch(0.82 0.009 250);
@@ -127,7 +130,7 @@
   --subject-7: oklch(0.74 0.12 340);
 
   --shadow-panel: 0 1px 2px oklch(0 0 0 / 40%), 0 12px 32px -12px oklch(0 0 0 / 60%);
-  --shadow-popover: 0 2px 6px oklch(0 0 0 / 50%), 0 20px 48px -12px oklch(0 0 0 / 70%);
+  --shadow-popover: 0 3px 8px oklch(0 0 0 / 55%), 0 22px 52px -12px oklch(0 0 0 / 76%);
 }
 
 /* shadcn aliases --------------------------------------------------------- */
@@ -314,6 +317,17 @@
   box-shadow: var(--shadow-panel);
   outline: 1px solid var(--line);
   outline-offset: -1px;
+}
+
+/* Skeleton shimmer (Tailwind's animate-pulse) is the one CSS-only loop in the
+   app — everything else routes through motion/react and is gated on
+   useReducedMotion() there. This is the equivalent gate for that one loop:
+   reduced motion gets a static muted block instead of a pulsing one, so a
+   loading route never carries a loop past this preference either. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
 }
 
 @media print {

@@ -77,7 +77,7 @@ export function BsCalendar({
   return (
     <div
       className={cn(
-        "bg-popover text-popover-foreground w-72 rounded-xl border p-3 shadow-md",
+        "bg-popover text-popover-foreground w-72 rounded-xl border border-popover-border p-3 shadow-popover",
         className,
       )}
     >

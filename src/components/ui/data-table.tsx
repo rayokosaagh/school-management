@@ -213,7 +213,11 @@ export function DataTable<T>({
                 }}
                 className={cn(
                   "border-line group border-b transition-colors last:border-b-0",
-                  onSelect && "hover:bg-surface-2 cursor-default",
+                  // Even a read-only table gets the hover shift: with hundreds
+                  // of rows the eye needs a way to track one across the width,
+                  // whether or not the row does anything when clicked.
+                  "hover:bg-surface-2",
+                  onSelect && "cursor-default",
                   selected && "bg-brand-tint hover:bg-brand-tint",
                   "focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none focus-visible:ring-inset",
                 )}
@@ -262,7 +266,7 @@ export function DataTable<T>({
         </span>
         <span className="flex items-center gap-1">
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Rows per page" className="border-line hover:bg-surface-2 inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono">
+            <DropdownMenuTrigger aria-label="Rows per page" className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono">
               <Rows3 className="size-3.5" aria-hidden="true" />
               {prefs.pageSize}
             </DropdownMenuTrigger>
@@ -279,7 +283,7 @@ export function DataTable<T>({
           </DropdownMenu>
 
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Choose columns" className="border-line hover:bg-surface-2 inline-flex h-7 items-center rounded-md border px-2">
+            <DropdownMenuTrigger aria-label="Choose columns" className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center rounded-md border px-2">
               <Columns3 className="size-3.5" aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -303,7 +307,7 @@ export function DataTable<T>({
             aria-label="Previous page"
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
-            className="hover:bg-surface-2 grid size-7 place-items-center rounded-md disabled:opacity-40"
+            className="hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none grid size-7 place-items-center rounded-md disabled:opacity-40"
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
@@ -313,7 +317,7 @@ export function DataTable<T>({
             aria-label="Next page"
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
-            className="hover:bg-surface-2 grid size-7 place-items-center rounded-md disabled:opacity-40"
+            className="hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none grid size-7 place-items-center rounded-md disabled:opacity-40"
           >
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>

@@ -318,6 +318,7 @@ export function RecordTable<T>({
               ) : null,
               ...(open ? group.rows : []).map((row) => {
                 const key = getKey(row);
+                const isOpen = openKey === key;
                 return (
                   <motion.li
                   key={key}
@@ -351,7 +352,17 @@ export function RecordTable<T>({
                     className={cn(
                       "bg-rail focus-visible:ring-ring/50 rounded-xl px-4 transition-colors duration-200 focus-visible:ring-3 focus-visible:outline-none",
                       density === "compact" ? "py-1.5" : "py-3",
-                      renderDetail && "hover:bg-muted cursor-pointer",
+                      // Every row gets the hover shift, not only ones that open
+                      // a detail panel: with hundreds of rows the eye still
+                      // needs to track one across the width even when nothing
+                      // is clickable.
+                      "hover:bg-muted",
+                      renderDetail && "cursor-pointer",
+                      // The row behind an open detail panel stays marked while
+                      // it's open, the same left-accent treatment DataTable
+                      // uses for its selected row, so the panel reads as
+                      // "editing this one" rather than a plain overlay.
+                      isOpen && "bg-muted shadow-[inset_3px_0_0_var(--brand)]",
                     )}
                   >
                     {/* Stacked on small screens, grid from md up. */}
