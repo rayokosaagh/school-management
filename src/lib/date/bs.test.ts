@@ -11,6 +11,7 @@ import {
   formatBsNepali,
   isValidBs,
   parseBsInput,
+  shiftBsInput,
   toBsInput,
 } from "./bs";
 
@@ -131,6 +132,43 @@ describe("bsYearRange", () => {
   it("throws outside the supported range", () => {
     expect(() => bsYearRange(1999)).toThrow(BsRangeError);
     expect(() => bsYearRange(2100)).toThrow(BsRangeError);
+  });
+});
+
+describe("shiftBsInput", () => {
+  // BS 2082: Baisakh (month 1) has 31 days, Ashadh (month 3) has 32 — a
+  // month-length span the old `day + 1` bump in the roll-call UI could not
+  // tell apart, since it just capped at "day > 32".
+  it("steps forward off the last day of a 31-day month onto day 1 of the next", () => {
+    expect(bsMonthLength(2082, 1)).toBe(31);
+    expect(shiftBsInput("2082-01-31", 1)).toBe("2082-02-01");
+  });
+
+  it("steps forward off the last day of a 32-day month onto day 1 of the next", () => {
+    expect(bsMonthLength(2082, 3)).toBe(32);
+    expect(shiftBsInput("2082-03-32", 1)).toBe("2082-04-01");
+  });
+
+  it("steps back off day 1 onto the last day of the previous month, whatever its length", () => {
+    expect(shiftBsInput("2082-02-01", -1)).toBe("2082-01-31"); // previous month has 31 days
+    expect(shiftBsInput("2082-04-01", -1)).toBe("2082-03-32"); // previous month has 32 days
+  });
+
+  it("crosses a BS year boundary in both directions", () => {
+    expect(bsMonthLength(2082, 12)).toBe(30);
+    expect(shiftBsInput("2082-12-30", 1)).toBe("2083-01-01");
+    expect(shiftBsInput("2083-01-01", -1)).toBe("2082-12-30");
+  });
+
+  it("moves an ordinary mid-month date by one day", () => {
+    expect(shiftBsInput("2082-01-15", 1)).toBe("2082-01-16");
+    expect(shiftBsInput("2082-01-15", -1)).toBe("2082-01-14");
+  });
+
+  it("returns null instead of guessing at malformed or unparseable input", () => {
+    expect(shiftBsInput("not-a-date", 1)).toBeNull();
+    expect(shiftBsInput("2082-13-01", 1)).toBeNull();
+    expect(shiftBsInput("", 1)).toBeNull();
   });
 });
 

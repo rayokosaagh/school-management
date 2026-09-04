@@ -99,6 +99,28 @@ export function parseBsInput(value: string): Date | null {
   return bsToAd(bs);
 }
 
+/// Steps a BS wire-format date by whole days through Gregorian arithmetic —
+/// `Date.UTC` rolls day-of-month overflow/underflow into the next or previous
+/// month itself, so this never has to know BS month lengths at all. That is
+/// what the raw `day + by` bump in the roll-call UI got wrong: it produced
+/// impossible days like "2082-01-32" instead of crossing into Jestha.
+export function shiftBsInput(value: string, by: number): string | null {
+  const ad = parseBsInput(value);
+  if (!ad) return null;
+  const { y, m, d } = utcParts(ad);
+  const shifted = fromUtcParts(y, m, d + by);
+  let bs: BsDate;
+  try {
+    bs = adToBs(shifted);
+  } catch {
+    return null; // Outside the range nepali-datetime's conversion table covers.
+  }
+  // adToBs does not itself enforce BS_MIN_YEAR/BS_MAX_YEAR, so check explicitly
+  // rather than trust the library to have thrown already.
+  if (!isValidBs(bs)) return null;
+  return `${bs.year}-${pad(bs.month)}-${pad(bs.day)}`;
+}
+
 // First and last day of a BS year, used to bound an academic year.
 export function bsYearRange(year: number): { startsOn: Date; endsOn: Date } {
   assertInRange(year);

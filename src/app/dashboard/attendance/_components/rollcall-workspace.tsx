@@ -11,6 +11,7 @@ import {
   registerTabId,
   type RegisterTab,
 } from "@/components/ui/register-tabs";
+import { shiftBsInput } from "@/lib/date/bs";
 import { sectionCode } from "@/lib/register-codes";
 import { AttendanceSheet, type SheetRow } from "./attendance-sheet";
 
@@ -73,14 +74,14 @@ export function RollCallWorkspace({
     });
   }
 
-  /// Steps a Bikram Sambat date by whole days without leaving BS: the day part
-  /// is nudged and the server clamps anything that overflows the month.
+  /// Steps a Bikram Sambat date by whole days, crossing month and year
+  /// boundaries correctly. A shift that does not resolve to a real BS date
+  /// (malformed input, or past the calendar's supported years) is dropped
+  /// rather than acted on, so the box never silently shows one date while a
+  /// stale one gets saved.
   function shiftDay(by: number) {
-    const [y, m, d] = dateInput.split("-").map(Number);
-    if (!y || !m || !d) return;
-    const day = d + by;
-    if (day < 1 || day > 32) return;
-    const next = `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const next = shiftBsInput(dateInput, by);
+    if (!next) return;
     setDateInput(next);
     goToDate(next);
   }
