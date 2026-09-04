@@ -57,7 +57,9 @@ export function Modal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.99 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="bg-surface my-auto flex max-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col rounded-2xl shadow-2xl ring-1 ring-black/5"
+            // bg-popover/ring-popover-border, not bg-surface/ring-black/5:
+            // this is a floating layer like every other popup, not a card.
+            className="bg-popover text-popover-foreground my-auto flex max-h-[calc(100vh-4rem)] w-full max-w-2xl flex-col rounded-2xl shadow-popover ring-1 ring-popover-border"
           >
             <div className="flex shrink-0 items-center justify-between gap-3 border-b p-5">
               <h3 className="font-semibold">{title}</h3>

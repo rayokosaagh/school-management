@@ -22,8 +22,16 @@
   --page: oklch(0.968 0.007 84);
   --surface: oklch(0.997 0.002 84);
   --surface-2: oklch(0.975 0.006 84);
+  /* Floating layers (popover/select/dropdown/dialog/sheet). Surface is
+     already within 0.003 of the lightness ceiling, so a lighter fill can't
+     carry elevation here — surface-3 is pushed to pure, zero-chroma white
+     (cooler than the warm-tinted cards) and elevation instead reads through
+     line-elevated (a real mid grey, not a translucent hairline) and
+     shadow-popover below. */
+  --surface-3: oklch(1 0 0);
   --line: oklch(0.895 0.009 84);
   --line-strong: oklch(0.80 0.014 84);
+  --line-elevated: oklch(0.62 0.016 84);
 
   --ink: oklch(0.21 0.016 248);
   --ink-2: oklch(0.40 0.014 248);
@@ -59,6 +67,9 @@
   --subject-7: oklch(0.57 0.11 340);
 
   --shadow-panel: 0 1px 2px oklch(0.24 0.02 84 / 7%), 0 10px 28px -14px oklch(0.24 0.02 84 / 22%);
+  /* Heavier than shadow-panel: floating layers need to read as cast above the
+     page, not resting on it like a card. */
+  --shadow-popover: 0 2px 4px oklch(0.24 0.02 84 / 10%), 0 16px 40px -12px oklch(0.24 0.02 84 / 32%);
 
   --rail: 64px;
   --topbar: 56px;
@@ -78,8 +89,14 @@
   --page: oklch(0.155 0.009 250);
   --surface: oklch(0.198 0.010 250);
   --surface-2: oklch(0.235 0.011 250);
+  /* Dark mode has headroom, so elevation works the conventional way: floating
+     layers get a visibly lighter fill than either surface step, plus a
+     border and shadow strong enough to read against both surface and
+     surface-2 (table headers, resting tabs) behind them. */
+  --surface-3: oklch(0.26 0.012 250);
   --line: oklch(0.29 0.011 250);
   --line-strong: oklch(0.38 0.013 250);
+  --line-elevated: oklch(0.57 0.015 250);
 
   --ink: oklch(0.95 0.006 250);
   --ink-2: oklch(0.82 0.009 250);
@@ -110,6 +127,7 @@
   --subject-7: oklch(0.74 0.12 340);
 
   --shadow-panel: 0 1px 2px oklch(0 0 0 / 40%), 0 12px 32px -12px oklch(0 0 0 / 60%);
+  --shadow-popover: 0 2px 6px oklch(0 0 0 / 50%), 0 20px 48px -12px oklch(0 0 0 / 70%);
 }
 
 /* shadcn aliases --------------------------------------------------------- */
@@ -118,8 +136,13 @@
   --foreground: var(--ink);
   --card: var(--surface);
   --card-foreground: var(--ink);
-  --popover: var(--surface);
+  /* Floating surfaces get their own fill/border/shadow instead of aliasing
+     onto --surface — see the surface-3/line-elevated/shadow-popover comments
+     above. Without this, an open dropdown was pixel-identical to the card it
+     opened over. */
+  --popover: var(--surface-3);
   --popover-foreground: var(--ink);
+  --popover-border: var(--line-elevated);
   --primary: var(--brand);
   --primary-foreground: var(--brand-ink);
   --secondary: var(--surface-2);
@@ -170,6 +193,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-popover-border: var(--popover-border);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -205,8 +229,10 @@
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-line-elevated: var(--line-elevated);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
@@ -246,6 +272,7 @@
   --font-devanagari: var(--font-devanagari-face), sans-serif;
 
   --shadow-panel: var(--shadow-panel);
+  --shadow-popover: var(--shadow-popover);
 
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
