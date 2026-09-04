@@ -29,6 +29,9 @@ const ROUTES = [
   // Fixed ids: these prove the unknown-id redirect, not the pane. Phase 2b
   // selects the first row instead.
   "dashboard/students?student=1",
+  // Honours as a view inside Students, and the old page redirecting to it.
+  "dashboard/students?view=honours",
+  "dashboard/honours",
   "dashboard/teachers",
   "dashboard/teachers?staff=1",
   "dashboard/classes",
@@ -38,7 +41,6 @@ const ROUTES = [
   "dashboard/rollover",
   "dashboard/attendance",
   "dashboard/exams",
-  "dashboard/honours",
   "dashboard/settings",
 ];
 const WIDTHS = [1440, 1000, 390];

@@ -68,8 +68,11 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
   );
   const w = honours.weights;
 
+  // No outer PageFrame here: this is a view inside the Students page, which
+  // owns the one title/actions row for both views. Only the tab strip,
+  // toolbar and body belong to this view.
   return (
-    <PageFrame eyebrow="Assessment" title="Honours" meta={`${ranked} ranked · ${honours.year.nameBS}`}>
+    <>
       <PageFrame.Tabs>
         <RegisterTabs
           tabs={tabs}
@@ -94,6 +97,9 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
           />
         </label>
         <span className="flex-1" />
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+          {ranked} ranked
+        </span>
         <span className="text-ink-3 shrink-0 font-mono text-[12px] whitespace-nowrap tabular-nums">
           Exam {w.exams} · Att {w.attendance} · Cond {w.conduct} · Act {w.activities}
         </span>
@@ -120,6 +126,6 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
           ))}
         </div>
       </PageFrame.Body>
-    </PageFrame>
+    </>
   );
 }

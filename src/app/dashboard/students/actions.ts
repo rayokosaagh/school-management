@@ -357,7 +357,6 @@ export async function saveConduct(_prev: ActionState, formData: FormData): Promi
   }
 
   revalidatePath(PATH);
-  revalidatePath("/dashboard/honours");
   return { success: kind === "MERIT" ? "Merit recorded." : "Demerit recorded." };
 }
 
@@ -378,7 +377,6 @@ export async function removeConduct(_prev: ActionState, formData: FormData): Pro
 
   await deleteConduct(id);
   revalidatePath(PATH);
-  revalidatePath("/dashboard/honours");
   return { success: "Entry removed." };
 }
 
@@ -417,7 +415,6 @@ export async function saveActivity(_prev: ActionState, formData: FormData): Prom
   }
 
   revalidatePath(PATH);
-  revalidatePath("/dashboard/honours");
   return { success: "Activity recorded." };
 }
 
@@ -438,6 +435,5 @@ export async function removeActivity(_prev: ActionState, formData: FormData): Pr
 
   await deleteActivity(id);
   revalidatePath(PATH);
-  revalidatePath("/dashboard/honours");
   return { success: "Entry removed." };
 }

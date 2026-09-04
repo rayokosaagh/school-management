@@ -7,12 +7,17 @@ import { PageFrame } from "@/components/ui/page-frame";
 import { allowedSectionIds, requirePage } from "@/lib/auth/guard";
 import { formatBs, toBsInput } from "@/lib/date/bs";
 import { recentStudentStrips } from "@/lib/attendance/attendance";
+import { getHonours } from "@/lib/honours/honours";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { listSections } from "@/lib/registry/structure";
 import { getStudentSummary, listEnrolledStudents, suggestAdmissionNo } from "@/lib/registry/students";
 import { StudentsWorkspace, type StudentRow } from "./_components/students-workspace";
 
-export default async function StudentsPage({ searchParams }: { searchParams: Promise<{ student?: string; denied?: string }> }) {
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ student?: string; denied?: string; view?: string }>;
+}) {
   // Redirects unless the stored permission matrix allows this section.
   const actor = await requirePage("/dashboard/students");
 
@@ -30,17 +35,24 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
     );
   }
 
-  const { student, denied } = await searchParams;
+  const { student, denied, view: viewParam } = await searchParams;
+  // The URL owns the view too, the same as `?student=` owns the pane: a
+  // reload or a bookmark — including the redirect from the old
+  // /dashboard/honours — has to land back on the right one.
+  const view: "register" | "honours" = viewParam === "honours" ? "honours" : "register";
   const selectedId = student && /^\d+$/.test(student) ? Number(student) : null;
   const now = new Date();
 
-  const [sections, enrollments, suggested, strips, summary, allowed] = await Promise.all([
+  const [sections, enrollments, suggested, strips, summary, allowed, honours] = await Promise.all([
     listSections(currentYear.id),
     listEnrolledStudents({ academicYearId: currentYear.id }),
     suggestAdmissionNo(),
     recentStudentStrips(currentYear.id, now, 14),
     selectedId == null ? Promise.resolve(null) : getStudentSummary(selectedId, currentYear.id, now),
     selectedId == null ? Promise.resolve<number[] | "all">("all") : allowedSectionIds(actor),
+    // Reads the whole year's marks and attendance, so it only runs for the
+    // view that needs it rather than on every Students page load.
+    view === "honours" ? getHonours(currentYear.id) : Promise.resolve(null),
   ]);
 
   // An id that names nobody — unknown, just deleted, or not enrolled in the
@@ -48,12 +60,15 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
   // lists this year's enrolments. Clear the query string instead, which is
   // also what a delete leaves behind. The list itself is not scoped: only the
   // pane is, and a row outside this actor's sections says so rather than
-  // clearing silently, so the click does not read as a dead row.
+  // clearing silently, so the click does not read as a dead row. The view is
+  // preserved across the redirect so an honours deep link with a stale
+  // student id does not silently fall back to the register.
   if (selectedId != null) {
     const enrollment = summary?.enrollment ?? null;
-    if (summary == null || enrollment == null) redirect("/dashboard/students");
+    const backTo = view === "honours" ? "/dashboard/students?view=honours" : "/dashboard/students";
+    if (summary == null || enrollment == null) redirect(backTo);
     const inScope = allowed === "all" || allowed.includes(enrollment.sectionId);
-    if (!inScope) redirect("/dashboard/students?denied=1");
+    if (!inScope) redirect(`${backTo}${backTo.includes("?") ? "&" : "?"}denied=1`);
   }
 
   const empty14: StudentRow["strip"] = Array.from({ length: 14 }, () => "none");
@@ -89,6 +104,8 @@ export default async function StudentsPage({ searchParams }: { searchParams: Pro
 
   return (
     <StudentsWorkspace
+      view={view}
+      honours={honours}
       rows={rows}
       sections={sections}
       academicYearId={currentYear.id}

@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   NotebookPen,
   Settings,
-  Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -41,7 +40,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "attendance", label: "Roll call", href: "/dashboard/attendance", icon: CalendarCheck },
       { id: "exams", label: "Exams", href: "/dashboard/exams", icon: ClipboardCheck },
-      { id: "honours", label: "Honours", href: "/dashboard/honours", icon: Trophy },
+      // Honours lives inside Students now (?view=honours); /dashboard/honours
+      // still redirects there for bookmarks.
     ],
   },
 ];
