@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Segmented } from "@/components/ui/segmented";
 import { useActionToast } from "@/components/ui/toast";
@@ -47,6 +47,12 @@ export function RolloverWorkspace({
   const [result, setResult] = useState<RolloverResult>({});
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(false);
+  // Bumped by every `refresh` call and closed over by that call's response
+  // handler, so a response can tell whether a later request has since
+  // superseded it — plain state would not be visible inside the async
+  // callback without landing in its dependency list, and a ref survives
+  // rerenders without one.
+  const requestId = useRef(0);
 
   useActionToast({ error: result.error });
 
@@ -55,12 +61,16 @@ export function RolloverWorkspace({
   // Takes the target year explicitly: a state update queued by the caller
   // (e.g. setTargetYearId) is not visible yet when this runs.
   const refresh = (next: RolloverOptions, target: number) => {
+    const id = ++requestId.current;
     startTransition(async () => {
       const outcome = await previewRollover({
         sourceYearId: sourceYear.id,
         targetYearId: target,
         options: next,
       });
+      // A slower earlier request resolving after a faster later one would
+      // otherwise win last-write and drag the screen back to a stale plan.
+      if (id !== requestId.current) return;
       setResult(outcome);
       if (outcome.plan) setPlan(outcome.plan);
     });
@@ -82,6 +92,14 @@ export function RolloverWorkspace({
     if (!merged.copyOfferings) merged.copyAssignments = false;
     if (!merged.copyAssignments) merged.copyTimetable = false;
     setOptions(merged);
+    // `done` describes one specific completed run of the plan on screen. This
+    // and the `onTargetYear` handler below are the only two places that can
+    // change what the next preview or run would produce — every other setter
+    // (decisions, bulk decisions, placements, the review step's own option
+    // toggles) funnels through one of these two — so clearing `done` in both,
+    // synchronously and before the new preview even goes out, leaves no path
+    // that can change the plan while still showing the previous run as ready.
+    setDone(false);
     refresh(merged, targetYearId);
   };
 
@@ -147,6 +165,7 @@ export function RolloverWorkspace({
             onTargetYear={(id) => {
               setTargetYearId(id);
               setPlan(null);
+              setDone(false);
               refresh(options, id);
             }}
             onOptions={update}

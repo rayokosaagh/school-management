@@ -121,7 +121,10 @@ function ReorderGradesBody({
           <GradeRowItem
             key={grade.id}
             grade={grade}
-            position={index}
+            // Human-facing only — the array index itself (0-based) is what
+            // gets saved as `order`; this is purely what the row displays and
+            // what the drag handle's aria-label speaks.
+            position={index + 1}
             reduce={reduce}
             onMove={move}
           />

@@ -4,6 +4,7 @@ import { granted, loadGrants } from "@/lib/auth/permissions";
 import { csvResponse, safeText, toCsv, type Cell } from "@/lib/export/csv";
 import { formatBs } from "@/lib/date/bs";
 import { prisma } from "@/lib/prisma";
+import { isExportKind, type ExportKind } from "./kinds";
 
 const STATUS: Record<string, string> = {
   PRESENT: "Present",
@@ -130,7 +131,10 @@ async function marksCsv(academicYearId: number) {
   );
 }
 
-const BUILDERS: Record<string, (academicYearId: number) => Promise<string>> = {
+// `Record<ExportKind, ...>` rather than `Record<string, ...>`: TS then
+// requires exactly the keys `isExportKind` recognizes, so the dispatch table
+// and the guard cannot drift apart.
+const BUILDERS: Record<ExportKind, (academicYearId: number) => Promise<string>> = {
   register: registerCsv,
   attendance: attendanceCsv,
   marks: marksCsv,
@@ -154,8 +158,8 @@ export async function GET(
   }
 
   const { kind } = await params;
+  if (!isExportKind(kind)) return new Response("Unknown export kind", { status: 400 });
   const build = BUILDERS[kind];
-  if (!build) return new Response("Unknown export kind", { status: 400 });
 
   const url = new URL(request.url);
   const yearParam = url.searchParams.get("year");
