@@ -153,8 +153,17 @@ describe.skipIf(!process.env.DB_TESTS)("year teardown: summarise and snapshot", 
     const assignment = await setSubjectTeacher(sectionA.id, offering.id, staff.id);
     if (!assignment) throw new Error("expected an assignment to be created");
 
+    // SchoolPeriod now belongs to a DayShape (see day-shapes.ts) rather than
+    // to the school outright — attached to the default shape here.
+    const defaultShape = await prisma.dayShape.findFirstOrThrow({ where: { isDefault: true } });
     const period = await prisma.schoolPeriod.create({
-      data: { order: 9001 + stamp, name: `__teardown Period ${stamp}`, startMinute: 600, endMinute: 645 },
+      data: {
+        order: 9001 + stamp,
+        name: `__teardown Period ${stamp}`,
+        startMinute: 600,
+        endMinute: 645,
+        dayShapeId: defaultShape.id,
+      },
     });
     made.schoolPeriodId = period.id;
     await prisma.timetablePeriod.create({

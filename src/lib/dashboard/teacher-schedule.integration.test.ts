@@ -105,13 +105,18 @@ beforeAll(async () => {
   );
 
   // Three bell slots, written directly so the suite does not replace whatever
-  // schedule the developer's database already holds.
+  // schedule the developer's database already holds. Attached to the default
+  // shape — SchoolPeriod now belongs to a DayShape (see day-shapes.ts) rather
+  // than to the school outright.
+  const defaultShape = await prisma.dayShape.findFirstOrThrow({ where: { isDefault: true } });
   for (const row of [
-    { order: 960, name: `__schedule Early ${stamp}`, startMinute: 8 * 60, endMinute: 8 * 60 + 45, isBreak: false },
-    { order: 961, name: `__schedule P1 ${stamp}`, startMinute: 9 * 60, endMinute: 10 * 60, isBreak: false },
-    { order: 962, name: `__schedule P2 ${stamp}`, startMinute: 10 * 60 + 30, endMinute: 11 * 60 + 15, isBreak: false },
+    { order: 960, name: `__schedule Early ${stamp}`, startMinute: 8 * 60, endMinute: 8 * 60 + 45 },
+    { order: 961, name: `__schedule P1 ${stamp}`, startMinute: 9 * 60, endMinute: 10 * 60 },
+    { order: 962, name: `__schedule P2 ${stamp}`, startMinute: 10 * 60 + 30, endMinute: 11 * 60 + 15 },
   ]) {
-    made.bellIds.push((await prisma.schoolPeriod.create({ data: row })).id);
+    made.bellIds.push(
+      (await prisma.schoolPeriod.create({ data: { ...row, dayShapeId: defaultShape.id } })).id,
+    );
   }
 
   // Placed through the real write path rather than a raw createMany, so this

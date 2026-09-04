@@ -12,8 +12,12 @@ import {
 
 export type { BellInput, BellPeriod } from "./schedule";
 
-export function listBellPeriods(): Promise<BellPeriod[]> {
-  return prisma.schoolPeriod.findMany({ orderBy: { order: "asc" } });
+/// Compile-level accommodation, same as saveBellSchedule below: BellPeriod
+/// still carries isBreak, derived here from kind, until this function is made
+/// shape-scoped.
+export async function listBellPeriods(): Promise<BellPeriod[]> {
+  const rows = await prisma.schoolPeriod.findMany({ orderBy: { order: "asc" } });
+  return rows.map((row) => ({ ...row, isBreak: row.kind === "BREAK" }));
 }
 
 /// How many lessons each bell period currently carries. The School day form
@@ -30,6 +34,12 @@ export async function countLessonsByPeriod(): Promise<Map<number, number>> {
 /// Replaces the schedule. Rows carrying an id are updated in place and keep
 /// their lessons; rows the editor removed are deleted, and their lessons
 /// cascade away with them — which is why the form confirms the count first.
+///
+/// Compile-level accommodation for the day-shapes migration (see
+/// day-shapes.ts): SchoolPeriod now requires a dayShapeId, and this function
+/// has not yet been made shape-scoped — that is the timetable UI task. Until
+/// then every row this writes lands on the default shape, which is exactly
+/// where the only shape that exists today already puts it.
 export async function saveBellSchedule(
   rows: (BellInput & { id?: number })[],
 ): Promise<void> {
@@ -38,6 +48,11 @@ export async function saveBellSchedule(
   const keep = rows.flatMap((row) => (row.id === undefined ? [] : [row.id]));
 
   await prisma.$transaction(async (tx) => {
+    const defaultShape = await tx.dayShape.findFirstOrThrow({
+      where: { isDefault: true },
+      select: { id: true },
+    });
+
     await tx.schoolPeriod.deleteMany({ where: { id: { notIn: keep } } });
 
     for (const row of rows) {
@@ -46,7 +61,8 @@ export async function saveBellSchedule(
         name: row.name.trim(),
         startMinute: row.startMinute,
         endMinute: row.endMinute,
-        isBreak: row.isBreak,
+        kind: row.isBreak ? ("BREAK" as const) : ("TEACHING" as const),
+        dayShapeId: defaultShape.id,
       };
       if (row.id === undefined) await tx.schoolPeriod.create({ data });
       else await tx.schoolPeriod.update({ where: { id: row.id }, data });

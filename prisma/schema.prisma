@@ -170,25 +170,64 @@ model TeacherAssignment {
   @@unique([staffId, sectionId, subjectOfferingId])
 }
 
-/// The school's bell schedule: the named slots every section's week is built
-/// from. Break rows carry no lesson but keep the grid honest about the gap.
+/// A named shape for a school day — "Regular day", "Half day". Periods belong
+/// to a shape rather than to the school, so Friday can finish early without
+/// every other day having to be edited to match.
+model DayShape {
+  id Int @id @default(autoincrement())
+  name String @unique
+  /// The shape a weekday falls back to when nothing else is assigned, and the
+  /// one the seed and the migration attach existing periods to. Exactly one
+  /// row is true; enforced in the library, not the schema.
+  isDefault Boolean @default(false)
+
+  periods  SchoolPeriod[]
+  weekdays WeekdayShape[]
+}
+
+/// Which shape each weekday runs. Absent means the default shape.
+model WeekdayShape {
+  /// Sunday = 0 through Saturday = 6, matching JavaScript's getDay().
+  dayOfWeek  Int @id
+  dayShapeId Int
+
+  dayShape DayShape @relation(fields: [dayShapeId], references: [id])
+}
+
+/// What a slot in the day is for. A teaching period carries a lesson; a break
+/// carries none; an event occupies the slot with a labelled activity instead
+/// of a lesson.
+enum PeriodKind {
+  TEACHING
+  BREAK
+  /// Extra-curricular, assembly, club time. Occupies a slot, carries a label,
+  /// takes no teacher or subject.
+  EVENT
+}
+
+/// The school's bell schedule: the named slots a shape's week is built from.
+/// Break rows carry no lesson but keep the grid honest about the gap.
 /// Minutes since midnight avoid attaching a timezone or arbitrary date to a
 /// wall-clock time.
 ///
-/// `order` is deliberately not unique, so the whole schedule can be renumbered
-/// in one transaction without rows colliding mid-flight. Contiguity is a
-/// service-layer rule — see validateBell() in src/lib/timetable/bell.ts.
+/// `order` is deliberately not unique on its own, so a shape's schedule can be
+/// renumbered in one transaction without rows colliding mid-flight. Contiguity
+/// is a service-layer rule — see validateBell() in src/lib/timetable/bell.ts.
 model SchoolPeriod {
-  id          Int     @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   order       Int
   name        String
   startMinute Int
   endMinute   Int
-  isBreak     Boolean @default(false)
+  dayShapeId  Int
+  kind        PeriodKind @default(TEACHING)
+  /// Shown in the grid for an EVENT period. Empty for the other kinds.
+  label       String     @default("")
 
-  periods TimetablePeriod[]
+  dayShape DayShape          @relation(fields: [dayShapeId], references: [id])
+  periods  TimetablePeriod[]
 
-  @@index([order])
+  @@unique([dayShapeId, order])
 }
 
 /// One recurring weekly lesson: a teaching assignment placed in a bell slot on

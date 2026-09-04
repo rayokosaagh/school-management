@@ -25,12 +25,14 @@ export type CellInput = {
 export async function setTimetableCell(input: CellInput): Promise<void> {
   const { sectionId, schoolPeriodId, dayOfWeek } = input;
 
+  // kind replaces isBreak (see day-shapes.ts); the EVENT case is left to the
+  // timetable UI task, which is what will ever produce one of those.
   const period = await prisma.schoolPeriod.findUnique({
     where: { id: schoolPeriodId },
-    select: { id: true, name: true, isBreak: true },
+    select: { id: true, name: true, kind: true },
   });
   if (!period) throw new TimetableCellError("That period is no longer in the school day.");
-  if (period.isBreak) throw new TimetableCellError(`${period.name} is a break, and breaks carry no lessons.`);
+  if (period.kind === "BREAK") throw new TimetableCellError(`${period.name} is a break, and breaks carry no lessons.`);
 
   const workingDays = await getWorkingDays();
   if (!workingDays.includes(dayOfWeek)) {

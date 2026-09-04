@@ -101,13 +101,18 @@ beforeAll(async () => {
   ).id;
 
   // Written directly rather than through saveBellSchedule, so the test does not
-  // replace whatever schedule the developer's database already holds.
+  // replace whatever schedule the developer's database already holds. Attached
+  // to the default shape — SchoolPeriod now belongs to a DayShape (see
+  // day-shapes.ts) rather than to the school outright.
+  const defaultShape = await prisma.dayShape.findFirstOrThrow({ where: { isDefault: true } });
   for (const row of [
-    { order: 900, name: `__cells P1 ${stamp}`, startMinute: 600, endMinute: 645, isBreak: false },
-    { order: 901, name: `__cells P2 ${stamp}`, startMinute: 645, endMinute: 690, isBreak: false },
-    { order: 902, name: `__cells Tiffin ${stamp}`, startMinute: 690, endMinute: 720, isBreak: true },
+    { order: 900, name: `__cells P1 ${stamp}`, startMinute: 600, endMinute: 645, kind: "TEACHING" as const },
+    { order: 901, name: `__cells P2 ${stamp}`, startMinute: 645, endMinute: 690, kind: "TEACHING" as const },
+    { order: 902, name: `__cells Tiffin ${stamp}`, startMinute: 690, endMinute: 720, kind: "BREAK" as const },
   ]) {
-    made.bellIds.push((await prisma.schoolPeriod.create({ data: row })).id);
+    made.bellIds.push(
+      (await prisma.schoolPeriod.create({ data: { ...row, dayShapeId: defaultShape.id } })).id,
+    );
   }
 
   // 5A: Maths -> Sharma, Science -> Thapa. 5B: Maths -> Sharma, so the two

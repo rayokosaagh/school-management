@@ -59,6 +59,9 @@ beforeAll(async () => {
     })
   ).id;
 
+  // Attached to the default shape — SchoolPeriod now belongs to a DayShape
+  // (see day-shapes.ts) rather than to the school outright.
+  const defaultShape = await prisma.dayShape.findFirstOrThrow({ where: { isDefault: true } });
   made.bellIds.push(
     (
       await prisma.schoolPeriod.create({
@@ -67,7 +70,7 @@ beforeAll(async () => {
           name: `__week P1 ${stamp}`,
           startMinute: 600,
           endMinute: 645,
-          isBreak: false,
+          dayShapeId: defaultShape.id,
         },
       })
     ).id,
