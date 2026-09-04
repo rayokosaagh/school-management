@@ -1,8 +1,7 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { IconTile, type Tint } from "@/components/ui/page-shell";
+import { TINT_CLASSES, type Tint } from "@/components/ui/page-shell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
@@ -18,6 +17,12 @@ const SPLIT_QUERY = "(min-width: 74rem)";
 /// paints its active item with — so a page's header, its rail entry and its
 /// empty states all read as the same place. Omit `icon` for a page that has
 /// none (there is none today, but a page contract should not require one).
+///
+/// `icon` is an element, not a component: this is a client component and half
+/// the pages that render it are server components. A component is a function,
+/// and a function cannot cross that boundary — passing one throws at runtime
+/// while typecheck, lint and the test suite all stay green. An element is part
+/// of the payload and travels fine.
 export function PageFrame({
   icon,
   tint = "violet",
@@ -28,7 +33,7 @@ export function PageFrame({
   children,
   className,
 }: {
-  icon?: LucideIcon;
+  icon?: React.ReactNode;
   tint?: Tint;
   eyebrow: string;
   title: string;
@@ -41,7 +46,17 @@ export function PageFrame({
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-3">
         <div className="flex min-w-0 items-center gap-3">
-          {icon ? <IconTile icon={icon} tint={tint} size="md" /> : null}
+          {icon ? (
+            <span
+              aria-hidden="true"
+              className={cn(
+                "grid size-10 shrink-0 place-items-center rounded-xl [&_svg]:size-5",
+                TINT_CLASSES[tint],
+              )}
+            >
+              {icon}
+            </span>
+          ) : null}
           <div className="min-w-0">
             <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
             <h1 className="mt-0.5 flex flex-wrap items-baseline gap-x-2.5">

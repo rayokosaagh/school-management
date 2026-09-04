@@ -143,7 +143,7 @@ export function StaffWorkspace({
 
   return (
     <PageFrame
-      icon={Users}
+      icon={<Users />}
       tint="amber"
       eyebrow="People"
       title="Staff"

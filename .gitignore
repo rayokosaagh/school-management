@@ -48,3 +48,4 @@ next-env.d.ts
 /artifacts/ui-check/
 /artifacts/shapes-check/
 /artifacts/exams-repro/
+/artifacts/accent/

@@ -196,7 +196,7 @@ export function TeachingWorkspace({
 
   return (
     <PageFrame
-      icon={ClipboardList}
+      icon={<ClipboardList />}
       tint="green"
       eyebrow="Timetable"
       title="Teaching"

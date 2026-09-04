@@ -189,7 +189,7 @@ export function SubjectsWorkspace({
 
   return (
     <PageFrame
-      icon={NotebookPen}
+      icon={<NotebookPen />}
       tint="amber"
       eyebrow="Timetable"
       title="Subjects"

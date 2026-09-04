@@ -217,7 +217,7 @@ export function StudentsWorkspace({
 
   return (
     <PageFrame
-      icon={GraduationCap}
+      icon={<GraduationCap />}
       tint="green"
       eyebrow="People"
       title="Students"

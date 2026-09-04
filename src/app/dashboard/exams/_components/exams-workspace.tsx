@@ -125,7 +125,7 @@ export function ExamsWorkspace({
 
   return (
     <PageFrame
-      icon={ClipboardCheck}
+      icon={<ClipboardCheck />}
       tint="amber"
       eyebrow="Assessment"
       title="Exams"

@@ -24,7 +24,7 @@ export default async function StudentsPage({
   const currentYear = await getCurrentAcademicYear();
   if (!currentYear) {
     return (
-      <PageFrame icon={GraduationCap} tint="green" eyebrow="People" title="Students">
+      <PageFrame icon={<GraduationCap />} tint="green" eyebrow="People" title="Students">
         <EmptyState
           icon={Info}
           tint="green"

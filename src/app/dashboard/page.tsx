@@ -73,7 +73,7 @@ export default async function DashboardHome() {
 
   return (
     <PageFrame
-      icon={LayoutDashboard}
+      icon={<LayoutDashboard />}
       tint="violet"
       eyebrow="School dashboard"
       title="Overview"

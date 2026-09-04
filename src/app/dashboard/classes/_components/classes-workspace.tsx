@@ -232,7 +232,7 @@ export function ClassesWorkspace({
 
   return (
     <PageFrame
-      icon={BookOpen}
+      icon={<BookOpen />}
       tint="violet"
       eyebrow="Structure"
       title="Classes"

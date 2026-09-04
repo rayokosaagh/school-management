@@ -136,7 +136,7 @@ export function RolloverWorkspace({
 
   return (
     <PageFrame
-      icon={CalendarPlus}
+      icon={<CalendarPlus />}
       tint="rose"
       eyebrow="School"
       title="Next year"

@@ -121,7 +121,7 @@ export function RollCallWorkspace({
 
   return (
     <PageFrame
-      icon={CalendarCheck}
+      icon={<CalendarCheck />}
       tint="green"
       eyebrow="Daily"
       title="Roll call"

@@ -239,7 +239,7 @@ export default async function SettingsPage({
 
   return (
     <PageFrame
-      icon={SettingsIcon}
+      icon={<SettingsIcon />}
       tint="violet"
       eyebrow="Administration"
       title="Settings"
