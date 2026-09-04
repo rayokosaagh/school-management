@@ -14,6 +14,12 @@ import { HonoursWeightsForm } from "./_components/honours-weights-form";
 import { Accounts } from "./_components/accounts";
 import { PermissionMatrix } from "./_components/permission-matrix";
 import { RestorePoints } from "./_components/restore-points";
+import {
+  SETTINGS_GROUP_IDS,
+  SettingsWorkspace,
+  type SettingsGroup,
+  type SettingsGroupId,
+} from "./_components/settings-workspace";
 import { loadGrants, granted } from "@/lib/auth/permissions";
 import {
   CAPABILITIES,
@@ -24,8 +30,16 @@ import {
 
 import { requirePage } from "@/lib/auth/guard";
 
-export default async function SettingsPage() {
-  // Redirects unless the stored permission matrix allows this section.
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  // Redirects unless the stored permission matrix allows this section. This
+  // is the only guard the page needs: every card below is reachable by
+  // anyone who clears it, since `manage:settings` gates the whole route
+  // rather than individual cards — there is no narrower per-card check to
+  // preserve, so no group can ever render empty for whoever is here.
   await requirePage("/dashboard/settings");
 
   const session = await auth();
@@ -65,112 +79,172 @@ export default async function SettingsPage() {
 
   if (!user) redirect("/login");
 
+  const { view: viewParam } = await searchParams;
+  // The URL owns the selected group, the same as `?view=honours` owns the
+  // Students page's switch: a reload or a bookmarked link has to land back
+  // on the right one. An unrecognised value falls back to the first group
+  // rather than erroring, matching how Students treats a stray `?view=`.
+  const view: SettingsGroupId = (SETTINGS_GROUP_IDS as readonly string[]).includes(viewParam ?? "")
+    ? (viewParam as SettingsGroupId)
+    : "school";
+
+  // Grouped the way Google's settings are: the school's own identity first,
+  // then who can even get in and what they can do once they're in, then the
+  // day-to-day academic knob, then this signed-in person's own credentials,
+  // and last — deliberately out of the way, since it is the one card that
+  // can permanently delete data — the restore points.
+  const groups: SettingsGroup[] = [
+    {
+      id: "school",
+      label: "School",
+      description: "Identity used on the dashboard header and every printed marksheet.",
+      icon: Building2,
+      tint: "violet",
+      content: (
+        <SectionCard
+          icon={Building2}
+          tint="violet"
+          title="School details"
+          description="Used on the dashboard header and every printed marksheet."
+        >
+          <SchoolForm school={school} />
+        </SectionCard>
+      ),
+    },
+    {
+      id: "privacy",
+      label: "Privacy & access",
+      description: "Who can sign in, and what each role is allowed to do once they do.",
+      icon: ShieldCheck,
+      tint: "blue",
+      content: (
+        <>
+          <SectionCard
+            icon={Users}
+            tint="amber"
+            title="Who can sign in"
+            description="Public sign-up is closed. What each of them can reach is set below."
+          >
+            <Accounts
+              accounts={accounts.map((a) => ({
+                id: a.id,
+                username: a.username,
+                email: a.email,
+                role: a.role,
+                createdLabel: a.createdAt.toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }),
+                staffId: a.staff?.id ?? null,
+                staffName: a.staff?.fullName ?? null,
+              }))}
+              staff={staff.map((s) => ({
+                id: s.id,
+                fullName: s.fullName,
+                taken: s.userId !== null,
+              }))}
+              currentUserId={Number(session.user.id)}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon={ShieldCheck}
+            tint="blue"
+            title="What each role can do"
+            description="Tick a box to allow that role into a section. Takes effect on their next page load."
+          >
+            <PermissionMatrix capabilities={matrix} anyChanged={anyChanged} />
+          </SectionCard>
+        </>
+      ),
+    },
+    {
+      id: "academic",
+      label: "Academic",
+      description: "How exams, attendance, conduct and activities combine into the Honours score.",
+      icon: Trophy,
+      tint: "amber",
+      content: (
+        <SectionCard
+          icon={Trophy}
+          tint="amber"
+          title="Honours weighting"
+          description="How exams, attendance, conduct and activities combine into each student's score on the Honours page."
+        >
+          <HonoursWeightsForm weights={weights} />
+        </SectionCard>
+      ),
+    },
+    {
+      id: "account",
+      label: "Your account",
+      description: "Your own sign-in username, email and password.",
+      icon: KeyRound,
+      tint: "green",
+      content: (
+        <SectionCard
+          icon={KeyRound}
+          tint="green"
+          title="Your account"
+          description="How you sign in."
+        >
+          <dl className="mb-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
+            <dt className="text-muted-foreground">Username</dt>
+            <dd className="font-medium">{user.username}</dd>
+            <dt className="text-muted-foreground">Member since</dt>
+            <dd className="font-medium">
+              {user.createdAt.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </dd>
+          </dl>
+
+          <EmailForm currentEmail={user.email} />
+        </SectionCard>
+      ),
+    },
+    {
+      id: "data",
+      label: "Data",
+      description: "Restore points captured when an academic year is deleted.",
+      icon: History,
+      tint: "rose",
+      content: (
+        <SectionCard
+          icon={History}
+          tint="rose"
+          title="Restore points"
+          description="Captured when an academic year is deleted. Each one is the only copy of that year's data once the year itself is gone — deleting a restore point loses it for good."
+        >
+          <RestorePoints
+            restorePoints={restorePoints.map((p) => ({
+              id: p.id,
+              yearNameBS: p.yearNameBS,
+              takenLabel: `${p.createdAt.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })} at ${p.createdAt.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}`,
+              createdByUsername: p.createdByUsername,
+              payloadBytes: p.payloadBytes,
+              counts: p.counts,
+            }))}
+          />
+        </SectionCard>
+      ),
+    },
+  ];
+
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader icon={Building2} tint="blue" title="Settings" />
-
-      <SectionCard
-        icon={Building2}
-        tint="violet"
-        title="School details"
-        description="Used on the dashboard header and every printed marksheet."
-      >
-        <SchoolForm school={school} />
-      </SectionCard>
-
-      <SectionCard
-        icon={Trophy}
-        tint="amber"
-        title="Honours weighting"
-        description="How exams, attendance, conduct and activities combine into each student's score on the Honours page."
-      >
-        <HonoursWeightsForm weights={weights} />
-      </SectionCard>
-
-      <SectionCard
-        icon={KeyRound}
-        tint="green"
-        title="Your account"
-        description="How you sign in."
-      >
-        <dl className="mb-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-          <dt className="text-muted-foreground">Username</dt>
-          <dd className="font-medium">{user.username}</dd>
-          <dt className="text-muted-foreground">Member since</dt>
-          <dd className="font-medium">
-            {user.createdAt.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </dd>
-        </dl>
-
-        <EmailForm currentEmail={user.email} />
-      </SectionCard>
-
-      <SectionCard
-        icon={Users}
-        tint="amber"
-        title="Who can sign in"
-        description="Public sign-up is closed. What each of them can reach is set below."
-      >
-        <Accounts
-          accounts={accounts.map((a) => ({
-            id: a.id,
-            username: a.username,
-            email: a.email,
-            role: a.role,
-            createdLabel: a.createdAt.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }),
-            staffId: a.staff?.id ?? null,
-            staffName: a.staff?.fullName ?? null,
-          }))}
-          staff={staff.map((s) => ({
-            id: s.id,
-            fullName: s.fullName,
-            taken: s.userId !== null,
-          }))}
-          currentUserId={Number(session.user.id)}
-        />
-      </SectionCard>
-
-      <SectionCard
-        icon={ShieldCheck}
-        tint="blue"
-        title="What each role can do"
-        description="Tick a box to allow that role into a section. Takes effect on their next page load."
-      >
-        <PermissionMatrix capabilities={matrix} anyChanged={anyChanged} />
-      </SectionCard>
-
-      <SectionCard
-        icon={History}
-        tint="rose"
-        title="Restore points"
-        description="Captured when an academic year is deleted. Each one is the only copy of that year's data once the year itself is gone — deleting a restore point loses it for good."
-      >
-        <RestorePoints
-          restorePoints={restorePoints.map((p) => ({
-            id: p.id,
-            yearNameBS: p.yearNameBS,
-            takenLabel: `${p.createdAt.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })} at ${p.createdAt.toLocaleTimeString("en-GB", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}`,
-            createdByUsername: p.createdByUsername,
-            payloadBytes: p.payloadBytes,
-            counts: p.counts,
-          }))}
-        />
-      </SectionCard>
+      <SettingsWorkspace view={view} groups={groups} />
     </div>
   );
 }
