@@ -129,13 +129,6 @@ export function SettingsWorkspace({
                       : "border-transparent text-ink hover:bg-surface-2",
                   )}
                 >
-                  {isActive ? (
-                    <motion.span
-                      layoutId={reduce ? undefined : "settings-active-indicator"}
-                      transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                      className="bg-brand absolute top-3 bottom-3 left-0 w-0.5 rounded-full"
-                    />
-                  ) : null}
                   <GroupBlurb group={group} size="sm" />
                 </motion.button>
               </li>

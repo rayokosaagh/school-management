@@ -16,11 +16,9 @@ function RailLink({ item, active, className }: { item: NavItem; active: boolean;
       className={cn(
         "text-ink-3 hover:bg-page hover:text-ink relative flex h-13 flex-col items-center justify-center gap-1 rounded-[9px] text-[10.5px] font-medium tracking-[0.01em] no-underline transition-colors",
         "focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none",
-        // The tinted pill (icon + label) already says which section this is;
-        // the "you are here" underline stays the constant brand colour
+        // The tinted pill (icon + label) identifies the current section.
         // rather than doubling the tint signal on the same small item — one
-        // accent per element, not two saying the same thing.
-        active && [TINT_CLASSES[item.tint], "after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:rounded-full after:bg-brand"],
+        active && TINT_CLASSES[item.tint],
         className,
       )}
     >
