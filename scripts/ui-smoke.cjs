@@ -43,6 +43,7 @@ const ROUTES = [
   "dashboard/rollover",
   "dashboard/attendance",
   "dashboard/exams",
+  "dashboard/fees",
   "dashboard/settings",
 ];
 const WIDTHS = [1440, 1000, 390];

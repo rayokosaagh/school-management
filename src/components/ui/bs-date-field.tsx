@@ -65,7 +65,7 @@ export function BsDateField({
           name={name}
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="2082-01-15"
+          placeholder="YYYY-MM-DD"
           inputMode="numeric"
           autoComplete="off"
           aria-invalid={invalid}

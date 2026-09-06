@@ -73,12 +73,12 @@ export async function makeYearCurrent(
   _prev: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requireSession();
+  const actor = await requireCapability("manage:registry");
   const id = numericField(formData, "academicYearId");
   if (id === null) return { error: "Pick a year." };
 
   try {
-    await setCurrentAcademicYear(id);
+    await setCurrentAcademicYear(id, actor);
   } catch (e) {
     if (e instanceof UnknownYearError) return { error: e.message };
     throw e;
@@ -414,11 +414,8 @@ export async function summariseYearAction(
   id: number,
 ): Promise<{ summary?: YearSummary; error?: string }> {
   try {
-    // requireCapability throws ForbiddenError rather than redirecting, and the
-    // "Delete year…" button renders for anyone who can open Classes at all
-    // (manage:registry) — without the try/catch a non-admin's click leaves the
-    // dialog stuck on "Loading…" while the rejection escapes to the error
-    // boundary instead of coming back as this action's own error result.
+    // The dialog now lives in Settings. Keep the action guard authoritative:
+    // a stale session or a direct POST must still receive a permission error.
     await requireCapability("manage:settings");
     return { summary: await summariseYear(id) };
   } catch (e) {

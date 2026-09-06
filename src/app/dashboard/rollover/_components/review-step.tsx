@@ -112,8 +112,14 @@ export function ReviewStep({
           checked={options.makeTargetCurrent}
           onCheckedChange={(checked) => onOptions({ makeTargetCurrent: checked === true })}
         />
-        Make {plan.targetYear.nameBS} the current year straight away
+        Activate {plan.targetYear.nameBS} for the whole school immediately
       </label>
+      <p className="text-ink-2 text-sm">
+        {options.makeTargetCurrent
+          ? "Everyone's year-scoped pages will switch to the new year. Check fee prices and service registrations before issuing new bills."
+          : "The school will stay in the current year. You can activate the prepared year later using the academic-year selector."}
+        {" "}Graduated and departed students are marked immediately when you confirm, regardless of activation.
+      </p>
 
       <Button disabled={blocked || pending} onClick={() => setConfirming(true)}>
         {pending ? "Rolling over…" : `Roll ${plan.sourceYear.nameBS} into ${plan.targetYear.nameBS}`}

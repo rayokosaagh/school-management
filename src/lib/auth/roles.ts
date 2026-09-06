@@ -12,6 +12,8 @@ export type Capability =
   | "manage:timetable"
   /// Create and publish exams.
   | "manage:exams"
+  /// Set fee structures, issue invoices, and record collections.
+  | "manage:fees"
   /// Enter marks. Teachers are additionally limited to their own subjects.
   | "enter:marks"
   /// Take attendance. Teachers are additionally limited to their own sections.
@@ -20,7 +22,9 @@ export type Capability =
   /// to their own sections.
   | "record:conduct"
   /// See student and staff records at all.
-  | "view:records";
+  | "view:records"
+  /// Write announcements for staff to read on their dashboard.
+  | "post:announcements";
 
 /// Every capability, in the order the settings matrix shows them.
 export const CAPABILITIES: Capability[] = [
@@ -28,10 +32,12 @@ export const CAPABILITIES: Capability[] = [
   "manage:registry",
   "manage:timetable",
   "manage:exams",
+  "manage:fees",
   "enter:marks",
   "take:attendance",
   "record:conduct",
   "view:records",
+  "post:announcements",
 ];
 
 export const CAPABILITY_LABEL: Record<Capability, string> = {
@@ -39,10 +45,12 @@ export const CAPABILITY_LABEL: Record<Capability, string> = {
   "manage:registry": "Students, staff, classes and subjects",
   "manage:timetable": "Build the class timetable",
   "manage:exams": "Create and publish exams",
+  "manage:fees": "Fee structures, invoices and collections",
   "enter:marks": "Enter marks",
   "take:attendance": "Take attendance",
   "record:conduct": "Record conduct and activities",
   "view:records": "View student and staff records",
+  "post:announcements": "Post announcements to staff",
 };
 
 export const CAPABILITY_NOTE: Partial<Record<Capability, string>> = {
@@ -50,6 +58,8 @@ export const CAPABILITY_NOTE: Partial<Record<Capability, string>> = {
   "take:attendance": "Teachers are limited to sections they teach or lead.",
   "record:conduct": "Teachers are limited to sections they teach or lead.",
   "manage:settings": "Includes creating logins and editing this matrix.",
+  "post:announcements":
+    "Everyone reads announcements meant for their role. This is who may write them.",
   "manage:timetable":
     "Teachers always see their own timetable, whether or not this is granted.",
 };
@@ -61,16 +71,19 @@ export const DEFAULT_GRANTS: Record<Role, Capability[]> = {
     "manage:registry",
     "manage:timetable",
     "manage:exams",
+    "manage:fees",
     "enter:marks",
     "take:attendance",
     "record:conduct",
     "view:records",
+    "post:announcements",
   ],
   // Runs the office: every record, but cannot hand out logins or change roles.
   OFFICE: [
     "manage:registry",
     "manage:timetable",
     "manage:exams",
+    "manage:fees",
     "enter:marks",
     "take:attendance",
     "record:conduct",
@@ -108,6 +121,7 @@ export const ROLE_DESCRIPTION: Record<Role, string> = {
 /// by one capability on the whole /dashboard/classes prefix. Adding a row here
 /// for either path would wrongly gate the other.
 export const ROUTE_CAPABILITY: { prefix: string; capability: Capability }[] = [
+  { prefix: "/dashboard/settings/academic-years", capability: "manage:registry" },
   { prefix: "/dashboard/settings", capability: "manage:settings" },
   { prefix: "/dashboard/classes", capability: "manage:registry" },
   { prefix: "/dashboard/subjects", capability: "manage:registry" },
@@ -118,6 +132,7 @@ export const ROUTE_CAPABILITY: { prefix: string; capability: Capability }[] = [
   { prefix: "/dashboard/honours", capability: "view:records" },
   { prefix: "/dashboard/attendance", capability: "take:attendance" },
   { prefix: "/dashboard/exams", capability: "enter:marks" },
+  { prefix: "/dashboard/fees", capability: "manage:fees" },
 ];
 
 /// The capability a path requires, or null when it needs only a session.

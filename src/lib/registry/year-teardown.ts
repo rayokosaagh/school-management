@@ -181,6 +181,15 @@ export async function deleteYearWithData(
 
   return prisma.$transaction(
     async (tx) => {
+      // Registry restore points do not capture finance records. Refuse the
+      // operation explicitly rather than losing registrations or failing on
+      // a foreign key after attempting the registry deletes.
+      if (await tx.studentFeePlan.count({ where: { academicYearId } })) {
+        throw new YearTeardownError("This year has service fee structures. Financial records must be retained; registry-only restore points cannot restore them.");
+      }
+      if (await tx.transportRegistration.count({ where: { enrollment: { academicYearId } } })) {
+        throw new YearTeardownError("This year has transport registrations. Its financial records must be retained; registry-only restore points cannot restore them.");
+      }
       const { payload, counts } = await snapshotYear(tx, academicYearId);
 
       let restorePointId: number | null = null;

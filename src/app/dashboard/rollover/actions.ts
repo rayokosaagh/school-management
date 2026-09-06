@@ -14,7 +14,7 @@ export type RolloverInput = {
   options: RolloverOptions;
 };
 
-const PATH = "/dashboard/rollover";
+const PATH = "/dashboard/settings/academic-years";
 
 // Server actions are public POST endpoints, so every one re-checks the session.
 async function requireSession() {
@@ -32,9 +32,9 @@ export async function previewRollover(input: RolloverInput): Promise<RolloverRes
 }
 
 export async function runRollover(input: RolloverInput): Promise<RolloverResult> {
-  await requireSession();
+  const actor = await requireCapability("manage:registry");
   try {
-    const plan = await applyRollover(input.sourceYearId, input.targetYearId, input.options);
+    const plan = await applyRollover(input.sourceYearId, input.targetYearId, input.options, actor);
     // Every year-scoped page reads different rows now.
     revalidatePath("/dashboard", "layout");
     revalidatePath(PATH);

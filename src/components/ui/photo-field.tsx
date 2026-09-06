@@ -13,12 +13,14 @@ export function PhotoField({
   alt,
   size = "md",
   removable = true,
+  removeName = "removePhoto",
 }: {
   name?: string;
   photoId: number | null;
   alt: string;
   size?: "md" | "lg";
   removable?: boolean;
+  removeName?: string;
 }) {
   const [preview, setPreview] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export function PhotoField({
             {photoId || preview ? "Change photo" : "Add photo"}
           </Button>
           {removable && photoId && !preview ? (
-            <Button type="submit" name="removePhoto" value="1" variant="ghost" size="sm">
+            <Button type="submit" name={removeName} value="1" variant="ghost" size="sm">
               <Trash2 />
               Remove
             </Button>

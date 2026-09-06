@@ -1,6 +1,7 @@
 import { cache } from "react";
 import type { Role } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+import { writeAuditEvent, type AuditActor } from "@/lib/audit";
 import { CAPABILITIES, DEFAULT_GRANTS, type Capability } from "./roles";
 
 // The school's own permission matrix. Stored rows override the built-in
@@ -53,7 +54,7 @@ export class PermissionError extends Error {}
 
 /// Writes one cell of the matrix. Only the difference from the default is kept,
 /// so the stored rows stay small and a default change still reaches the school.
-export async function setGrant(role: Role, capability: Capability, allow: boolean) {
+export async function setGrant(role: Role, capability: Capability, allow: boolean, actor?: AuditActor) {
   if (role === "ADMIN") {
     throw new PermissionError(
       "Administrators always hold every permission, so nobody can be locked out of this page.",
@@ -64,18 +65,28 @@ export async function setGrant(role: Role, capability: Capability, allow: boolea
   }
 
   const isDefault = DEFAULT_GRANTS[role].includes(capability) === allow;
-  if (isDefault) {
-    await prisma.rolePermission.deleteMany({ where: { role, capability } });
-    return;
-  }
-
-  await prisma.rolePermission.upsert({
-    where: { role_capability: { role, capability } },
-    create: { role, capability, granted: allow },
-    update: { granted: allow },
+  await prisma.$transaction(async (tx) => {
+    if (isDefault) {
+      await tx.rolePermission.deleteMany({ where: { role, capability } });
+    } else {
+      await tx.rolePermission.upsert({
+        where: { role_capability: { role, capability } },
+        create: { role, capability, granted: allow },
+        update: { granted: allow },
+      });
+    }
+    if (actor) await writeAuditEvent(tx, actor, {
+      action: "permission.changed", entityType: "RolePermission", entityId: role,
+      details: { capability, allowed: allow },
+    });
   });
 }
 
-export async function resetGrants() {
-  await prisma.rolePermission.deleteMany({});
+export async function resetGrants(actor?: AuditActor) {
+  await prisma.$transaction(async (tx) => {
+    await tx.rolePermission.deleteMany({});
+    if (actor) await writeAuditEvent(tx, actor, {
+      action: "permission.reset", entityType: "RolePermission", entityId: "all", details: {},
+    });
+  });
 }

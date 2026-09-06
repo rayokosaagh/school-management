@@ -14,6 +14,16 @@ export const BS_MONTHS = [
   "Kartik", "Mangsir", "Poush", "Magh", "Falgun", "Chaitra",
 ] as const;
 
+/// Three-letter month labels for places too tight for the full name, such as
+/// a twelve-cell strip.
+///
+/// Not `BS_MONTHS[i].slice(0, 3)`: that renders both Ashadh and Ashwin as
+/// "Ash", so two different months become indistinguishable.
+export const BS_MONTHS_SHORT = [
+  "Bai", "Jes", "Asa", "Shr", "Bha", "Asw",
+  "Kar", "Man", "Pou", "Mag", "Fal", "Cha",
+] as const;
+
 export class BsRangeError extends Error {}
 
 // Prisma `@db.Date` values come back as UTC midnight, so calendar components are

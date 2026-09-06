@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   BS_MAX_YEAR,
   BS_MIN_YEAR,
+  BS_MONTHS,
+  BS_MONTHS_SHORT,
   BsRangeError,
   adToBs,
   bsMonthLength,
@@ -191,5 +193,19 @@ describe("formatting", () => {
     const { startsOn, endsOn } = bsYearRange(2083);
     expect(formatAd(startsOn)).toBe("2026-04-14");
     expect(formatAd(endsOn)).toBe("2027-04-13");
+  });
+});
+
+describe("short month labels", () => {
+  it("gives every month a distinct label", () => {
+    // Slicing the full names to three letters renders both Ashadh and Ashwin
+    // as "Ash", which made two months indistinguishable in the fee strip.
+    expect(new Set(BS_MONTHS_SHORT).size).toBe(12);
+  });
+
+  it("keeps one label per month, in order", () => {
+    expect(BS_MONTHS_SHORT).toHaveLength(BS_MONTHS.length);
+    expect(BS_MONTHS_SHORT[2]).toBe("Asa");
+    expect(BS_MONTHS_SHORT[5]).toBe("Asw");
   });
 });

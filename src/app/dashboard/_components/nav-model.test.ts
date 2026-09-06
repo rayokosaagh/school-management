@@ -8,6 +8,7 @@ describe("activeId", () => {
     expect(activeId("/dashboard/students/12")).toBe("students");
     expect(activeId("/dashboard/exams/print")).toBe("exams");
     expect(activeId("/dashboard/settings")).toBe("settings");
+    expect(activeId("/dashboard/settings/academic-years")).toBe("settings");
   });
   it("returns '' off the dashboard", () => {
     expect(activeId("/login")).toBe("");
@@ -22,6 +23,7 @@ describe("visibleGroups", () => {
   it("never includes settings; the rail pins it separately", () => {
     const ids = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
     expect(ids).not.toContain(SETTINGS.id);
+    expect(ids).not.toContain("rollover");
   });
 });
 

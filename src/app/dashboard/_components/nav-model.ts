@@ -1,9 +1,9 @@
 import {
   BookOpen,
   CalendarCheck,
-  CalendarPlus,
   ClipboardCheck,
   ClipboardList,
+  ReceiptText,
   GraduationCap,
   LayoutDashboard,
   NotebookPen,
@@ -38,7 +38,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: "assignments", label: "Teaching", href: "/dashboard/assignments", icon: ClipboardList, tint: "green" },
       // Timetable lives inside Classes now (?view=timetable); /dashboard/timetable
       // still redirects there for bookmarks.
-      { id: "rollover", label: "Next year", href: "/dashboard/rollover", icon: CalendarPlus, tint: "rose" },
     ],
   },
   {
@@ -46,6 +45,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: "attendance", label: "Roll call", href: "/dashboard/attendance", icon: CalendarCheck, tint: "green" },
       { id: "exams", label: "Exams", href: "/dashboard/exams", icon: ClipboardCheck, tint: "amber" },
+      { id: "fees", label: "Fees", href: "/dashboard/fees", icon: ReceiptText, tint: "rose" },
       // Honours lives inside Students now (?view=honours); /dashboard/honours
       // still redirects there for bookmarks.
     ],
@@ -61,7 +61,7 @@ export const SETTINGS: NavItem = {
 };
 
 /// The bottom bar on phones. Everything else moves into the account menu.
-export const MOBILE_IDS = ["home", "students", "teachers", "attendance", "exams"];
+export const MOBILE_IDS = ["home", "students", "teachers", "attendance", "fees"];
 
 const ALL: NavItem[] = [...NAV_GROUPS.flatMap((g) => g.items), SETTINGS];
 

@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
 import type { YearSummary } from "@/lib/registry/year-teardown";
-import { deleteYearAction, summariseYearAction } from "../actions";
-import type { YearRow } from "./classes-view";
+import { deleteYearAction, summariseYearAction } from "../../classes/actions";
+import type { YearRow } from "../../classes/_components/classes-view";
 
 /// Table label, in the same order the teardown itself walks: children before
 /// parents, so the list reads like the delete will run.

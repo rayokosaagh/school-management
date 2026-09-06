@@ -9,6 +9,9 @@
     "lint": "eslint",
     "postinstall": "prisma skills sync || exit 0",
     "test": "vitest run",
+    "test:integration": "node scripts/test-integration.cjs",
+    "db:backup": "node scripts/db-recovery.cjs backup",
+    "db:restore-drill": "node scripts/db-recovery.cjs restore-drill",
     "test:watch": "vitest",
     "smoke": "node scripts/ui-smoke.cjs"
   },

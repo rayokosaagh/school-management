@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { writeAuditEvent, type AuditActor } from "@/lib/audit";
 import {
   assignmentKey,
   buildPlan,
@@ -230,6 +231,7 @@ export async function applyRollover(
   sourceYearId: number,
   targetYearId: number,
   options: RolloverOptions,
+  actor?: AuditActor,
 ): Promise<RolloverPlan> {
   const snapshot = await loadSnapshot(sourceYearId, targetYearId, options.markOrderExamTermId);
   const { plan, writes } = buildPlan(snapshot, options);
@@ -349,6 +351,13 @@ export async function applyRollover(
         await tx.academicYear.updateMany({ where: { isCurrent: true }, data: { isCurrent: false } });
         await tx.academicYear.update({ where: { id: targetYearId }, data: { isCurrent: true } });
       }
+      if (actor) await writeAuditEvent(tx, actor, {
+        action: "year.rolled_over", entityType: "AcademicYear", entityId: targetYearId,
+        academicYearId: targetYearId,
+        details: { sourceYearId, enrolled: writes.enrollments.length,
+          graduated: writes.graduateIds.length, left: writes.leaveIds.length,
+          activated: options.makeTargetCurrent },
+      });
     },
     // Hundreds of sequential inserts on a school-sized year; the default 5s
     // interactive limit is not enough.

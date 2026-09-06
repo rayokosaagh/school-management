@@ -1,4 +1,11 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { CalendarPlus } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { formatAd } from "@/lib/date/bs";
+import { listAcademicYears } from "@/lib/registry/academic-year";
+import { YearDeletion } from "./_components/year-deletion";
 import { Building2, History, KeyRound, Settings as SettingsIcon, ShieldCheck, Trophy, Users } from "lucide-react";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
@@ -38,11 +45,14 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ view?: string }>;
 }) {
-  // Redirects unless the stored permission matrix allows this section. This
-  // is the only guard the page needs: every card below is reachable by
-  // anyone who clears it, since `manage:settings` gates the whole route
-  // rather than individual cards — there is no narrower per-card check to
-  // preserve, so no group can ever render empty for whoever is here.
+  // Registry staff get the academic-year tool, never the privileged settings
+  // data below. Check this before loading accounts or restore points.
+  const actor = await requirePage("/dashboard");
+  const grants = await loadGrants();
+  const canManageRegistry = granted(grants, actor.role, "manage:registry");
+  if (!granted(grants, actor.role, "manage:settings") && canManageRegistry) {
+    redirect("/dashboard/settings/academic-years");
+  }
   await requirePage("/dashboard/settings");
 
   const session = await auth();
@@ -50,7 +60,7 @@ export default async function SettingsPage({
 
   // The session carries id and username, but not email — the JWT is issued at
   // sign-in and would go stale the moment the address changes. Read it fresh.
-  const [user, school, accounts, weights, restorePoints] = await Promise.all([
+  const [user, school, accounts, weights, restorePoints, academicYears] = await Promise.all([
     prisma.user.findUnique({
       where: { id: Number(session.user.id) },
       select: { username: true, email: true, createdAt: true },
@@ -59,9 +69,9 @@ export default async function SettingsPage({
     listAccounts(),
     getWeights(),
     listRestorePoints(),
+    listAcademicYears(),
   ]);
   const staff = await listStaff();
-  const grants = await loadGrants();
 
   // Each cell also carries whether it differs from the built-in default, so the
   // matrix can mark what the school has changed.
@@ -161,9 +171,22 @@ export default async function SettingsPage({
     {
       id: "academic",
       label: "Academic",
-      description: "How exams, attendance, conduct and activities combine into the Honours score.",
+      description: "Prepare the next academic year and manage Honours scoring.",
       tint: "amber",
       content: (
+        <>
+        {canManageRegistry ? (
+          <SectionCard icon={CalendarPlus} tint="rose" title="Academic year transition"
+            description="Prepare next year's classes and student placements, then choose when to activate it.">
+            <p className="text-ink-2 mb-4 text-sm">
+              Review promotions before applying changes. Previous-year records stay intact;
+              fee prices and service registrations need a separate setup for the new year.
+            </p>
+            <Button render={<Link href="/dashboard/settings/academic-years" />} nativeButton={false}>
+              Prepare next academic year
+            </Button>
+          </SectionCard>
+        ) : null}
         <SectionCard
           icon={Trophy}
           tint="amber"
@@ -172,6 +195,7 @@ export default async function SettingsPage({
         >
           <HonoursWeightsForm weights={weights} />
         </SectionCard>
+        </>
       ),
     },
     {
@@ -206,9 +230,24 @@ export default async function SettingsPage({
     {
       id: "data",
       label: "Data",
-      description: "Restore points captured when an academic year is deleted.",
+      description: "Activity history, financial checks, academic-year deletion and restore points.",
       tint: "rose",
       content: (
+        <>
+        <SectionCard icon={ShieldCheck} tint="blue" title="Accountability & operational checks"
+          description="Review recorded changes and reconcile the ledger before a year transition.">
+          <div className="flex flex-wrap gap-3">
+            <Button render={<Link href="/dashboard/settings/activity" />} nativeButton={false}>View activity history</Button>
+            <Button variant="secondary" render={<Link href="/dashboard/settings/readiness" />} nativeButton={false}>Run operational checks</Button>
+          </div>
+        </SectionCard>
+        <SectionCard icon={Trash2} tint="rose" title="Delete an academic year"
+          description="Destructive administration belongs here. Review carefully before confirming.">
+          <YearDeletion years={academicYears.map((year) => ({
+            id: year.id, nameBS: year.nameBS, isCurrent: year.isCurrent,
+            span: `${formatAd(year.startsOn)} → ${formatAd(year.endsOn)}`,
+          }))} />
+        </SectionCard>
         <SectionCard
           icon={History}
           tint="rose"
@@ -233,6 +272,7 @@ export default async function SettingsPage({
             }))}
           />
         </SectionCard>
+        </>
       ),
     },
   ];

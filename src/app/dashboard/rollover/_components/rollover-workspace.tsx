@@ -1,9 +1,10 @@
 "use client";
 
 import { CalendarPlus } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { PageFrame } from "@/components/ui/page-frame";
-import { Segmented } from "@/components/ui/segmented";
+import { Button } from "@/components/ui/button";
 import { useActionToast } from "@/components/ui/toast";
 import type {
   RolloverOptions,
@@ -33,7 +34,9 @@ export function RolloverWorkspace({
   examTerms: { id: number; name: string }[];
 }) {
   const [step, setStep] = useState<Step>("year");
-  const [targetYearId, setTargetYearId] = useState<number | null>(years[0]?.id ?? null);
+  const [targetYearId, setTargetYearId] = useState<number | null>(
+    years.find((year) => Number(year.nameBS) === Number(sourceYear.nameBS) + 1)?.id ?? null,
+  );
   const [options, setOptions] = useState<RolloverOptions>({
     copyOfferings: true,
     copyAssignments: true,
@@ -73,7 +76,7 @@ export function RolloverWorkspace({
       // otherwise win last-write and drag the screen back to a stale plan.
       if (id !== requestId.current) return;
       setResult(outcome);
-      if (outcome.plan) setPlan(outcome.plan);
+      setPlan(outcome.plan ?? null);
     });
   };
 
@@ -86,7 +89,6 @@ export function RolloverWorkspace({
   }, []);
 
   const update = (patch: Partial<RolloverOptions>) => {
-    if (targetYearId === null) return;
     // Unticking a stage unticks whatever hangs off it: an assignment needs its
     // offering, a period needs its assignment.
     const merged = { ...options, ...patch };
@@ -101,7 +103,7 @@ export function RolloverWorkspace({
     // synchronously and before the new preview even goes out, leaves no path
     // that can change the plan while still showing the previous run as ready.
     setDone(false);
-    refresh(merged, targetYearId);
+    if (targetYearId !== null) refresh(merged, targetYearId);
   };
 
   const setDecision = (studentId: number, decision: StudentDecision) => {
@@ -138,24 +140,32 @@ export function RolloverWorkspace({
     <PageFrame
       icon={<CalendarPlus />}
       tint="rose"
-      eyebrow="School"
-      title="Next year"
+      eyebrow="Settings"
+      breadcrumb={<><Link href="/dashboard/settings?view=academic" className="hover:underline">Settings</Link> / Academic year transition</>}
+      title="Prepare next academic year"
+      subtitle="Set up the year, review each student's placement, then confirm the transition."
       meta={targetYear ? `${sourceYear.nameBS} → ${targetYear.nameBS}` : sourceYear.nameBS}
     >
       <PageFrame.Toolbar>
-        <Segmented
-          value={step}
-          onChange={setStep}
-          ariaLabel="Rollover step"
-          options={[
-            { value: "year", label: "1. Year" },
-            { value: "students", label: "2. Students" },
-            { value: "review", label: "3. Review" },
-          ]}
-        />
+        <ol aria-label="Academic year preparation progress" className="grid w-full grid-cols-3 gap-2">
+          {([ ["year", "Prepare year"], ["students", "Review students"], ["review", "Confirm & activate"] ] as const).map(([value, label], index) => (
+            <li key={value} aria-current={step === value ? "step" : undefined}
+              className={`rounded-lg border px-3 py-3 text-sm ${step === value ? "border-brand-tint-2 bg-brand-tint text-brand-text" : "border-line text-ink-3"}`}>
+              <span className="mb-1 block text-xs">Step {index + 1}</span>
+              <span className="font-medium">{label}</span>
+            </li>
+          ))}
+        </ol>
       </PageFrame.Toolbar>
 
       <PageFrame.Body className="overflow-y-auto p-4">
+        {step !== "year" && !done ? (
+          <Button variant="ghost" className="mb-4" disabled={pending}
+            onClick={() => setStep(step === "review" ? "students" : "year")}>
+            Back to {step === "review" ? "students" : "year setup"}
+          </Button>
+        ) : null}
+        {result.error ? <p role="alert" className="mb-4 text-sm text-destructive">{result.error}</p> : null}
         {step === "year" ? (
           <YearStep
             sourceYear={sourceYear}
@@ -180,7 +190,7 @@ export function RolloverWorkspace({
             plan={plan}
             onDecision={setDecision}
             onBulk={setBulk}
-            onContinue={() => setStep("review")}
+            onContinue={() => { if (!pending) setStep("review"); }}
           />
         ) : null}
         {step === "review" && plan ? (

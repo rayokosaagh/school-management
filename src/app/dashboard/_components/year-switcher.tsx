@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarRange, TriangleAlert } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { FieldSelect } from "@/components/ui/select";
+import type { YearDateStatus } from "@/lib/date/year-status";
 import { switchAcademicYear, type YearState } from "../actions";
 
 const EMPTY: YearState = {};
@@ -15,14 +16,16 @@ export function YearSwitcher({
   years,
   currentId,
   span,
-  todayInYear,
+  yearStatus,
+  canManageRegistry,
 }: {
-  years: { id: number; nameBS: string; sections: number }[];
+  years: { id: number; nameBS: string; sections?: number }[];
+  canManageRegistry: boolean;
   currentId: number | null;
   /** The Gregorian span of the current year, shown beneath the control. */
   span: string | null;
-  /** False when today falls outside the selected year — worth flagging. */
-  todayInYear: boolean;
+  /** Date position is independent of which year the school has activated. */
+  yearStatus: YearDateStatus | null;
 }) {
   const [, action, pending] = useToastedActionState(switchAcademicYear, EMPTY);
   const card = useRef<HTMLDivElement>(null);
@@ -49,6 +52,13 @@ export function YearSwitcher({
   }
 
   if (years.length === 0) {
+    if (!canManageRegistry) {
+      return (
+        <span className="text-ink-3 px-2 text-xs" title="Ask your administrator to set up an academic year.">
+          No academic year
+        </span>
+      );
+    }
     return (
       <div className="flex gap-2 shrink-0">
         <Link
@@ -59,7 +69,7 @@ export function YearSwitcher({
           Add an academic year
         </Link>
         <Link
-          href="/dashboard/rollover"
+          href="/dashboard/settings/academic-years"
           className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
         >
           Roll last year into it
@@ -115,14 +125,13 @@ export function YearSwitcher({
           </span>
         ) : null}
 
-        {/* Marking a year current that today falls outside of is legitimate when
-            reviewing last year, but it is worth saying so out loud. */}
-        {currentId !== null && !todayInYear ? (
+        {/* An activated year can be in the past or future. */}
+        {currentId !== null && (yearStatus === "past" || yearStatus === "upcoming") ? (
           <span
             className="bg-tint-amber text-tint-amber-fg rounded-md px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap"
-            title="Today's date falls outside this academic year"
+            title={yearStatus === "upcoming" ? "This academic year has not started yet" : "This academic year has ended"}
           >
-            Past year
+            {yearStatus === "upcoming" ? "Upcoming year" : "Past year"}
           </span>
         ) : null}
       </div>

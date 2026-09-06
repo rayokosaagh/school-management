@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hideableColumnIds } from "@/lib/table/columns";
 import { clampPageIndex } from "@/lib/table/paging";
@@ -39,6 +40,7 @@ export function DataTable<T>({
   selectedId,
   onSelect,
   rowActions,
+  selection,
   empty,
   initialSort = [],
   className,
@@ -50,6 +52,22 @@ export function DataTable<T>({
   selectedId?: string | null;
   onSelect?: (row: T) => void;
   rowActions?: (row: T) => React.ReactNode;
+  /// Opt-in tick-box column for acting on several rows at once. Omitted by
+  /// every page that has no bulk action, which is all of them but the service
+  /// rosters — the column does not exist unless this is passed, so nothing
+  /// else shifts by a pixel.
+  ///
+  /// `ids` are `getRowId` values, held by the caller so a selection can
+  /// outlive paging, sorting and filtering: the rows on screen change, the
+  /// pupils you ticked do not.
+  selection?: {
+    ids: string[];
+    onChange: (ids: string[]) => void;
+    /// Rows that cannot be acted on — already billed, already left. Ticking
+    /// them would offer an action that silently does nothing.
+    isSelectable?: (row: T) => boolean;
+    label?: (row: T) => string;
+  };
   empty: EmptyProps;
   initialSort?: SortingState;
   className?: string;
@@ -108,6 +126,33 @@ export function DataTable<T>({
   });
 
   const pageRows = table.getRowModel().rows;
+
+  // The header tick-box speaks for this page only. "Select all" across pages
+  // is a promise the eye cannot check — you would be acting on rows you have
+  // never seen.
+  const selectableOnPage = selection
+    ? pageRows.filter((row) => selection.isSelectable?.(row.original) ?? true)
+    : [];
+  const chosen = new Set(selection?.ids ?? []);
+  const pageAllChosen = selectableOnPage.length > 0 && selectableOnPage.every((row) => chosen.has(row.id));
+  const pageSomeChosen = selectableOnPage.some((row) => chosen.has(row.id));
+
+  function toggleRow(rowId: string) {
+    if (!selection) return;
+    selection.onChange(
+      chosen.has(rowId) ? selection.ids.filter((id) => id !== rowId) : [...selection.ids, rowId],
+    );
+  }
+
+  function togglePage() {
+    if (!selection) return;
+    const pageIds = selectableOnPage.map((row) => row.id);
+    selection.onChange(
+      pageAllChosen
+        ? selection.ids.filter((id) => !pageIds.includes(id))
+        : [...new Set([...selection.ids, ...pageIds])],
+    );
+  }
   const from = total === 0 ? 0 : safeIndex * prefs.pageSize + 1;
   const to = Math.min(total, (safeIndex + 1) * prefs.pageSize);
   const rowHeight = prefs.density === "compact" ? "h-[var(--row-compact)]" : "h-[var(--row)]";
@@ -138,6 +183,17 @@ export function DataTable<T>({
         <TableHeader className="bg-surface-2 sticky top-0 z-[1]">
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} role={grid ? "row" : undefined} className="hover:bg-transparent">
+              {selection ? (
+                <TableHead role={grid ? "columnheader" : undefined} className="w-10 px-2.5">
+                  <Checkbox
+                    checked={pageAllChosen}
+                    indeterminate={!pageAllChosen && pageSomeChosen}
+                    onCheckedChange={togglePage}
+                    disabled={selectableOnPage.length === 0}
+                    aria-label={pageAllChosen ? "Clear this page" : "Select this page"}
+                  />
+                </TableHead>
+              ) : null}
               {hg.headers.map((header) => {
                 const meta = (header.column.columnDef.meta ?? {}) as ColumnMeta;
                 const sort = header.column.getIsSorted();
@@ -222,6 +278,20 @@ export function DataTable<T>({
                   "focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none focus-visible:ring-inset",
                 )}
               >
+                {selection ? (
+                  <TableCell role={grid ? "gridcell" : undefined} className={cn(rowHeight, "px-2.5 py-0")}>
+                    {/* Marked as row actions so ticking a box never also opens
+                        the row underneath it. */}
+                    <span data-row-actions>
+                      <Checkbox
+                        checked={chosen.has(rid)}
+                        disabled={!(selection.isSelectable?.(row.original) ?? true)}
+                        onCheckedChange={() => toggleRow(rid)}
+                        aria-label={selection.label?.(row.original) ?? `Select row ${rid}`}
+                      />
+                    </span>
+                  </TableCell>
+                ) : null}
                 {row.getVisibleCells().map((cell, ci) => {
                   const meta = (cell.column.columnDef.meta ?? {}) as ColumnMeta;
                   return (

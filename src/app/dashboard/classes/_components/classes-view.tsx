@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-
 import { useToastedActionState } from "@/components/ui/toast";
 import { ROLL_ORDER_LABEL, type RollOrder } from "@/lib/registry/roll-order";
-import { ArrowDown, ArrowDownAZ, ArrowUp, ListOrdered, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowDownAZ, ArrowUp, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldSelect } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { RecordTable, StatusPill } from "@/components/ui/record-table";
-import { DeleteYearDialog } from "./delete-year-dialog";
 import {
   type ActionState,
   editAcademicYear,
@@ -62,7 +60,6 @@ export type SectionRow = {
 function YearDetail({ row, onDone }: { row: YearRow; onDone: () => void }) {
   const [editState, editAction, saving] = useToastedActionState(editAcademicYear, EMPTY);
   const [curState, curAction] = useToastedActionState(makeYearCurrent, EMPTY);
-  const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
     <div className="space-y-5">
@@ -94,32 +91,11 @@ function YearDetail({ row, onDone }: { row: YearRow; onDone: () => void }) {
             </Button>
           </form>
         )}
-        <Button
-          type="button"
-          variant="destructive"
-          onClick={() => setDeleteOpen(true)}
-        >
-          <Trash2 data-icon="inline-start" aria-hidden="true" />
-          Delete year…
-        </Button>
         <Button type="button" variant="ghost" onClick={onDone}>
           Close
         </Button>
       </div>
       <Status state={curState} />
-      <p className="text-muted-foreground text-xs">
-        Deleting removes everything recorded in the year — sections,
-        enrolments, attendance and marks.
-      </p>
-      <DeleteYearDialog
-        year={row}
-        open={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onDeleted={() => {
-          setDeleteOpen(false);
-          onDone();
-        }}
-      />
     </div>
   );
 }

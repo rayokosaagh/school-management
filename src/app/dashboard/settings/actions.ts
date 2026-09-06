@@ -8,8 +8,10 @@ import { ForbiddenError, requireCapability } from "@/lib/auth/guard";
 import { WeightsError, saveWeights } from "@/lib/honours/weights";
 import { isValidEmail, normalizeEmail } from "@/lib/auth/identity";
 import { saveSchool } from "@/lib/registry/school";
+import { PhotoError, readUpload } from "@/lib/registry/photos";
 import type { Role } from "@/generated/prisma/enums";
 import { numericField } from "@/lib/form";
+import type { AuditActor } from "@/lib/audit";
 import {
   CAPABILITIES,
   CAPABILITY_LABEL,
@@ -110,10 +112,26 @@ export async function updateSchool(
   if (name.length < 2) return { error: "Enter the school's name." };
   if (email && !isValidEmail(email)) return { error: "Enter a valid email address." };
 
-  await saveSchool({ name, nameNp, address, phone, email });
+  let logo;
+  try {
+    const candidate = formData.get("logo");
+    if (candidate instanceof File && candidate.size > 0) {
+      logo = await readUpload(candidate);
+    }
+  } catch (e) {
+    if (e instanceof PhotoError) return { error: e.message };
+    throw e;
+  }
 
-  // The name shows in the dashboard header and on every printed marksheet.
+  await saveSchool(
+    { name, nameNp, address, phone, email },
+    { logo, removeLogo: formData.get("removeLogo") === "1" },
+  );
+
+  // The name and logo appear before sign-in as well as in the dashboard and
+  // on printed marksheets.
   revalidatePath("/dashboard", "layout");
+  revalidatePath("/login");
   return { success: "School details saved." };
 }
 
@@ -251,8 +269,9 @@ export async function togglePermission(
   _prev: AccountState,
   formData: FormData,
 ): Promise<AccountState> {
+  let actor: AuditActor;
   try {
-    await requireCapability("manage:settings");
+    actor = await requireCapability("manage:settings");
   } catch (e) {
     if (e instanceof ForbiddenError) return { error: e.message };
     throw e;
@@ -266,7 +285,7 @@ export async function togglePermission(
   if (!CAPABILITIES.includes(capability)) return { error: "Unknown permission." };
 
   try {
-    await setGrant(role, capability, allow);
+    await setGrant(role, capability, allow, actor);
   } catch (e) {
     if (e instanceof PermissionError) return { error: e.message };
     throw e;
@@ -283,14 +302,15 @@ export async function restoreDefaultPermissions(
   _formData: FormData,
 ): Promise<AccountState> {
   void _formData;
+  let actor: AuditActor;
   try {
-    await requireCapability("manage:settings");
+    actor = await requireCapability("manage:settings");
   } catch (e) {
     if (e instanceof ForbiddenError) return { error: e.message };
     throw e;
   }
 
-  await resetGrants();
+  await resetGrants(actor);
   revalidatePath("/dashboard", "layout");
   return { success: "Permissions restored to their defaults." };
 }

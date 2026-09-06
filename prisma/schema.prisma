@@ -35,21 +35,25 @@ model RolePermission {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  username String @unique
-  role Role @default(OFFICE)
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  role         Role     @default(OFFICE)
   // Optional so the column can be added to a table that already has rows, and
   // so accounts created before email existed keep working. Postgres permits
   // many NULLs under a unique index, so those rows do not collide.
   // Always stored lowercased — see normalizeEmail() in src/lib/auth/identity.ts.
-  email String? @unique
+  email        String?  @unique
   passwordHash String
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   staff              Staff?
   conductRecorded    ConductEntry[]
   activitiesRecorded ActivityEntry[]
   restorePoints      RestorePoint[]
+  paymentsReceived   Payment[]
+  feeNotes           FeeNote[]
+  announcements      Announcement[]
+  announcementReads  AnnouncementRead[]
 }
 
 // ---------------------------------------------------------------------------
@@ -66,13 +70,17 @@ model AcademicYear {
   isCurrent Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  sections    Section[]
-  offerings   SubjectOffering[]
-  enrollments Enrollment[]
-  attendance  AttendanceSession[]
-  examTerms   ExamTerm[]
-  conduct     ConductEntry[]
-  activities  ActivityEntry[]
+  sections        Section[]
+  offerings       SubjectOffering[]
+  enrollments     Enrollment[]
+  attendance      AttendanceSession[]
+  examTerms       ExamTerm[]
+  conduct         ConductEntry[]
+  activities      ActivityEntry[]
+  feeStructures   FeeStructure[]
+  studentFeePlans StudentFeePlan[]
+  invoices        Invoice[]
+  payments        Payment[]
 }
 
 /// A year group: "Class 5". `order` drives sorting and year-end promotion.
@@ -81,8 +89,9 @@ model Grade {
   name  String @unique
   order Int    @unique
 
-  sections  Section[]
-  offerings SubjectOffering[]
+  sections      Section[]
+  offerings     SubjectOffering[]
+  feeStructures FeeStructure[]
 }
 
 model Section {
@@ -162,9 +171,9 @@ model TeacherAssignment {
   sectionId         Int
   subjectOfferingId Int
 
-  staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  section         Section         @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  subjectOffering SubjectOffering @relation(fields: [subjectOfferingId], references: [id], onDelete: Cascade)
+  staff           Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  section         Section           @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subjectOffering SubjectOffering   @relation(fields: [subjectOfferingId], references: [id], onDelete: Cascade)
   timetable       TimetablePeriod[]
 
   @@unique([staffId, sectionId, subjectOfferingId])
@@ -174,8 +183,8 @@ model TeacherAssignment {
 /// to a shape rather than to the school, so Friday can finish early without
 /// every other day having to be edited to match.
 model DayShape {
-  id Int @id @default(autoincrement())
-  name String @unique
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
   /// The shape a weekday falls back to when nothing else is assigned, and the
   /// one the seed and the migration attach existing periods to. Exactly one
   /// row is true; enforced in the library, not the schema.
@@ -306,7 +315,24 @@ model Guardian {
   occupation String?
   isPrimary  Boolean          @default(false)
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student  Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  payments Payment[]
+}
+
+/// One running note per pupil per year: the arrangement the office has with a
+/// family, not a record of one transaction.
+///
+/// Deliberately not a column on Enrollment — that table belongs to the
+/// registry, and this is a fees concern that happens to be keyed the same way.
+model FeeNote {
+  id           Int      @id @default(autoincrement())
+  enrollmentId Int      @unique
+  body         String
+  updatedAt    DateTime @updatedAt
+  updatedById  Int?
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  updatedBy  User?      @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 }
 
 enum GuardianRelation {
@@ -325,12 +351,255 @@ model Enrollment {
   rollNo         Int
   enrolledOn     DateTime @db.Date
 
-  student      Student      @relation(fields: [studentId], references: [id])
-  section      Section      @relation(fields: [sectionId], references: [id])
-  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  student               Student                @relation(fields: [studentId], references: [id])
+  section               Section                @relation(fields: [sectionId], references: [id])
+  academicYear          AcademicYear           @relation(fields: [academicYearId], references: [id])
+  invoices              Invoice[]
+  feeNote               FeeNote?
+  transportRegistration TransportRegistration?
+  studentFeeAssignments StudentFeeAssignment[]
 
   @@unique([studentId, academicYearId])
   @@unique([sectionId, academicYearId, rollNo])
+}
+
+// ---------------------------------------------------------------------------
+// Fees — immutable invoice lines and payment allocations keep partial payments
+// and reversals auditable without changing a student's historical class/year.
+// ---------------------------------------------------------------------------
+
+enum FeeFrequency {
+  ONE_TIME
+  MONTHLY
+  TERMLY
+  ANNUAL
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  COMPLETED
+  REVERSED
+}
+
+enum FeeBillingScope {
+  CLASS
+  TRANSPORT
+  STUDENT
+}
+
+model StudentFeePlan {
+  id             Int                    @id @default(autoincrement())
+  academicYearId Int
+  feeHeadId      Int
+  amount         Int
+  isActive       Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  academicYear   AcademicYear           @relation(fields: [academicYearId], references: [id])
+  feeHead        FeeHead                @relation(fields: [feeHeadId], references: [id])
+  assignments    StudentFeeAssignment[]
+
+  @@unique([academicYearId, feeHeadId])
+}
+
+model StudentFeeAssignment {
+  id           Int            @id @default(autoincrement())
+  planId       Int
+  enrollmentId Int
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  plan         StudentFeePlan @relation(fields: [planId], references: [id])
+  enrollment   Enrollment     @relation(fields: [enrollmentId], references: [id])
+  invoices     Invoice[]
+
+  @@unique([planId, enrollmentId])
+  @@index([enrollmentId])
+}
+
+model TransportRegistration {
+  id             Int      @id @default(autoincrement())
+  enrollmentId   Int      @unique
+  pickupLocation String
+  monthlyAmount  Int
+  startMonth     Int      @default(1)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+  invoices   Invoice[]
+}
+
+model FeeHead {
+  id           Int             @id @default(autoincrement())
+  name         String          @unique
+  isActive     Boolean         @default(true)
+  /// How often this charge is raised. A property of the fee itself, not of the
+  /// class paying it — "Library, monthly" is true school-wide, and holding it
+  /// per class would let Admission be one-time for one grade and monthly for
+  /// another.
+  frequency    FeeFrequency    @default(ONE_TIME)
+  billingScope FeeBillingScope @default(CLASS)
+  createdAt    DateTime        @default(now())
+
+  structureLines  FeeStructureLine[]
+  studentFeePlans StudentFeePlan[]
+  invoiceLines    InvoiceLine[]
+}
+
+model FeeStructure {
+  id             Int      @id @default(autoincrement())
+  academicYearId Int
+  gradeId        Int
+  name           String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  academicYear AcademicYear       @relation(fields: [academicYearId], references: [id])
+  grade        Grade              @relation(fields: [gradeId], references: [id])
+  lines        FeeStructureLine[]
+  invoices     Invoice[]
+
+  @@unique([academicYearId, gradeId, name])
+}
+
+model FeeStructureLine {
+  id             Int @id @default(autoincrement())
+  feeStructureId Int
+  feeHeadId      Int
+  amount         Int
+
+  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id], onDelete: Cascade)
+  feeHead      FeeHead      @relation(fields: [feeHeadId], references: [id])
+
+  @@unique([feeStructureId, feeHeadId])
+}
+
+model Invoice {
+  id                      Int           @id @default(autoincrement())
+  enrollmentId            Int
+  academicYearId          Int
+  feeStructureId          Int?
+  transportRegistrationId Int?
+  studentFeeAssignmentId  Int?
+  number                  String        @unique
+  issuedOn                DateTime      @db.Date
+  dueOn                   DateTime?     @db.Date
+  status                  InvoiceStatus @default(ISSUED)
+  /// Which instalment this bill is: 1-12 for a monthly fee (the BS month), 0
+  /// for a one-time charge like admission.
+  ///
+  /// 0 rather than NULL because it sits in the unique index below. Postgres
+  /// treats every NULL there as distinct, so a nullable column would quietly
+  /// stop the index blocking duplicate one-time invoices — the guard that
+  /// exists today.
+  periodMonth             Int           @default(0)
+  createdAt               DateTime      @default(now())
+
+  enrollment            Enrollment             @relation(fields: [enrollmentId], references: [id])
+  academicYear          AcademicYear           @relation(fields: [academicYearId], references: [id])
+  feeStructure          FeeStructure?          @relation(fields: [feeStructureId], references: [id])
+  transportRegistration TransportRegistration? @relation(fields: [transportRegistrationId], references: [id])
+  studentFeeAssignment  StudentFeeAssignment?  @relation(fields: [studentFeeAssignmentId], references: [id])
+  lines                 InvoiceLine[]
+
+  @@unique([enrollmentId, feeStructureId, periodMonth])
+  @@unique([transportRegistrationId, periodMonth])
+  @@unique([studentFeeAssignmentId, periodMonth])
+  @@index([academicYearId, status])
+  @@index([enrollmentId])
+}
+
+model InvoiceLine {
+  id          Int    @id @default(autoincrement())
+  invoiceId   Int
+  feeHeadId   Int
+  description String
+  amount      Int
+
+  invoice     Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  feeHead     FeeHead             @relation(fields: [feeHeadId], references: [id])
+  allocations PaymentAllocation[]
+
+  @@index([feeHeadId])
+}
+
+model Payment {
+  id               Int           @id @default(autoincrement())
+  academicYearId   Int
+  receiptNo        String        @unique
+  amount           Int
+  paidOn           DateTime      @db.Date
+  method           PaymentMethod @default(CASH)
+  reference        String?
+  /// Who handed the money over. Name and phone are snapshotted rather than
+  /// read through the guardian link, because a receipt must keep saying what
+  /// it said the day it was printed. The link is kept for provenance; for a
+  /// payer who is not a guardian it is simply null.
+  paidByGuardianId Int?
+  paidByName       String?
+  paidByPhone      String?
+  status           PaymentStatus @default(COMPLETED)
+  receivedById     Int?
+  createdAt        DateTime      @default(now())
+
+  academicYear   AcademicYear        @relation(fields: [academicYearId], references: [id])
+  receivedBy     User?               @relation(fields: [receivedById], references: [id], onDelete: SetNull)
+  paidByGuardian Guardian?           @relation(fields: [paidByGuardianId], references: [id], onDelete: SetNull)
+  allocations    PaymentAllocation[]
+  request        PaymentRequest?
+
+  @@index([academicYearId, paidOn])
+}
+
+/// Append-only operational history. Actor and year identifiers are snapshots,
+/// not foreign keys: deleting an account must not erase its accountability.
+model PaymentRequest {
+  key         String  @id
+  paymentId   Int     @unique
+  fingerprint String
+  payment     Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+}
+
+model AuditEvent {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  actorUserId    Int
+  actorUsername  String
+  action         String
+  entityType     String
+  entityId       String
+  academicYearId Int?
+  details        Json
+
+  @@index([createdAt, id])
+  @@index([academicYearId, createdAt])
+}
+
+model PaymentAllocation {
+  id            Int @id @default(autoincrement())
+  paymentId     Int
+  invoiceLineId Int
+  amount        Int
+
+  payment     Payment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoiceLine InvoiceLine @relation(fields: [invoiceLineId], references: [id])
+
+  @@unique([paymentId, invoiceLineId])
+  @@index([invoiceLineId])
 }
 
 // ---------------------------------------------------------------------------
@@ -395,23 +664,23 @@ model Photo {
 /// The school's own details, for letterheads on printed documents. A single
 /// row: this is one school's system, not a directory of them.
 model SchoolProfile {
-  id        Int      @id @default(1)
-  name      String
-  nameNp    String?
-  address   String?
-  phone     String?
-  email     String?
-  logoId    Int?     @unique
+  id               Int      @id @default(1)
+  name             String
+  nameNp           String?
+  address          String?
+  phone            String?
+  email            String?
+  logoId           Int?     @unique
   /// Which weekdays the school runs, Sunday = 0. Saturday is the weekly holiday
   /// in Nepal, but enough schools differ for this to be a setting.
-  workingDays Int[]  @default([0, 1, 2, 3, 4, 5])
+  workingDays      Int[]    @default([0, 1, 2, 3, 4, 5])
   /// How the honours score is weighted, in percent. Must sum to 100; enforced
   /// in src/lib/honours/weights.ts.
-  weightExams      Int @default(50)
-  weightAttendance Int @default(20)
-  weightConduct    Int @default(15)
-  weightActivities Int @default(15)
-  updatedAt DateTime @updatedAt
+  weightExams      Int      @default(50)
+  weightAttendance Int      @default(20)
+  weightConduct    Int      @default(15)
+  weightActivities Int      @default(15)
+  updatedAt        DateTime @updatedAt
 
   logo Photo? @relation(fields: [logoId], references: [id])
 }
@@ -542,4 +811,58 @@ model RestorePoint {
   createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Announcements — notices from the office to the people who work here.
+// ---------------------------------------------------------------------------
+
+/// Who a notice is for. By role rather than by person: a school's messages are
+/// "for teachers" or "for everyone", and a list of named recipients would have
+/// to be rebuilt every time somebody is hired or changes job.
+enum AnnouncementAudience {
+  ALL
+  TEACHER
+  OFFICE
+}
+
+/// One notice. Kept after it expires rather than deleted, so "what did the
+/// office say in Bhadra" still has an answer.
+model Announcement {
+  id        Int                  @id @default(autoincrement())
+  title     String
+  body      String
+  audience  AnnouncementAudience @default(ALL)
+  /// Sits above the rest whatever its date, for the handful of notices that
+  /// stay true all year — exam week, the fee deadline, the fire drill.
+  isPinned  Boolean              @default(false)
+  /// Date-only, like every other school date. Null means it never expires;
+  /// a notice stops showing after this day rather than on it, so "expires
+  /// today" is still readable today.
+  expiresOn DateTime?            @db.Date
+  authorId  Int?
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  /// Optional, and kept when the account goes: a notice outlives the person
+  /// who wrote it, and losing the notice would be the worse loss.
+  author User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  reads  AnnouncementRead[]
+
+  @@index([audience, expiresOn])
+}
+
+/// One row per person who has read a notice. Absence is unread, so somebody
+/// hired today does not arrive to a year of notices already marked read.
+model AnnouncementRead {
+  id             Int      @id @default(autoincrement())
+  announcementId Int
+  userId         Int
+  readAt         DateTime @default(now())
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
 }

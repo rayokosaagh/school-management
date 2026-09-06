@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { writeAuditEvent, type AuditActor } from "@/lib/audit";
 import { BS_MAX_YEAR, BS_MIN_YEAR, bsYearRange } from "@/lib/date/bs";
 
 export type AcademicYearInput = { nameBS: string };
@@ -51,7 +52,7 @@ export class UnknownYearError extends Error {}
 
 /// Exactly one year is current. Both writes share a transaction so a failure
 /// cannot leave the school with two current years, or none.
-export async function setCurrentAcademicYear(id: number) {
+export async function setCurrentAcademicYear(id: number, actor?: AuditActor) {
   // Checked first so a stale id reads as a message, not a crashed layout.
   const year = await prisma.academicYear.findUnique({
     where: { id },
@@ -59,13 +60,20 @@ export async function setCurrentAcademicYear(id: number) {
   });
   if (!year) throw new UnknownYearError("That academic year no longer exists.");
 
-  return prisma.$transaction([
-    prisma.academicYear.updateMany({
+  return prisma.$transaction(async (tx) => {
+    // Serialize school-wide switches, including two concurrent first switches.
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(73628401)`;
+    const cleared = await tx.academicYear.updateMany({
       where: { isCurrent: true },
       data: { isCurrent: false },
-    }),
-    prisma.academicYear.update({ where: { id }, data: { isCurrent: true } }),
-  ]);
+    });
+    const current = await tx.academicYear.update({ where: { id }, data: { isCurrent: true } });
+    if (actor) await writeAuditEvent(tx, actor, {
+      action: "year.activated", entityType: "AcademicYear", entityId: id,
+      academicYearId: id, details: {},
+    });
+    return [cleared, current] as const;
+  });
 }
 
 export function getAcademicYear(id: number) {

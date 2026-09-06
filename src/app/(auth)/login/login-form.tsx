@@ -3,14 +3,19 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import { ArrowRight, AtSign, Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/ui/login-signup";
 
-export function LoginForm({ schoolName }: { schoolName: string | null }) {
+export function LoginForm({
+  schoolName,
+  schoolLogoId,
+}: {
+  schoolName: string | null;
+  schoolLogoId: number | null;
+}) {
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -50,7 +55,19 @@ export function LoginForm({ schoolName }: { schoolName: string | null }) {
     <div className="flex items-center justify-center min-h-screen px-4">
       <div className="mx-auto w-full max-w-xs space-y-6">
         <div className="space-y-2 text-center">
-          <Logo className="mx-auto h-16 w-16" />
+          {schoolLogoId ? (
+            // The route exposes only the school's public identity image. The
+            // id changes whenever an admin replaces it, so cached old logos
+            // are never requested after Settings is saved.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/school-logo?v=${schoolLogoId}`}
+              alt={schoolName ? `${schoolName} logo` : "School logo"}
+              className="mx-auto h-28 w-28 rounded-2xl object-contain"
+            />
+          ) : (
+            <Logo className="mx-auto h-28 w-28" />
+          )}
           <h1 className="text-3xl font-semibold">{schoolName ?? "Welcome back"}</h1>
           <p className="text-muted-foreground">
             Sign in to access students, teachers and classes.
@@ -131,15 +148,6 @@ export function LoginForm({ schoolName }: { schoolName: string | null }) {
             {!pending && <ArrowRight className="h-4 w-4" />}
           </Button>
 
-          <div className="text-center text-sm">
-            No account?{" "}
-            <Link
-              href="/signup"
-              className="text-primary font-medium hover:underline"
-            >
-              Create an account
-            </Link>
-          </div>
         </form>
       </div>
     </div>

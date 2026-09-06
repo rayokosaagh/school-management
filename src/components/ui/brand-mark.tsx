@@ -4,10 +4,12 @@ import { cn } from "@/lib/utils";
 /// pages adopt it in Phase 3.
 export function BrandMark({
   name,
+  logoId,
   size = "md",
   className,
 }: {
   name: string;
+  logoId?: number | null;
   size?: "md" | "lg";
   className?: string;
 }) {
@@ -16,12 +18,26 @@ export function BrandMark({
     <span
       aria-hidden="true"
       className={cn(
-        "from-brand to-brand-deep text-brand-ink font-display grid shrink-0 place-items-center bg-gradient-to-br font-bold tracking-tight",
+        "font-display grid shrink-0 place-items-center overflow-hidden font-bold tracking-tight",
         size === "md" ? "size-8 rounded-[9px] text-[15px]" : "size-14 rounded-2xl text-2xl",
+        logoId
+          ? "bg-surface border-line border"
+          : "from-brand to-brand-deep text-brand-ink bg-gradient-to-br",
         className,
       )}
     >
-      {initial}
+      {logoId ? (
+        // The saved logo is public branding and its id changes on replacement,
+        // which gives the browser a fresh URL after Settings is saved.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={`/api/school-logo?v=${logoId}`}
+          alt=""
+          className="size-full object-contain"
+        />
+      ) : (
+        initial
+      )}
     </span>
   );
 }

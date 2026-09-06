@@ -12,6 +12,8 @@
 
 # testing
 /coverage
+/backups/
+*.dump
 
 # next.js
 /.next/
@@ -57,3 +59,8 @@ next-env.d.ts
 /docs/superpowers/
 /CLAUDE.md
 /AGENTS.md
+/.claude/
+
+# Verification screenshots and preview bundles (large, may contain real pupil data)
+/artifacts/fee-setup-check/
+/artifacts/overview-preview/

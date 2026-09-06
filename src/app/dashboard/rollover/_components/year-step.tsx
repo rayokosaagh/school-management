@@ -39,9 +39,15 @@ export function YearStep({
 }) {
   const [newYear, setNewYear] = useState("");
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   return (
     <div className="max-w-2xl space-y-6">
+      <Callout icon={Info} tint="blue">
+        <p className="font-medium">Prepare first. Activate when the school is ready.</p>
+        <p className="mt-1">Existing records stay in {sourceYear.nameBS}. Fee prices, transport and other service registrations do not copy; set them up separately for the new year.</p>
+        <p className="mt-1">Student decisions take effect when you confirm, even if you leave the current year unchanged. There is no undo button.</p>
+      </Callout>
       <section className="space-y-2">
         <Label htmlFor="target-year">Roll {sourceYear.nameBS} into</Label>
         <div className="flex gap-2">
@@ -71,26 +77,39 @@ export function YearStep({
               value={newYear}
               onChange={(e) => setNewYear(e.target.value)}
               placeholder={String(Number(sourceYear.nameBS) + 1)}
+              disabled={creating || pending}
               inputMode="numeric"
               className="w-32 font-mono"
             />
           </div>
           <Button
             variant="secondary"
-            disabled={creating || newYear.trim() === ""}
+            disabled={creating || pending || newYear.trim() === ""}
             onClick={async () => {
+              if (!/^\d{4}$/.test(newYear.trim()) || Number(newYear) <= Number(sourceYear.nameBS)) {
+                setCreateError("Enter a four-digit BS year later than the current year.");
+                return;
+              }
               setCreating(true);
-              const made = await addTargetYear(newYear.trim());
-              setCreating(false);
-              if (made.id !== undefined) {
-                setNewYear("");
-                onTargetYear(made.id);
+              setCreateError(null);
+              try {
+                const made = await addTargetYear(newYear.trim());
+                if (made.id !== undefined) {
+                  setNewYear("");
+                  onTargetYear(made.id);
+                } else setCreateError(made.error ?? "Could not create the year. Try again.");
+              } catch {
+                setCreateError("Could not create the year. Try again.");
+              } finally {
+                setCreating(false);
               }
             }}
           >
             {creating ? "Creating…" : "Create"}
           </Button>
         </div>
+        {createError ? <p role="alert" className="text-destructive text-sm">{createError}</p> : null}
+        <p className="text-ink-3 text-xs">Creating a year saves an empty year only. It does not promote students or activate it.</p>
       </section>
 
       <section className="space-y-3">
@@ -166,7 +185,7 @@ export function YearStep({
 
       {/* Step 2 renders only when plan is set — without this check a stale or
           in-flight preview would strand the operator on a blank panel. */}
-      <Button disabled={targetYearId === null || pending || !plan} onClick={onContinue}>
+      <Button disabled={targetYearId === null || pending || creating || !plan} onClick={onContinue}>
         Continue to students
       </Button>
     </div>

@@ -27,7 +27,9 @@ export function PageFrame({
   icon,
   tint = "violet",
   eyebrow,
+  breadcrumb,
   title,
+  subtitle,
   meta,
   actions,
   children,
@@ -36,7 +38,14 @@ export function PageFrame({
   icon?: React.ReactNode;
   tint?: Tint;
   eyebrow: string;
+  /// A trail above the header. Replaces the eyebrow when given — one line
+  /// reading "Finance" and another reading "Finance › Fees" is the same fact
+  /// twice. Optional, so every page that does not pass one is unchanged.
+  breadcrumb?: React.ReactNode;
   title: string;
+  /// A sentence under the title, for a page whose job is not obvious from one
+  /// word. Also optional, for the same reason.
+  subtitle?: React.ReactNode;
   meta?: React.ReactNode;
   actions?: React.ReactNode;
   children: React.ReactNode;
@@ -44,8 +53,21 @@ export function PageFrame({
 }) {
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-3">
-        <div className="flex min-w-0 items-center gap-3">
+      {breadcrumb ? (
+        <nav aria-label="Breadcrumb" className="text-ink-3 pb-2 text-[12.5px]">
+          {breadcrumb}
+        </nav>
+      ) : null}
+      <div
+        className={cn(
+          "flex flex-wrap justify-between gap-x-4 gap-y-3 pb-3",
+          // Bottom-aligned is right when the block is one title line; with a
+          // sentence under it the actions belong beside the title, not beside
+          // the sentence.
+          subtitle ? "items-start" : "items-end",
+        )}
+      >
+        <div className={cn("flex min-w-0 gap-3", subtitle ? "items-start" : "items-center")}>
           {icon ? (
             <span
               aria-hidden="true"
@@ -58,11 +80,14 @@ export function PageFrame({
             </span>
           ) : null}
           <div className="min-w-0">
-            <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
-            <h1 className="mt-0.5 flex flex-wrap items-baseline gap-x-2.5">
+            {breadcrumb ? null : (
+              <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
+            )}
+            <h1 className={cn("flex flex-wrap items-baseline gap-x-2.5", breadcrumb ? null : "mt-0.5")}>
               {title}
               {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{meta}</span> : null}
             </h1>
+            {subtitle ? <p className="text-ink-3 mt-1 text-sm leading-6">{subtitle}</p> : null}
           </div>
         </div>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
@@ -168,3 +193,7 @@ PageFrame.Tabs = Tabs;
 PageFrame.Toolbar = Toolbar;
 PageFrame.Split = Split;
 PageFrame.Body = Body;
+
+// Server components must import this named client reference. The compound
+// PageFrame.Body convenience API remains available inside client components.
+export { Body as PageFrameBody };

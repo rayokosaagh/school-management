@@ -71,6 +71,8 @@ describe("capabilityFor", () => {
 describe("rollover route", () => {
   it("needs the registry capability", () => {
     expect(capabilityFor("/dashboard/rollover")).toBe("manage:registry");
+    expect(capabilityFor("/dashboard/settings/academic-years")).toBe("manage:registry");
+    expect(capabilityFor("/dashboard/settings")).toBe("manage:settings");
   });
 
   it("is open to admin and office, closed to teachers", () => {

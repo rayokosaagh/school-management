@@ -411,9 +411,35 @@
   /* Hide the shell: sidebar, header, controls. Only the sheets print. */
   body * { visibility: hidden; }
   .print-root, .print-root * { visibility: visible; }
+
+  /* Hiding is not enough — the shell still laid the sheets out.
+     `<main>` is a 100dvh grid cell with `overflow-y: auto`, so an absolutely
+     positioned `.print-root` anchored to it and was clipped to a ~56px sliver:
+     only the letterhead reached the paper. On paper the shell must not size,
+     clip or position anything, so its other cells are removed outright and
+     `main` becomes an ordinary block. */
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  /* Block, not grid: with the rail cell removed, `main` slid into the rail's
+     column and the sheets printed 64px wide. */
+  body > div {
+    display: block !important;
+    height: auto !important;
+  }
+  body > div > :not(#dashboard-main) { display: none !important; }
+  #dashboard-main {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
   .print-root {
-    position: absolute;
-    inset: 0;
+    position: static;
     max-width: none;
     margin: 0;
     padding: 0;

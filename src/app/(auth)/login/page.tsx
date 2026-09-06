@@ -10,5 +10,10 @@ export const dynamic = "force-dynamic";
 // it before authentication gives nothing away.
 export default async function LoginPage() {
   const school = await getLetterhead();
-  return <LoginForm schoolName={school.configured ? school.name : null} />;
+  return (
+    <LoginForm
+      schoolName={school.configured ? school.name : null}
+      schoolLogoId={school.logoId}
+    />
+  );
 }
