@@ -54,3 +54,7 @@ next-env.d.ts
 
 # Verification screenshots, mockups and preview bundles (large, may show real pupil data)
 /artifacts/
+
+# Agent handoffs and working docs — kept local, not shipped with the app
+/docs/
+CLAUDE_HANDOFF.md
