@@ -4,6 +4,8 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronRight, Search, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { IconTile, type Tint } from "@/components/ui/page-shell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +85,9 @@ export function RecordTable<T>({
   density = "comfortable",
   renderDetail,
   detailTitle,
+  icon,
+  tint = "blue",
+  footer,
 }: {
   title: string;
   subtitle?: ReactNode;
@@ -107,6 +112,14 @@ export function RecordTable<T>({
   density?: "comfortable" | "compact";
   renderDetail?: (row: T, close: () => void) => ReactNode;
   detailTitle?: (row: T) => ReactNode;
+  /// Renders the same tinted tile `SectionCard` puts beside its heading, so a
+  /// table can sit among section cards without looking like a different kind
+  /// of thing. Omit it and the header is the plain title it has always been.
+  icon?: LucideIcon;
+  tint?: Tint;
+  /// Sits inside the card below the rows — for a form or an action that
+  /// belongs to the table as a whole rather than to any one row.
+  footer?: ReactNode;
 }) {
   const [query, setQuery] = useState("");
   const [chosen, setChosen] = useState<Record<string, string>>({});
@@ -180,7 +193,9 @@ export function RecordTable<T>({
   return (
     <div className="card-surface relative">
       <div className="flex flex-wrap items-center justify-between gap-3 p-5 pb-4">
-        <div>
+        <div className="flex min-w-0 items-start gap-3">
+          {icon ? <IconTile icon={icon} tint={tint} /> : null}
+          <div className="min-w-0">
           <h2 className="font-semibold">{title}</h2>
           {subtitle ? (
             <p className="text-muted-foreground text-sm">
@@ -189,6 +204,7 @@ export function RecordTable<T>({
                 : subtitle}
             </p>
           ) : null}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {filters?.map((filter) => (
@@ -404,6 +420,7 @@ export function RecordTable<T>({
             })}
           </motion.ul>
         )}
+        {footer ? <div className="mt-4">{footer}</div> : null}
       </div>
 
       {open && renderDetail

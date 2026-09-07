@@ -6,7 +6,7 @@ import { Trash2 } from "lucide-react";
 import { formatAd } from "@/lib/date/bs";
 import { listAcademicYears } from "@/lib/registry/academic-year";
 import { YearDeletion } from "./_components/year-deletion";
-import { Building2, History, KeyRound, Settings as SettingsIcon, ShieldCheck, Trophy, Users } from "lucide-react";
+import { Building2, History, KeyRound, Settings as SettingsIcon, ShieldCheck, Trophy } from "lucide-react";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { SectionCard } from "@/components/ui/page-shell";
@@ -43,7 +43,7 @@ import { requirePage } from "@/lib/auth/guard";
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; staff?: string }>;
 }) {
   // Registry staff get the academic-year tool, never the privileged settings
   // data below. Check this before loading accounts or restore points.
@@ -92,7 +92,11 @@ export default async function SettingsPage({
 
   if (!user) redirect("/login");
 
-  const { view: viewParam } = await searchParams;
+  const { view: viewParam, staff: staffParam } = await searchParams;
+  // Set by the "Set up sign-in" button on a staff pane, so the new-account
+  // form opens on the person it was clicked from. A stray value is ignored
+  // rather than erroring, the same as an unrecognised `?view=`.
+  const presetStaffId = staffParam && /^\d+$/.test(staffParam) ? Number(staffParam) : null;
   // The URL owns the selected group, the same as `?view=honours` owns the
   // Students page's switch: a reload or a bookmarked link has to land back
   // on the right one. An unrecognised value falls back to the first group
@@ -128,13 +132,9 @@ export default async function SettingsPage({
       tint: "blue",
       content: (
         <>
-          <SectionCard
-            icon={Users}
-            tint="amber"
-            title="Who can sign in"
-            description="Public sign-up is closed. What each of them can reach is set below."
-          >
-            <Accounts
+          {/* Renders its own card: it is a RecordTable, and carries the same
+              icon and heading a SectionCard would have given it. */}
+          <Accounts
               accounts={accounts.map((a) => ({
                 id: a.id,
                 username: a.username,
@@ -153,9 +153,9 @@ export default async function SettingsPage({
                 fullName: s.fullName,
                 taken: s.userId !== null,
               }))}
-              currentUserId={Number(session.user.id)}
-            />
-          </SectionCard>
+            currentUserId={Number(session.user.id)}
+            presetStaffId={presetStaffId}
+          />
 
           <SectionCard
             icon={ShieldCheck}
