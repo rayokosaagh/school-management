@@ -21,7 +21,7 @@ export function BrandMark({
         "font-display grid shrink-0 place-items-center overflow-hidden font-bold tracking-tight",
         size === "md" ? "size-8 rounded-[9px] text-[15px]" : "size-14 rounded-2xl text-2xl",
         logoId
-          ? "bg-surface border-line border"
+          ? "bg-white border-line border"
           : "from-brand to-brand-deep text-brand-ink bg-gradient-to-br",
         className,
       )}
