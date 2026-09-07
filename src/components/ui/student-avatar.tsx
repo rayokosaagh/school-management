@@ -11,6 +11,11 @@ export function initialsOf(name: string) {
 
 /// The photo from our own route, or an initials tile in the brand tint. The
 /// pane and the podium share it so a student looks the same everywhere.
+///
+/// `object-top`, not the default centre: these are portrait headshots dropped
+/// into a square, so a centred crop takes an even slice off the top and the
+/// bottom — and the slice off the top is the top of the head. Anchored to the
+/// top edge, the face is kept and the chest is what gets trimmed.
 export function StudentAvatar({
   photoId,
   name,
@@ -28,7 +33,7 @@ export function StudentAvatar({
       <img
         src={`/api/photo/${photoId}`}
         alt=""
-        className={cn("size-13 shrink-0 rounded-xl object-cover", className)}
+        className={cn("size-13 shrink-0 rounded-xl object-cover object-top", className)}
       />
     );
   }

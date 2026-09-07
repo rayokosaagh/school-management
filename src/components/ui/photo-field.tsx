@@ -41,7 +41,7 @@ export function PhotoField({
           // Served from our own route; next/image would add no value for a
           // one-off private thumbnail.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={current} alt={alt} className="size-full object-cover" />
+          <img src={current} alt={alt} className="size-full object-cover object-top" />
         ) : (
           <User className="size-8" aria-hidden="true" />
         )}
