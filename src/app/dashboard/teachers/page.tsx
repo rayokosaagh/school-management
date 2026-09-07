@@ -1,19 +1,37 @@
 import { redirect } from "next/navigation";
 import { requirePage } from "@/lib/auth/guard";
+import { granted, loadGrants } from "@/lib/auth/permissions";
 import { toBsInput } from "@/lib/date/bs";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { getStaffSummary, listStaff } from "@/lib/registry/staff";
+import { listGradesWithSections } from "@/lib/registry/structure";
+import { gradeCode } from "@/lib/register-codes";
 import { StaffWorkspace } from "./_components/staff-workspace";
 import type { StaffRow } from "./_components/staff-detail";
 
 export default async function TeachersPage({ searchParams }: { searchParams: Promise<{ staff?: string }> }) {
   // Redirects unless the stored permission matrix allows this section.
-  await requirePage("/dashboard/teachers");
+  const actor = await requirePage("/dashboard/teachers");
 
   const { staff } = await searchParams;
   const selectedId = staff && /^\d+$/.test(staff) ? Number(staff) : null;
 
-  const [people, currentYear] = await Promise.all([listStaff(), getCurrentAcademicYear()]);
+  const [currentYear, grants] = await Promise.all([getCurrentAcademicYear(), loadGrants()]);
+  // The Load column describes what somebody carries now, so it counts inside
+  // the selected year. The pane still shows every year they have taught.
+  const people = await listStaff({ academicYearId: currentYear?.id });
+
+  // The ladder the teaching-load bar is drawn against: every grade the school
+  // actually runs this year, in order. Grades with no section this year are
+  // left out — an empty rung would read as a gap in somebody's teaching.
+  const ladder = currentYear
+    ? (await listGradesWithSections(currentYear.id))
+        .filter((g) => g.sections.length > 0)
+        .map((g) => ({ name: g.name, code: gradeCode(g.name) }))
+    : [];
+  // Only decides whether the pane offers the shortcut. Settings re-checks
+  // this on arrival, and `addAccount` checks it again before writing.
+  const canManageAccounts = granted(grants, actor.role, "manage:settings");
   const summary = selectedId == null ? null : await getStaffSummary(selectedId, currentYear?.id ?? -1);
 
   // An id that names nobody — unknown or just deleted — would open a pane with
@@ -38,5 +56,14 @@ export default async function TeachersPage({ searchParams }: { searchParams: Pro
     assignments: p._count.assignments,
   }));
 
-  return <StaffWorkspace rows={rows} selectedId={selectedId} summary={summary} />;
+  return (
+    <StaffWorkspace
+      rows={rows}
+      selectedId={selectedId}
+      summary={summary}
+      canManageAccounts={canManageAccounts}
+      yearLabel={currentYear?.nameBS ?? null}
+      ladder={ladder}
+    />
+  );
 }

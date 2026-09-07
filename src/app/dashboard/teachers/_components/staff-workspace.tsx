@@ -51,12 +51,21 @@ export function StaffWorkspace({
   rows,
   selectedId,
   summary,
+  canManageAccounts,
+  yearLabel,
+  ladder,
 }: {
   rows: StaffRow[];
   /** From `?staff=`; null when nothing is selected. */
   selectedId: number | null;
   /** The server-rendered summary for `selectedId`, or null while it is not loaded. */
   summary: StaffSummary | null;
+  /** Whether this account may reach Settings to create a sign-in. */
+  canManageAccounts: boolean;
+  /** The selected academic year, which the pane leads with. */
+  yearLabel: string | null;
+  /** Every grade running this year, in order, for the teaching-load bar. */
+  ladder: { name: string; code: string }[];
 }) {
   const router = useRouter();
   const [, startNavigation] = useTransition();
@@ -128,12 +137,15 @@ export function StaffWorkspace({
       ) },
       { id: "designation", accessorKey: "designation", header: "Designation" },
       { id: "phone", accessorKey: "phone", header: "Phone", meta: { mono: true } satisfies ColumnMeta },
-      // Sorted on sections first, subjects as the tie-break — an explicit
+      // `assignments` counts subject-in-a-class pairings, not subjects: a
+      // teacher taking one subject across fourteen classes has fourteen. It
+      // read as "28 subjects" for somebody who teaches exactly one.
+      // Sorted on sections first, classes as the tie-break — an explicit
       // comparator rather than folding the pair into one number.
       { id: "load", accessorFn: (r) => [r.sectionsLed, r.assignments], header: "Load",
         sortingFn: (a, b) => a.original.sectionsLed - b.original.sectionsLed || a.original.assignments - b.original.assignments,
         cell: ({ row }) => (
-        <span className="text-ink-2">{row.original.sectionsLed} {row.original.sectionsLed === 1 ? "section" : "sections"} · {row.original.assignments} {row.original.assignments === 1 ? "subject" : "subjects"}</span>
+        <span className="text-ink-2">{row.original.sectionsLed} {row.original.sectionsLed === 1 ? "section" : "sections"} · {row.original.assignments} {row.original.assignments === 1 ? "class" : "classes"}</span>
       ) },
       { id: "joined", accessorKey: "joinedOnBs", header: "Joined (BS)", meta: { mono: true } satisfies ColumnMeta },
       { id: "status", accessorFn: (r) => (r.isActive ? 1 : 0), header: "Status", cell: ({ row }) => <StaffStatus isActive={row.original.isActive} /> },
@@ -173,7 +185,7 @@ export function StaffWorkspace({
       </PageFrame.Toolbar>
 
       <PageFrame.Split
-        aside={selectedRow ? (summaryMatches ? <StaffPane key={summary!.staffId} summary={summary!} row={selectedRow} onClose={clearSelection} /> : <StaffPaneSkeleton />) : undefined}
+        aside={selectedRow ? (summaryMatches ? <StaffPane key={summary!.staffId} summary={summary!} row={selectedRow} onClose={clearSelection} canManageAccounts={canManageAccounts} yearLabel={yearLabel} ladder={ladder} /> : <StaffPaneSkeleton />) : undefined}
         asideTitle={selectedRow?.fullName ?? "Staff member"}
         asideOpen={selectedRow != null}
         onAsideClose={clearSelection}

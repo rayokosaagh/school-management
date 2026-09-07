@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { composeFullName, type NameParts } from "./names";
 import { toBsInput } from "@/lib/date/bs";
+import { groupTeachingLoad, type TeachingLoad } from "./teaching-load";
 
 export type StaffInput = NameParts & {
   fullNameNp?: string | null;
@@ -9,13 +10,23 @@ export type StaffInput = NameParts & {
   joinedOn: Date;
 };
 
-export function listStaff({ activeOnly = false } = {}) {
+/// `academicYearId` scopes the counts to one year. Without it they span every
+/// year on record, which reads as a much heavier load than anyone carries: a
+/// teacher taking fourteen classes in each of two years counts twenty-eight.
+/// The register shows one year at a time, so it passes the year it is showing.
+export function listStaff({
+  activeOnly = false,
+  academicYearId,
+}: { activeOnly?: boolean; academicYearId?: number } = {}) {
+  const inYear = academicYearId === undefined ? {} : { where: { academicYearId } };
+  const assignedInYear =
+    academicYearId === undefined ? {} : { where: { section: { academicYearId } } };
   return prisma.staff.findMany({
     where: activeOnly ? { isActive: true } : undefined,
     orderBy: [{ isActive: "desc" }, { fullName: "asc" }],
     include: {
       user: { select: { username: true } },
-      _count: { select: { sectionsLed: true, assignments: true } },
+      _count: { select: { sectionsLed: inYear, assignments: assignedInYear } },
     },
   });
 }
@@ -118,7 +129,7 @@ export type StaffSummary = {
   isActive: boolean;
   account: { username: string; email: string | null } | null;
   sectionsLed: { id: number; label: string; year: string }[];
-  load: { year: string; items: { section: string; subject: string }[] }[];
+  load: TeachingLoad;
   rollCallsTaken: number;
 };
 
@@ -127,21 +138,6 @@ export type StaffSummary = {
 export async function getStaffSummary(staffId: number, academicYearId: number): Promise<StaffSummary | null> {
   const staff = await getStaffDetail(staffId);
   if (!staff) return null;
-
-  const byYear = new Map<string, { section: string; subject: string }[]>();
-  const years: { id: number; nameBS: string }[] = [];
-  for (const a of staff.assignments) {
-    const y = a.section.academicYear;
-    if (!byYear.has(y.nameBS)) {
-      byYear.set(y.nameBS, []);
-      years.push({ id: y.id, nameBS: y.nameBS });
-    }
-    byYear.get(y.nameBS)!.push({
-      section: `${a.section.grade.name} ${a.section.name}`,
-      subject: a.subjectOffering.subject.name,
-    });
-  }
-  years.sort((a, b) => (a.id === academicYearId ? -1 : b.id === academicYearId ? 1 : b.nameBS.localeCompare(a.nameBS)));
 
   return {
     staffId: staff.id,
@@ -156,7 +152,18 @@ export async function getStaffSummary(staffId: number, academicYearId: number): 
     sectionsLed: staff.sectionsLed.map((s) => ({
       id: s.id, label: `${s.grade.name} ${s.name}`, year: s.academicYear.nameBS,
     })),
-    load: years.map((y) => ({ year: y.nameBS, items: byYear.get(y.nameBS) ?? [] })),
+    load: groupTeachingLoad(
+      staff.assignments.map((a) => ({
+        yearId: a.section.academicYear.id,
+        yearName: a.section.academicYear.nameBS,
+        sectionId: a.section.id,
+        sectionName: a.section.name,
+        gradeName: a.section.grade.name,
+        gradeOrder: a.section.grade.order,
+        subject: a.subjectOffering.subject.name,
+      })),
+      academicYearId,
+    ),
     rollCallsTaken: staff._count.attendanceKept,
   };
 }

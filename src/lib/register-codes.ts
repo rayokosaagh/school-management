@@ -1,11 +1,18 @@
 /// Short codes for the register tab badges. Pure and shared, so the Students
 /// and Staff strips cannot drift apart.
 
+/// "Kindergarten" → "K", "Class 10" → "10", "Senior Kindergarten" → "SK".
+/// A grade names itself by its number where it has one, and by its initials
+/// where it does not.
+export function gradeCode(gradeName: string) {
+  const num = gradeName.match(/\d+/)?.[0];
+  if (num) return num;
+  return gradeName.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("");
+}
+
 /// "Kindergarten A" → "KA", "Class 10 B" → "10B", "Senior Kindergarten A" → "SKA".
 export function sectionCode(gradeName: string, sectionName: string) {
-  const num = gradeName.match(/\d+/)?.[0];
-  const letters = num ? "" : gradeName.split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("");
-  return `${num ?? letters}${sectionName.toUpperCase()}`;
+  return `${gradeCode(gradeName)}${sectionName.toUpperCase()}`;
 }
 
 /// "Vice Principal" → "VP", "Teacher" → "T".

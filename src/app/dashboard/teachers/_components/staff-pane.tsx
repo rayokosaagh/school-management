@@ -1,14 +1,21 @@
 "use client";
 
-import { Pencil, Phone, X } from "lucide-react";
+import { ChevronRight, KeyRound, Pencil, Phone, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DetailPane } from "@/components/ui/detail-pane";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusDot } from "@/components/ui/status-dot";
+import { cn } from "@/lib/utils";
 import type { StaffSummary } from "@/lib/registry/staff";
 import { StaffDetail, type StaffRow } from "./staff-detail";
 import { StaffPhotoForm } from "./photo-form";
+
+/// The same code badge the register tab strips use, so a class reads the
+/// same here as it does there.
+const CLASS_CHIP =
+  "border-line bg-page text-ink-3 rounded border px-1.5 py-px font-mono text-[10.5px] tracking-[0.04em]";
 
 /// Shared with the table so a status reads the same in both places.
 export function StaffStatus({ isActive }: { isActive: boolean }) {
@@ -32,8 +39,95 @@ export function StaffPaneSkeleton() {
 /// The right-hand pane: read view by default, the existing editor in place
 /// when "Edit" is pressed. `row` is the table row's editable shape; `summary`
 /// is the server-rendered aggregate for the same person.
-export function StaffPane({ summary, row, onClose }: { summary: StaffSummary; row: StaffRow; onClose?: () => void }) {
+/// Both the sections led and the teaching load repeat themselves once per
+/// academic year, and a teacher who does the same job two years running had
+/// every line printed twice at full weight. The selected year leads; the rest
+/// fold away behind one line, because they are history rather than news.
+function OtherYears({ count, children }: { count: number; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  if (count === 0) return null;
+  return (
+    <div className="mt-3">
+      <Button
+        size="xs"
+        variant="ghost"
+        className="text-ink-3 -ml-2"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <ChevronRight
+          aria-hidden="true"
+          data-icon="inline-start"
+          className={cn("transition-transform", open && "rotate-90")}
+        />
+        {count === 1 ? "1 other year" : `${count} other years`}
+      </Button>
+      {open ? <div className="mt-2.5 space-y-3.5">{children}</div> : null}
+    </div>
+  );
+}
+
+/// A subject's reach across the school, drawn rather than listed.
+///
+/// Fourteen class codes wrapped over two lines told you which classes but not
+/// what shape the load was. Laid on the year's own grade ladder, a teacher who
+/// covers the school and one who only takes the top two grades are different
+/// pictures before you read a word — and two staff can be compared by glancing
+/// at the same rungs in the same places.
+function ReachBar({
+  ladder,
+  classes,
+}: {
+  ladder: { name: string; code: string }[];
+  classes: { code: string; label: string; gradeName: string; gradeOrder: number }[];
+}) {
+  // Sections taught, keyed by the grade they sit in.
+  const taught = new Map<string, string[]>();
+  for (const c of classes) {
+    const sections = taught.get(c.gradeName) ?? [];
+    sections.push(c.label);
+    taught.set(c.gradeName, sections);
+  }
+  const covered = ladder.filter((g) => taught.has(g.name)).length;
+
+  return (
+    <div className="mt-1.5">
+      <ul className="flex items-stretch gap-px" aria-label="Grades taught">
+        {ladder.map((g) => {
+          const sections = taught.get(g.name);
+          return (
+            <li
+              key={g.name}
+              className={cn(
+                "flex-1 rounded-[3px] py-1 text-center font-mono text-[10px] leading-none tracking-[0.02em] first:rounded-l-md last:rounded-r-md",
+                sections
+                  ? "bg-brand-tint text-brand-text font-medium"
+                  : "bg-surface-2 text-ink-3/45",
+              )}
+            >
+              <span aria-hidden="true">{g.code}</span>
+              <span className="sr-only">
+                {sections ? sections.join(", ") : `${g.name} — not taught`}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="text-ink-3 mt-1 text-[11.5px]">
+        {covered} of {ladder.length} grades
+        {classes.length > covered ? ` · ${classes.length} classes` : null}
+      </p>
+    </div>
+  );
+}
+
+export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel, ladder }: { summary: StaffSummary; row: StaffRow; onClose?: () => void; canManageAccounts: boolean; yearLabel: string | null; ladder: { name: string; code: string }[] }) {
   const [editing, setEditing] = useState(false);
+  // Anything not in the selected year is folded away rather than dropped.
+  const ledNow = summary.sectionsLed.filter((s) => s.year === yearLabel);
+  const ledThen = summary.sectionsLed.filter((s) => s.year !== yearLabel);
+  const loadNow = summary.load.filter((y) => y.year === yearLabel);
+  const loadThen = summary.load.filter((y) => y.year !== yearLabel);
   return (
     <DetailPane
       title={summary.fullName}
@@ -44,7 +138,7 @@ export function StaffPane({ summary, row, onClose }: { summary: StaffSummary; ro
           // Served from our own route; next/image would add no value for a
           // one-off private thumbnail. Falls back to the initials tile.
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/photo/${summary.photoId}`} alt="" className="size-13 shrink-0 rounded-xl object-cover" />
+          <img src={`/api/photo/${summary.photoId}`} alt="" className="size-13 shrink-0 rounded-xl object-cover object-top" />
         ) : undefined
       }
       actions={
@@ -80,24 +174,116 @@ export function StaffPane({ summary, row, onClose }: { summary: StaffSummary; ro
                 { label: "Phone", value: summary.phone, mono: true },
                 { label: "Joined (BS)", value: summary.joinedOnBs, mono: true },
                 { label: "Sign-in", value: summary.account ? summary.account.username : "No account" },
-                { label: "Email", value: summary.account?.email ?? "—" },
+                // An email row reading "—" under a sign-in row reading "No
+                // account" is one fact spread over two cells.
+                ...(summary.account ? [{ label: "Email", value: summary.account.email ?? "—" }] : []),
               ]}
             />
+            {/* Creating the account itself stays in Settings, where the roles,
+                the permission matrix and the rest of the accounts already
+                live. This is the shortcut to it, carrying the staff id so the
+                form opens on the person whose pane it was clicked from. The
+                button is hidden without the capability because Settings would
+                only bounce them back to the overview. */}
+            {summary.account === null && canManageAccounts ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3"
+                nativeButton={false}
+                render={<Link href={`/dashboard/settings?view=privacy&staff=${summary.staffId}`} />}
+              >
+                <KeyRound data-icon="inline-start" aria-hidden="true" />
+                Set up sign-in
+              </Button>
+            ) : null}
           </DetailPane.Section>
 
           <DetailPane.Section label="Class teacher of">
             {summary.sectionsLed.length === 0 ? <p className="text-ink-3 text-sm">Not a class teacher.</p> : (
-              <ul className="space-y-1 text-[12.5px]">{summary.sectionsLed.map((s) => <li key={s.id}>{s.label} <span className="text-ink-3">· {s.year}</span></li>)}</ul>
+              <>
+                {ledNow.length === 0 ? (
+                  <p className="text-ink-3 text-sm">Not a class teacher this year.</p>
+                ) : (
+                  // The year is the section's own heading now, so it is not
+                  // repeated against every line.
+                  <ul className="space-y-1 text-[12.5px]">{ledNow.map((s) => <li key={s.id}>{s.label}</li>)}</ul>
+                )}
+                <OtherYears count={ledThen.length === 0 ? 0 : 1}>
+                  <ul className="space-y-1 text-[12.5px]">{ledThen.map((s) => <li key={s.id}>{s.label} <span className="text-ink-3">· {s.year}</span></li>)}</ul>
+                </OtherYears>
+              </>
             )}
           </DetailPane.Section>
 
           <DetailPane.Section label="Teaching load">
-            {summary.load.length === 0 ? <p className="text-ink-3 text-sm">No subjects assigned.</p> : summary.load.map((y) => (
-              <div key={y.year} className="mb-2 last:mb-0">
-                <p className="text-ink-3 mb-1 font-mono text-[11.5px]">{y.year} · {y.items.length} {y.items.length === 1 ? "subject" : "subjects"}</p>
-                <ul className="space-y-0.5 text-[12.5px]">{y.items.map((it, i) => <li key={`${it.section}-${it.subject}-${i}`}>{it.subject} <span className="text-ink-3">· {it.section}</span></li>)}</ul>
-              </div>
-            ))}
+            {summary.load.length === 0 ? <p className="text-ink-3 text-sm">No subjects assigned.</p> : (
+              <>
+                {loadNow.length === 0 ? (
+                  <p className="text-ink-3 text-sm">No subjects this year.</p>
+                ) : null}
+                {loadNow.map((y) => (
+                  <div key={y.year}>
+                    <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
+                      <span>{y.year}</span>
+                      <span>
+                        {y.subjectCount} {y.subjectCount === 1 ? "subject" : "subjects"} · {y.classCount}{" "}
+                        {y.classCount === 1 ? "class" : "classes"}
+                      </span>
+                    </p>
+                    <ul className="space-y-2.5">
+                      {y.subjects.map((s) => (
+                        <li key={s.subject}>
+                          <p className="text-[12.5px] font-medium">{s.subject}</p>
+                          {ladder.length > 0 ? (
+                            <ReachBar ladder={ladder} classes={s.classes} />
+                          ) : (
+                            // No ladder to draw against — a year with no
+                            // sections yet. The codes still say which classes.
+                            <ul className="mt-1 flex flex-wrap gap-1">
+                              {s.classes.map((c) => (
+                                <li key={c.code} className={CLASS_CHIP}>
+                                  <span aria-hidden="true">{c.code}</span>
+                                  <span className="sr-only">{c.label}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                <OtherYears count={loadThen.length}>
+                  {loadThen.map((y) => (
+                    <div key={y.year}>
+                      <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
+                        <span>{y.year}</span>
+                        <span>
+                          {y.subjectCount} {y.subjectCount === 1 ? "subject" : "subjects"} · {y.classCount}{" "}
+                          {y.classCount === 1 ? "class" : "classes"}
+                        </span>
+                      </p>
+                      <ul className="space-y-2.5">
+                        {y.subjects.map((s) => (
+                          <li key={s.subject}>
+                            <p className="text-[12.5px] font-medium">{s.subject}</p>
+                            <ul className="mt-1 flex flex-wrap gap-1">
+                              {s.classes.map((c) => (
+                                <li key={c.code} className={CLASS_CHIP}>
+                                  <span aria-hidden="true">{c.code}</span>
+                                  <span className="sr-only">{c.label}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </OtherYears>
+              </>
+            )}
           </DetailPane.Section>
 
           <DetailPane.Section label="Roll calls">
