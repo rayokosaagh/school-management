@@ -113,7 +113,7 @@ export function listTeachingLoad(academicYearId: number) {
       { section: { name: "asc" } },
     ],
     include: {
-      staff: { select: { id: true, fullName: true, isActive: true } },
+      staff: { select: { id: true, fullName: true, isActive: true, designation: true, photoId: true } },
       section: { include: { grade: true } },
       subjectOffering: { include: { subject: true } },
     },

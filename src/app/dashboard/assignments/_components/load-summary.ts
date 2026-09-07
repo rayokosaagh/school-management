@@ -1,6 +1,16 @@
 import type { TeachingRow } from "./teaching-workspace";
 
-export type LoadStaff = { id: number; fullName: string; photoId: number | null };
+export type LoadStaff = {
+  id: number;
+  fullName: string;
+  photoId: number | null;
+  /// Two people can share a name, and an accountant holding no classes is not
+  /// the same finding as a teacher holding none.
+  designation: string;
+  /// Somebody deactivated while still holding classes. They keep their card so
+  /// the slots they hold stay visible and add up.
+  isActive: boolean;
+};
 
 export function summarizeLoad(
   rows: TeachingRow[],

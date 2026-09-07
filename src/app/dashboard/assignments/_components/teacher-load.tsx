@@ -12,7 +12,18 @@ import { cn } from "@/lib/utils";
 import { summarizeLoad, type LoadStaff, type TeacherLoad } from "./load-summary";
 import type { TeachingRow } from "./teaching-workspace";
 
-type Filter = "all" | "assigned" | "empty";
+type Filter = "all" | "assigned" | "empty" | "former";
+
+/// Who belongs in a workload view.
+///
+/// Designation alone will not do: the Principal and the Vice Principal both
+/// carry classes here, so filtering on the word "Teacher" would hide real
+/// load. Anyone holding a class is teaching staff whatever their title says;
+/// beyond that, the title is what is left to go on. The accountant, who holds
+/// nothing and is not a teacher, is not part of the teaching workload.
+function isTeachingStaff(person: { designation: string; assignments: unknown[] }) {
+  return person.assignments.length > 0 || /teacher/i.test(person.designation);
+}
 
 export function TeacherLoadView({ rows, staff, chosen, onManage }: {
   rows: TeachingRow[];
@@ -23,15 +34,19 @@ export function TeacherLoadView({ rows, staff, chosen, onManage }: {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState("most");
-  const { people, unassigned } = useMemo(() => summarizeLoad(rows, staff, chosen), [rows, staff, chosen]);
+  const { people: everyone, unassigned } = useMemo(() => summarizeLoad(rows, staff, chosen), [rows, staff, chosen]);
+  const people = useMemo(() => everyone.filter(isTeachingStaff), [everyone]);
   const assignedPeople = people.filter((person) => person.assignments.length > 0).length;
   const maxLoad = Math.max(1, ...people.map((person) => person.assignments.length));
   const assignedSlots = rows.length - unassigned;
   const coverage = rows.length ? Math.round(assignedSlots / rows.length * 100) : 0;
   const q = query.trim().toLowerCase();
+  const formerHolders = people.filter((person) => !person.isActive && person.assignments.length > 0);
+  const formerSlots = formerHolders.reduce((sum, person) => sum + person.assignments.length, 0);
   const visible = people.filter((person) => {
     if (filter === "assigned" && !person.assignments.length) return false;
     if (filter === "empty" && person.assignments.length) return false;
+    if (filter === "former" && person.isActive) return false;
     return !q || `${person.fullName} ${person.assignments.map((row) => `${row.subjectName} ${row.sectionLabel}`).join(" ")}`.toLowerCase().includes(q);
   }).sort((a, b) => (
     sort === "name" ? 0 : sort === "least" ? a.assignments.length - b.assignments.length : b.assignments.length - a.assignments.length
@@ -45,6 +60,21 @@ export function TeacherLoadView({ rows, staff, chosen, onManage }: {
         <Kpi value={assignedPeople ? (people.reduce((sum, person) => sum + person.assignments.length, 0) / assignedPeople).toFixed(1) : "—"} label="Average assignments" hint="Per staff member with assignments" />
         <Kpi value={people.length - assignedPeople} label="No assignments" hint="Active staff without teaching assignments" />
       </div>
+
+      {formerHolders.length > 0 ? (
+        <div className="border-warn/25 bg-warn/5 mx-4 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
+          <p className="text-ink-2 text-sm">
+            <span className="text-warn font-semibold">
+              {formerSlots} class{formerSlots === 1 ? "" : "es"}
+            </span>{" "}
+            {formerSlots === 1 ? "is" : "are"} still assigned to{" "}
+            {formerHolders.length === 1 ? formerHolders[0].fullName : `${formerHolders.length} deactivated staff`}.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => setFilter("former")}>
+            Show {formerHolders.length === 1 ? "card" : "cards"} <ArrowRight data-icon="inline-end" aria-hidden="true" />
+          </Button>
+        </div>
+      ) : null}
 
       {unassigned > 0 ? (
         <div className="border-warn/25 bg-warn/5 mx-4 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
@@ -63,6 +93,7 @@ export function TeacherLoadView({ rows, staff, chosen, onManage }: {
             { value: "all", label: "All staff", count: people.length },
             { value: "assigned", label: "Assigned", count: assignedPeople },
             { value: "empty", label: "Unassigned", count: people.length - assignedPeople },
+            ...(formerHolders.length ? [{ value: "former" as const, label: "Deactivated", count: formerHolders.length }] : []),
           ]} />
         </div>
         <FieldSelect value={sort} onValueChange={(value) => setSort(value ?? "most")} aria-label="Sort teacher load" className="h-8 w-40 sm:ml-auto" options={[
@@ -101,7 +132,17 @@ function TeacherCard({ person, maxLoad, onManage }: {
 }) {
   const count = person.assignments.length;
   return (
-    <li className="border-line bg-surface overflow-hidden rounded-[10px] border transition-colors hover:border-line-strong">
+    <li
+      className={cn(
+        "border-line bg-surface overflow-hidden rounded-[10px] border transition-colors hover:border-line-strong",
+        !person.isActive && count > 0 && "border-warn/40",
+      )}
+    >
+      {!person.isActive && count > 0 ? (
+        <p className="bg-warn/5 text-warn border-warn/25 border-b px-4 py-1.5 text-[11px] font-medium">
+          Deactivated, still holding {count} class{count === 1 ? "" : "es"}
+        </p>
+      ) : null}
       <div className="p-4">
         <div className="flex items-center gap-3">
           <StudentAvatar
@@ -109,7 +150,13 @@ function TeacherCard({ person, maxLoad, onManage }: {
             name={person.fullName}
             className={cn("size-10 rounded-lg bg-none text-xs font-semibold", count ? "bg-brand-tint text-brand-text" : "bg-surface-2 text-ink-3")}
           />
-          <div className="min-w-0 flex-1"><h2 className="text-sm font-semibold">{person.fullName}</h2><p className="text-ink-3 mt-0.5 text-xs">{person.subjects.length} subject{person.subjects.length === 1 ? "" : "s"} · {person.classCount} class{person.classCount === 1 ? "" : "es"}</p></div>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-semibold">{person.fullName}</h2>
+            <p className="text-ink-3 mt-0.5 truncate text-xs">
+              {person.designation}
+              {count ? ` · ${person.subjects.length} subject${person.subjects.length === 1 ? "" : "s"} · ${person.classCount} class${person.classCount === 1 ? "" : "es"}` : null}
+            </p>
+          </div>
           <div className="text-right"><p className="font-display text-2xl font-semibold tabular-nums">{count}</p><p className="text-ink-3 text-[10px]">assignments</p></div>
         </div>
         <div className="bg-surface-2 mt-4 flex h-2 gap-px overflow-hidden rounded-full" role="img" aria-label={`${count} assignments; largest staff load is ${maxLoad}.`}>

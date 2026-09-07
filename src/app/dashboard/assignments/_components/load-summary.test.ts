@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { summarizeLoad } from "./load-summary";
 import type { TeachingRow } from "./teaching-workspace";
 
-const staff = [{ id: 1, fullName: "Asha Rai", photoId: 42 }, { id: 2, fullName: "Asha Rai", photoId: null }, { id: 3, fullName: "Ram Shah", photoId: null }];
+const person = (id: number, fullName: string, photoId: number | null, over: object = {}) =>
+  ({ id, fullName, photoId, designation: "Teacher", isActive: true, ...over });
+const staff = [person(1, "Asha Rai", 42), person(2, "Asha Rai", null), person(3, "Ram Shah", null)];
 const rows: TeachingRow[] = [
   { sectionId: 1, offeringId: 10, sectionLabel: "Class 1 A", subjectName: "Math", tone: 2, hasPractical: false, staffId: 1 },
   { sectionId: 2, offeringId: 10, sectionLabel: "Class 1 B", subjectName: "Math", tone: 2, hasPractical: false, staffId: 1 },
@@ -35,5 +37,38 @@ describe("teacher load overview", () => {
     const result = summarizeLoad([], staff, {});
     expect(result.unassigned).toBe(0);
     expect(result.people.every((person) => person.classCount === 0 && person.subjects.length === 0)).toBe(true);
+  });
+});
+
+describe("slots held by somebody who has been deactivated", () => {
+  // Deactivating does not release the classes somebody holds, so their slots
+  // are neither unassigned nor on an active card. Before they were listed,
+  // the header counted them as assigned and no card accounted for them.
+  const held: TeachingRow[] = [
+    { sectionId: 1, offeringId: 10, sectionLabel: "Class 1 A", subjectName: "Math", tone: 2, hasPractical: false, staffId: 9 },
+    { sectionId: 2, offeringId: 10, sectionLabel: "Class 1 B", subjectName: "Math", tone: 2, hasPractical: false, staffId: null },
+  ];
+
+  it("still adds up when the holder is listed", () => {
+    const withFormer = [...staff, person(9, "Gone Teacher", null, { isActive: false })];
+    const result = summarizeLoad(held, withFormer, {});
+    const onCards = result.people.reduce((sum, p) => sum + p.assignments.length, 0);
+    expect(held.length - result.unassigned).toBe(onCards);
+  });
+
+  it("keeps the held class on the deactivated person's own card", () => {
+    const withFormer = [...staff, person(9, "Gone Teacher", null, { isActive: false })];
+    const result = summarizeLoad(held, withFormer, {});
+    const gone = result.people.find((p) => p.id === 9);
+    expect(gone?.assignments).toHaveLength(1);
+    expect(gone?.isActive).toBe(false);
+  });
+
+  it("loses the slot when the holder is left out, which is what was wrong", () => {
+    const result = summarizeLoad(held, staff, {});
+    const onCards = result.people.reduce((sum, p) => sum + p.assignments.length, 0);
+    // One slot counted as assigned by the header, shown on no card at all.
+    expect(held.length - result.unassigned).toBe(1);
+    expect(onCards).toBe(0);
   });
 });
