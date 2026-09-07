@@ -7,6 +7,7 @@ import { createStudent } from "@/lib/registry/students";
 import {
   AttendanceError,
   absenteesOn,
+  classStudentAttendance,
   getSheet,
   monthlyRegister,
   saveSheet,
@@ -204,6 +205,26 @@ describe.skipIf(!process.env.DB_TESTS)("attendance", () => {
     expect(second?.absent).toBe(1);
     expect(second?.attended).toBe(1);
     expect(second?.percent).toBe(50);
+  });
+
+  it("loads each student's detailed attendance for a class period", async () => {
+    const detail = await classStudentAttendance(
+      made.sectionId,
+      made.yearId,
+      day1,
+      day2,
+    );
+
+    expect(detail.daysRecorded).toBe(2);
+    expect(detail.students).toHaveLength(2);
+
+    const first = detail.students.find((row) => row.studentId === made.studentIds[0]);
+    expect(first).toMatchObject({ present: 2, absent: 0, late: 0, leave: 0, rate: 100 });
+    expect(first?.days).toHaveLength(2);
+
+    const second = detail.students.find((row) => row.studentId === made.studentIds[1]);
+    expect(second).toMatchObject({ present: 1, absent: 1, late: 0, leave: 0, rate: 50 });
+    expect(second?.days).toHaveLength(2);
   });
 
   it("reports absentees with a guardian phone for messaging", async () => {

@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 
-export type StatusTone = "ok" | "warn" | "bad" | "neutral";
+export type StatusTone = "ok" | "warn" | "bad" | "brand" | "neutral";
 
 const DOT: Record<StatusTone, string> = {
   ok: "bg-ok",
   warn: "bg-warn",
   bad: "bg-bad",
+  brand: "bg-brand",
   neutral: "bg-ink-3",
 };
 

@@ -1,3 +1,4 @@
+import type { AttendanceStatus } from "@/generated/prisma/enums";
 import { BS_MONTHS, adToBs } from "@/lib/date/bs";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,8 @@ export type MapDay = {
   date: Date;
   /** 0..1 attendance rate, or null when no roll call happened. */
   rate: number | null;
+  /** Present only when the map represents one student's categorical record. */
+  status?: AttendanceStatus;
   label: string;
 };
 
@@ -26,6 +29,13 @@ function levelClass(rate: number | null) {
   return "bg-red-500/60 dark:bg-red-500/50";
 }
 
+const STATUS_CLASS: Record<AttendanceStatus, string> = {
+  PRESENT: "bg-ok",
+  ABSENT: "bg-bad",
+  LATE: "bg-warn",
+  LEAVE: "bg-brand",
+};
+
 const utcKey = (d: Date) =>
   `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 
@@ -34,11 +44,13 @@ export function AttendanceMap({
   to,
   days,
   caption,
+  variant = "rate",
 }: {
   from: Date;
   to: Date;
   days: MapDay[];
   caption?: string;
+  variant?: "rate" | "status";
 }) {
   const byDate = new Map(days.map((d) => [utcKey(d.date), d]));
 
@@ -71,7 +83,7 @@ export function AttendanceMap({
     return adToBs(prev.date).month === bs.month ? null : BS_MONTHS[bs.month - 1];
   });
 
-  const taken = days.filter((d) => d.rate !== null).length;
+  const taken = days.filter((d) => variant === "status" ? d.status !== undefined : d.rate !== null).length;
 
   return (
     <div className="space-y-2">
@@ -105,7 +117,12 @@ export function AttendanceMap({
                     <span
                       key={di}
                       title={day ? `${stamp} — ${day.label}` : `${stamp} — not taken`}
-                      className={cn("size-3 rounded-[3px]", levelClass(day?.rate ?? null))}
+                      className={cn(
+                        "size-3 rounded-[3px]",
+                        variant === "status"
+                          ? day?.status ? STATUS_CLASS[day.status] : "bg-rail"
+                          : levelClass(day?.rate ?? null),
+                      )}
                     />
                   );
                 })}
@@ -120,20 +137,38 @@ export function AttendanceMap({
           {taken} day{taken === 1 ? "" : "s"} recorded
           {caption ? ` · ${caption}` : ""}
         </span>
-        <span className="flex items-center gap-1">
-          Low
-          <span className="bg-red-500/60 dark:bg-red-500/50 size-3 rounded-[3px]" />
-          <span className="bg-amber-500/60 dark:bg-amber-500/50 size-3 rounded-[3px]" />
-          <span className="bg-emerald-500/50 dark:bg-emerald-500/45 size-3 rounded-[3px]" />
-          <span className="bg-emerald-500/75 dark:bg-emerald-500/70 size-3 rounded-[3px]" />
-          <span className="bg-emerald-600 dark:bg-emerald-500 size-3 rounded-[3px]" />
-          High
-        </span>
+        {variant === "status" ? (
+          <>
+            <LegendItem className="bg-ok">Present</LegendItem>
+            <LegendItem className="bg-bad">Absent</LegendItem>
+            <LegendItem className="bg-warn">Late</LegendItem>
+            <LegendItem className="bg-brand">Leave</LegendItem>
+          </>
+        ) : (
+          <span className="flex items-center gap-1">
+            Low
+            <span className="bg-red-500/60 dark:bg-red-500/50 size-3 rounded-[3px]" />
+            <span className="bg-amber-500/60 dark:bg-amber-500/50 size-3 rounded-[3px]" />
+            <span className="bg-emerald-500/50 dark:bg-emerald-500/45 size-3 rounded-[3px]" />
+            <span className="bg-emerald-500/75 dark:bg-emerald-500/70 size-3 rounded-[3px]" />
+            <span className="bg-emerald-600 dark:bg-emerald-500 size-3 rounded-[3px]" />
+            High
+          </span>
+        )}
         <span className="flex items-center gap-1">
           <span className="bg-rail size-3 rounded-[3px]" />
           Not taken
         </span>
       </div>
     </div>
+  );
+}
+
+function LegendItem({ children, className }: { children: React.ReactNode; className: string }) {
+  return (
+    <span className="flex items-center gap-1">
+      <span className={cn("size-3 rounded-[3px]", className)} aria-hidden="true" />
+      {children}
+    </span>
   );
 }

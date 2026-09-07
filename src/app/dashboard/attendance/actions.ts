@@ -6,16 +6,69 @@ import {
   ForbiddenError,
   canTakeAttendance,
   requireCapability,
+  requirePage,
 } from "@/lib/auth/guard";
-import { parseBsInput } from "@/lib/date/bs";
-import { AttendanceError, type Entry, saveSheet } from "@/lib/attendance/attendance";
+import { adToBs, bsMonthLength, bsToAd, parseBsInput } from "@/lib/date/bs";
+import {
+  AttendanceError,
+  classStudentAttendance,
+  type ClassAttendanceDetail,
+  type Entry,
+  saveSheet,
+} from "@/lib/attendance/attendance";
+import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 
 export type ActionState = { error?: string; success?: string };
 
 const PATH = "/dashboard/attendance";
 const STATUSES: AttendanceStatus[] = ["PRESENT", "ABSENT", "LATE", "LEAVE"];
 
+export type ClassDetailResult = {
+  detail: ClassAttendanceDetail | null;
+  error: string | null;
+};
 
+/// Read-only server function used by the statistics drill-down. Authentication
+/// is repeated here because exported server functions are public entry points,
+/// even when their caller is already inside a protected page.
+export async function loadClassAttendanceDetail(
+  sectionId: number,
+  period: "monthly" | "yearly",
+  dateInput: string,
+): Promise<ClassDetailResult> {
+  await requirePage(PATH);
+  if (!Number.isInteger(sectionId)) return { detail: null, error: "Choose a valid class." };
+  if (period !== "monthly" && period !== "yearly") {
+    return { detail: null, error: "Choose a valid reporting period." };
+  }
+
+  const year = await getCurrentAcademicYear();
+  if (!year) return { detail: null, error: "No academic year is current." };
+
+  let from = year.startsOn;
+  let to = year.endsOn;
+  if (period === "monthly") {
+    const date = parseBsInput(dateInput);
+    if (!date || date < year.startsOn || date > year.endsOn) {
+      return { detail: null, error: "That month is outside the current academic year." };
+    }
+    const bs = adToBs(date);
+    const monthFrom = bsToAd({ year: bs.year, month: bs.month, day: 1 });
+    const monthTo = bsToAd({ year: bs.year, month: bs.month, day: bsMonthLength(bs.year, bs.month) });
+    from = monthFrom < year.startsOn ? year.startsOn : monthFrom;
+    to = monthTo > year.endsOn ? year.endsOn : monthTo;
+  }
+
+  try {
+    return {
+      detail: await classStudentAttendance(sectionId, year.id, from, to),
+      error: null,
+    };
+  } catch (error) {
+    if (error instanceof AttendanceError) return { detail: null, error: error.message };
+    throw error;
+  }
+}
 
 export async function saveAttendance(
   _prev: ActionState,

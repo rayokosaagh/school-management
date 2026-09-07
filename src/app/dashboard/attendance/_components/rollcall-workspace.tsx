@@ -8,13 +8,16 @@ import { Input } from "@/components/ui/input";
 import { PageFrame } from "@/components/ui/page-frame";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BsCalendar } from "@/components/ui/bs-calendar";
+import { Segmented } from "@/components/ui/segmented";
 import {
   RegisterTabs,
   registerTabId,
   type RegisterTab,
 } from "@/components/ui/register-tabs";
 import { shiftBsInput } from "@/lib/date/bs";
+import type { ClassAttendanceStat } from "@/lib/attendance/attendance";
 import { sectionCode } from "@/lib/register-codes";
+import { AttendanceStats } from "./attendance-stats";
 import { AttendanceSheet, type SheetRow } from "./attendance-sheet";
 
 export type RollCallSection = {
@@ -43,6 +46,8 @@ export function RollCallWorkspace({
   monthLabel,
   daysTaken,
   register,
+  monthlyStats,
+  yearlyStats,
   sheetError,
   yearLabel,
 }: {
@@ -55,6 +60,8 @@ export function RollCallWorkspace({
   monthLabel: string;
   daysTaken: number;
   register: RegisterRow[];
+  monthlyStats: ClassAttendanceStat[];
+  yearlyStats: ClassAttendanceStat[];
   sheetError: string | null;
   yearLabel: string;
 }) {
@@ -96,6 +103,8 @@ export function RollCallWorkspace({
     setPendingSectionId(null);
   }
   const [showRegister, setShowRegister] = useState(false);
+  const [view, setView] = useState<"rollcall" | "statistics">("rollcall");
+  const [statsPeriod, setStatsPeriod] = useState<"monthly" | "yearly">("monthly");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const sectionId = pendingSectionId ?? initialSectionId;
 
@@ -149,18 +158,66 @@ export function RollCallWorkspace({
       title="Roll call"
       meta={`${dateLabel} · ${yearLabel}`}
       actions={
-        <Button
-          type="button"
-          variant={showRegister ? "secondary" : "outline"}
-          size="sm"
-          aria-pressed={showRegister}
-          onClick={() => setShowRegister((v) => !v)}
-        >
-          <CalendarDays data-icon="inline-start" aria-hidden="true" />
-          Month register
-        </Button>
+        <>
+          <Segmented
+            value={view}
+            onChange={(next) => {
+              setView(next);
+              if (next === "statistics") setShowRegister(false);
+            }}
+            options={[
+              { value: "rollcall", label: "Roll call" },
+              { value: "statistics", label: "Statistics" },
+            ]}
+            ariaLabel="Attendance view"
+          />
+          {view === "rollcall" ? (
+            <Button
+              type="button"
+              variant={showRegister ? "secondary" : "outline"}
+              size="sm"
+              aria-pressed={showRegister}
+              onClick={() => setShowRegister((v) => !v)}
+            >
+              <CalendarDays data-icon="inline-start" aria-hidden="true" />
+              Month register
+            </Button>
+          ) : null}
+        </>
       }
     >
+      {view === "statistics" ? (
+        <>
+          <PageFrame.Toolbar>
+            <Segmented
+              value={statsPeriod}
+              onChange={setStatsPeriod}
+              options={[
+                { value: "monthly", label: "Monthly" },
+                { value: "yearly", label: "Yearly" },
+              ]}
+              ariaLabel="Statistics period"
+            />
+            <span className="text-ink-3 text-[12.5px]">
+              {statsPeriod === "monthly" ? monthLabel : `Academic year ${yearLabel}`}
+            </span>
+          </PageFrame.Toolbar>
+          <PageFrame.Body>
+            <AttendanceStats
+              key={statsPeriod}
+              rows={statsPeriod === "monthly" ? monthlyStats : yearlyStats}
+              periodLabel={statsPeriod === "monthly" ? monthLabel : `Academic year ${yearLabel}`}
+              period={statsPeriod}
+              dateLabel={dateLabel}
+              onOpenRollCall={(id) => {
+                setView("rollcall");
+                goToSection(id);
+              }}
+            />
+          </PageFrame.Body>
+        </>
+      ) : (
+        <>
       <PageFrame.Tabs>
         <RegisterTabs
           tabs={tabs}
@@ -311,6 +368,8 @@ export function RollCallWorkspace({
           </div>
         </PageFrame.Body>
       </PageFrame.Split>
+        </>
+      )}
     </PageFrame>
   );
 }

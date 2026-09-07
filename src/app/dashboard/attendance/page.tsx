@@ -2,12 +2,13 @@ import { CalendarCheck } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   AttendanceError,
+  classAttendanceStats,
   getSheet,
   monthlyRegister,
   sectionsMissingAttendance,
   todayBsLabel,
 } from "@/lib/attendance/attendance";
-import { adToBs, BS_MONTHS } from "@/lib/date/bs";
+import { adToBs, BS_MONTHS, bsMonthLength, bsToAd } from "@/lib/date/bs";
 import { getCurrentAcademicYear } from "@/lib/registry/academic-year";
 import { listSections } from "@/lib/registry/structure";
 import { resolveRollCallDate } from "./_components/roll-call-date";
@@ -93,9 +94,17 @@ export default async function AttendancePage({
   const sheetError = dateError ?? loaded.find((l) => l.id === sectionId)?.error ?? null;
 
   const bs = adToBs(date);
-  const [missing, register] = await Promise.all([
+  const monthFrom = bsToAd({ year: bs.year, month: bs.month, day: 1 });
+  const monthTo = bsToAd({
+    year: bs.year,
+    month: bs.month,
+    day: bsMonthLength(bs.year, bs.month),
+  });
+  const [missing, register, monthlyStats, yearlyStats] = await Promise.all([
     sectionsMissingAttendance(currentYear.id, date),
     monthlyRegister(sectionId, bs.year, bs.month),
+    classAttendanceStats(currentYear.id, monthFrom, monthTo),
+    classAttendanceStats(currentYear.id, currentYear.startsOn, currentYear.endsOn),
   ]);
   const missingIds = new Set(missing.map((s) => s.id));
 
@@ -113,6 +122,8 @@ export default async function AttendancePage({
       monthLabel={`${BS_MONTHS[bs.month - 1]} ${bs.year}`}
       daysTaken={register.daysTaken}
       register={register.rows}
+      monthlyStats={monthlyStats}
+      yearlyStats={yearlyStats}
       sheetError={sheetError}
       yearLabel={currentYear.nameBS}
     />

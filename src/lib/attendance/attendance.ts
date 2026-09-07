@@ -174,6 +174,223 @@ export async function monthlyRegister(
   };
 }
 
+/// One class's recorded attendance over a selected reporting period.
+export type ClassAttendanceStat = {
+  sectionId: number;
+  section: string;
+  students: number;
+  daysRecorded: number;
+  present: number;
+  absent: number;
+  late: number;
+  leave: number;
+  rate: number | null;
+};
+
+type ClassAttendanceSource = {
+  id: number;
+  name: string;
+  grade: { name: string };
+  enrollments: { student: { status: string } }[];
+  attendance: { records: { status: AttendanceStatus }[] }[];
+};
+
+/// Converts recorded sessions into one comparable row per class. A missing
+/// roll call is not treated as absence, so classes without records have a null
+/// rate instead of a misleading zero.
+export function summarizeClassAttendance(source: ClassAttendanceSource): ClassAttendanceStat {
+  let present = 0, absent = 0, late = 0, leave = 0;
+  for (const session of source.attendance) {
+    for (const record of session.records) {
+      if (record.status === "PRESENT") present++;
+      else if (record.status === "ABSENT") absent++;
+      else if (record.status === "LATE") late++;
+      else leave++;
+    }
+  }
+  const total = present + absent + late + leave;
+  return {
+    sectionId: source.id,
+    section: `${source.grade.name} ${source.name}`,
+    students: source.enrollments.filter((enrollment) => enrollment.student.status === "ACTIVE").length,
+    daysRecorded: source.attendance.length,
+    present,
+    absent,
+    late,
+    leave,
+    rate: total === 0 ? null : Math.round(((present + late) / total) * 100),
+  };
+}
+
+/// Class-level totals for an arbitrary period within one academic year.
+export async function classAttendanceStats(
+  academicYearId: number,
+  from: Date,
+  to: Date,
+): Promise<ClassAttendanceStat[]> {
+  const sections = await prisma.section.findMany({
+    where: { academicYearId },
+    orderBy: [{ grade: { order: "asc" } }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      grade: { select: { name: true } },
+      enrollments: {
+        where: { academicYearId },
+        select: { student: { select: { status: true } } },
+      },
+      attendance: {
+        where: { date: { gte: from, lte: to } },
+        orderBy: { date: "asc" },
+        select: { records: { select: { status: true } } },
+      },
+    },
+  });
+  return sections.map(summarizeClassAttendance);
+}
+
+export type StudentAttendanceStat = {
+  studentId: number;
+  fullName: string;
+  admissionNo: string;
+  photoId: number | null;
+  status: string;
+  rollNo: number;
+  from: Date;
+  present: number;
+  absent: number;
+  late: number;
+  leave: number;
+  rate: number | null;
+  days: { date: Date; status: AttendanceStatus; note: string | null }[];
+  notes: { date: Date; status: AttendanceStatus; note: string }[];
+};
+
+export type ClassAttendanceDetail = {
+  sectionId: number;
+  section: string;
+  from: Date;
+  to: Date;
+  daysRecorded: number;
+  students: StudentAttendanceStat[];
+};
+
+type StudentAttendanceSource = {
+  studentId: number;
+  fullName: string;
+  admissionNo: string;
+  photoId: number | null;
+  status: string;
+  rollNo: number;
+  enrolledOn: Date;
+};
+
+export function summarizeStudentAttendance(
+  source: StudentAttendanceSource,
+  records: { date: Date; status: AttendanceStatus; note: string | null }[],
+  periodFrom: Date,
+): StudentAttendanceStat {
+  let present = 0, absent = 0, late = 0, leave = 0;
+  const notes: StudentAttendanceStat["notes"] = [];
+  for (const record of records) {
+    if (record.status === "PRESENT") present++;
+    else if (record.status === "ABSENT") absent++;
+    else if (record.status === "LATE") late++;
+    else leave++;
+    if (record.note?.trim()) notes.push({ ...record, note: record.note.trim() });
+  }
+  const total = present + absent + late + leave;
+  return {
+    studentId: source.studentId,
+    fullName: source.fullName,
+    admissionNo: source.admissionNo,
+    photoId: source.photoId,
+    status: source.status,
+    rollNo: source.rollNo,
+    from: source.enrolledOn > periodFrom ? source.enrolledOn : periodFrom,
+    present,
+    absent,
+    late,
+    leave,
+    rate: total === 0 ? null : Math.round(((present + late) / total) * 100),
+    days: records,
+    notes,
+  };
+}
+
+/// Detailed attendance for the academic-year roster of one class. It is loaded
+/// only after a class is opened because a full-year calendar has one cell per
+/// pupil per day and does not belong in the initial roll-call payload.
+export async function classStudentAttendance(
+  sectionId: number,
+  academicYearId: number,
+  from: Date,
+  to: Date,
+): Promise<ClassAttendanceDetail> {
+  const [section, sessions] = await Promise.all([
+    prisma.section.findFirst({
+      where: { id: sectionId, academicYearId },
+      select: {
+        id: true,
+        name: true,
+        grade: { select: { name: true } },
+        enrollments: {
+          where: { academicYearId },
+          orderBy: { rollNo: "asc" },
+          select: {
+            rollNo: true,
+            enrolledOn: true,
+            student: {
+              select: { id: true, fullName: true, admissionNo: true, photoId: true, status: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.attendanceSession.findMany({
+      where: { sectionId, academicYearId, date: { gte: from, lte: to } },
+      orderBy: { date: "asc" },
+      select: {
+        date: true,
+        records: { select: { studentId: true, status: true, note: true } },
+      },
+    }),
+  ]);
+  if (!section) throw new AttendanceError("That section is not part of the current academic year.");
+
+  const byStudent = new Map<number, StudentAttendanceStat["days"]>();
+  for (const session of sessions) {
+    for (const record of session.records) {
+      const list = byStudent.get(record.studentId) ?? [];
+      list.push({ date: session.date, status: record.status, note: record.note });
+      byStudent.set(record.studentId, list);
+    }
+  }
+
+  return {
+    sectionId: section.id,
+    section: `${section.grade.name} ${section.name}`,
+    from,
+    to,
+    daysRecorded: sessions.length,
+    students: section.enrollments.map((enrollment) =>
+      summarizeStudentAttendance(
+        {
+          studentId: enrollment.student.id,
+          fullName: enrollment.student.fullName,
+          admissionNo: enrollment.student.admissionNo,
+          photoId: enrollment.student.photoId,
+          status: enrollment.student.status,
+          rollNo: enrollment.rollNo,
+          enrolledOn: enrollment.enrolledOn,
+        },
+        byStudent.get(enrollment.student.id) ?? [],
+        from,
+      ),
+    ),
+  };
+}
+
 /// Which sections have not had a roll call on a date — the daily nag list.
 export async function sectionsMissingAttendance(academicYearId: number, date: Date) {
   const [sections, sessions] = await Promise.all([
