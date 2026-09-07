@@ -28,6 +28,18 @@ import { clampPageIndex } from "@/lib/table/paging";
 import { DEFAULT_PREFS, PAGE_SIZES, loadPrefs, savePrefs, type TablePrefs } from "@/lib/table/prefs";
 import { cn } from "@/lib/utils";
 
+/// A click that lands on a control inside a row belongs to that control, not
+/// to the row. Without this, opening the class-teacher dropdown on Classes
+/// also opened the section's settings dialog behind it — one click, two
+/// things — and every table that puts a select, a checkbox or a link in a
+/// cell had the same fault waiting.
+const ROW_CONTROL =
+  '[data-row-actions], a[href], button, input, select, textarea, [role="combobox"], [role="checkbox"], [role="switch"], [contenteditable="true"]';
+
+function fromRowControl(target: EventTarget | null) {
+  return target instanceof HTMLElement && target.closest(ROW_CONTROL) !== null;
+}
+
 export type ColumnMeta = { numeric?: boolean; mono?: boolean; width?: string };
 
 type EmptyProps = React.ComponentProps<typeof EmptyState>;
@@ -252,13 +264,14 @@ export function DataTable<T>({
                 tabIndex={onSelect ? (i === focusIndex ? 0 : -1) : undefined}
                 aria-selected={onSelect ? selected : undefined}
                 onClick={(e) => {
-                  if ((e.target as HTMLElement).closest("[data-row-actions]")) return;
+                  if (fromRowControl(e.target)) return;
                   onSelect?.(row.original);
                 }}
                 onKeyDown={(e) => {
                   if (!onSelect) return;
-                  // Keys pressed on a row action belong to that control.
-                  if ((e.target as HTMLElement).closest("[data-row-actions]")) return;
+                  // Keys pressed on a control belong to that control: Space
+                  // on a select opens it, and must not also open the row.
+                  if (fromRowControl(e.target)) return;
                   if (e.key === "ArrowDown") { e.preventDefault(); focusRowAt(i + 1); return; }
                   if (e.key === "ArrowUp") { e.preventDefault(); focusRowAt(i - 1); return; }
                   if (e.key === "Home") { e.preventDefault(); focusRowAt(0); return; }
