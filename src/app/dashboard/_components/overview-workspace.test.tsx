@@ -48,7 +48,7 @@ function render(actor: Actor, data = overview(actor.role), periods: TodayPeriod[
   const html = renderToStaticMarkup(React.createElement(OverviewWorkspace, {
     actor, overview: data, periods, yearLabel: "2083",
     announcements: [], manageableAnnouncements: [],
-    insights: { marks: [], watch: [], money: null },
+    insights: { marks: [], watch: [], money: null }, notice: null,
   }));
   return {
     html,

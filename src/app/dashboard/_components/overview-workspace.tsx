@@ -16,10 +16,13 @@ type Props = {
   actor: Actor; yearLabel: string; overview: DashboardOverview; periods: TodayPeriod[];
   announcements: AnnouncementCard[]; manageableAnnouncements: AnnouncementCard[];
   insights: RoleInsights;
+  /// Set when `requirePage` bounced the visitor here from a section their
+  /// account cannot open. Same treatment as the Students register's notice.
+  notice: string | null;
 };
 type Action = { label: string; detail: string; href: string; icon: LucideIcon };
 
-export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insights, announcements, manageableAnnouncements }: Props) {
+export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insights, announcements, manageableAnnouncements, notice }: Props) {
   const teacher = actor.role === "TEACHER";
   const office = actor.role === "OFFICE";
   const { access: a, counts: c } = o;
@@ -50,6 +53,9 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
 
   return (
     <div className="mx-auto w-full max-w-[1480px] space-y-5 pb-2">
+      {notice ? (
+        <p role="status" className="text-warn bg-warn-tint border-warn/30 rounded-lg border px-3 py-2 text-sm">{notice}</p>
+      ) : null}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-ink-3 text-[11px] font-medium uppercase tracking-[0.16em]">{teacher ? "My workspace" : office ? "Office workspace" : "School workspace"}</p>

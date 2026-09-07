@@ -7,10 +7,18 @@ import { getDashboardOverview } from "@/lib/dashboard/overview";
 import { getTeacherScheduleForToday } from "@/lib/dashboard/teacher-schedule";
 import { allAnnouncements, announcementsFor } from "@/lib/announcements/announcements";
 import { getRoleInsights } from "@/lib/dashboard/insights";
-import { OverviewWorkspace } from "./_components/overview-workspace";
+import { OverviewWorkspace } from "../_components/overview-workspace";
 
-export default async function DashboardHome() {
+export default async function DashboardHome({
+  searchParams,
+}: {
+  // `requirePage` sends anyone without the capability for a section here with
+  // `?denied=1`. Without reading it the redirect is silent, and the page they
+  // asked for just appears to be the dashboard.
+  searchParams: Promise<{ denied?: string }>;
+}) {
   const actor = await requirePage("/dashboard");
+  const { denied } = await searchParams;
   const currentYear = await getCurrentAcademicYear();
   if (!currentYear) {
     const grants = await loadGrants();
@@ -45,6 +53,7 @@ export default async function DashboardHome() {
       insights={insights}
       announcements={announcements}
       manageableAnnouncements={manageable}
+      notice={denied ? "That section is not open to your account. Ask your administrator if you need access." : null}
     />
   );
 }
