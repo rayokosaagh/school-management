@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ClipboardList, Search, Users, X } from "lucide-react";
+import { ClipboardList, Search } from "lucide-react";
 import { startTransition, useId, useMemo, useOptimistic, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
@@ -13,9 +13,12 @@ import {
   type RegisterTab,
 } from "@/components/ui/register-tabs";
 import { FieldSelect } from "@/components/ui/select";
+import { Segmented } from "@/components/ui/segmented";
 import { useToastedActionState } from "@/components/ui/toast";
 import { sectionCode } from "@/lib/register-codes";
 import { assignSubjectTeacher, type ActionState } from "../actions";
+import { TeacherLoadView } from "./teacher-load";
+import type { LoadStaff } from "./load-summary";
 
 export type TeachingRow = {
   /// Section and offering together identify one assignment slot.
@@ -48,7 +51,7 @@ export function TeachingWorkspace({
 }: {
   rows: TeachingRow[];
   sections: Section[];
-  staff: { id: number; fullName: string }[];
+  staff: LoadStaff[];
   yearLabel: string;
 }) {
   const baseId = useId();
@@ -59,6 +62,7 @@ export function TeachingWorkspace({
   const [tab, setTab] = useState(ALL);
   const [query, setQuery] = useState("");
   const [showLoad, setShowLoad] = useState(false);
+  const [teacherFilter, setTeacherFilter] = useState(ALL);
   const [, assignAction] = useToastedActionState(assignSubjectTeacher, EMPTY);
 
   const slotKey = (row: TeachingRow) => `${row.sectionId}:${row.offeringId}`;
@@ -129,31 +133,18 @@ export function TeachingWorkspace({
     const q = query.trim().toLowerCase();
     return rows.filter((r) => {
       if (tab !== ALL && String(r.sectionId) !== tab) return false;
+      const teacher = chosen[slotKey(r)] ?? String(r.staffId ?? "");
+      if (teacherFilter === "unassigned" && teacher !== "") return false;
+      if (teacherFilter !== ALL && teacherFilter !== "unassigned" && teacher !== teacherFilter) return false;
       if (q && !`${r.subjectName} ${r.sectionLabel}`.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [rows, tab, query]);
+  }, [rows, tab, query, teacherFilter, chosen]);
 
   const unassigned = visible.filter(
     (r) => (chosen[slotKey(r)] ?? (r.staffId ? String(r.staffId) : "")) === "",
   ).length;
-
-  // Load per teacher is how workload gets argued about, so it stays one click
-  // away rather than being dropped.
-  const load = useMemo(() => {
-    const byStaff = new Map<number, { name: string; items: string[] }>();
-    for (const r of rows) {
-      const id = Number(chosen[slotKey(r)] ?? (r.staffId ?? ""));
-      if (!Number.isInteger(id) || id === 0) continue;
-      const person = staff.find((s) => s.id === id);
-      if (!person) continue;
-      const entry = byStaff.get(id) ?? { name: person.fullName, items: [] };
-      entry.items.push(`${r.sectionLabel} · ${r.subjectName}`);
-      byStaff.set(id, entry);
-    }
-    return [...byStaff.entries()].sort((a, b) => b[1].items.length - a[1].items.length);
-  }, [rows, staff, chosen]);
 
   const currentSection = sections.find((s) => String(s.id) === tab) ?? null;
 
@@ -225,18 +216,25 @@ export function TeachingWorkspace({
       title="Teaching"
       meta={`${rows.length} slots · ${yearLabel}`}
       actions={
-        <Button
-          type="button"
-          variant={showLoad ? "secondary" : "outline"}
-          size="sm"
-          aria-pressed={showLoad}
-          onClick={() => setShowLoad((v) => !v)}
-        >
-          <Users data-icon="inline-start" aria-hidden="true" />
-          Teacher load
-        </Button>
+        <Segmented
+          value={showLoad ? "load" : "assignments"}
+          onChange={(value) => setShowLoad(value === "load")}
+          options={[{ value: "assignments", label: "Assignments" }, { value: "load", label: "Teacher load" }]}
+          ariaLabel="Teaching view"
+        />
       }
     >
+      {showLoad ? (
+        <PageFrame.Body>
+          <TeacherLoadView rows={rows} staff={staff} chosen={chosen} onManage={(teacherId, sectionId) => {
+            setTeacherFilter(teacherId);
+            setTab(sectionId ? String(sectionId) : ALL);
+            setQuery("");
+            setShowLoad(false);
+          }} />
+        </PageFrame.Body>
+      ) : (
+        <>
       <PageFrame.Tabs>
         <RegisterTabs
           tabs={tabs}
@@ -260,6 +258,18 @@ export function TeachingWorkspace({
             className="h-7 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
           />
         </label>
+        <FieldSelect
+          value={teacherFilter}
+          onValueChange={(value) => setTeacherFilter(value ?? ALL)}
+          aria-label="Filter assignments by teacher"
+          className="h-8 w-48 shrink-0"
+          options={[
+            { value: ALL, label: "All teachers" },
+            { value: "unassigned", label: "Unassigned slots" },
+            ...staff.map((person) => ({ value: String(person.id), label: person.fullName })),
+          ]}
+        />
+        {teacherFilter !== ALL ? <Button variant="ghost" size="sm" onClick={() => setTeacherFilter(ALL)}>Clear teacher filter</Button> : null}
         {currentSection ? (
           <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
             Class teacher: {currentSection.classTeacher ?? "not set"}
@@ -272,52 +282,6 @@ export function TeachingWorkspace({
         </span>
       </PageFrame.Toolbar>
 
-      <PageFrame.Split
-        aside={
-          showLoad ? (
-            <div className="flex min-h-0 flex-col">
-              <div className="border-line flex items-center justify-between gap-2 border-b px-4 py-3">
-                <p className="font-medium">Load per teacher</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setShowLoad(false)}
-                  aria-label="Close teacher load"
-                >
-                  <X />
-                </Button>
-              </div>
-              {load.length === 0 ? (
-                <p className="text-ink-3 px-4 py-4 text-sm">Nothing assigned yet.</p>
-              ) : (
-                <ul className="divide-line divide-y">
-                  {/* Keyed by staff id, not name: two people can share a name,
-                      and one of them is not a duplicate of the other. */}
-                  {load.map(([staffId, teacher]) => (
-                    <li key={staffId} className="px-4 py-2.5">
-                      <p className="text-sm font-medium">
-                        {teacher.name}
-                        <span className="text-ink-3 font-normal">
-                          {" "}
-                          · {teacher.items.length} subject
-                          {teacher.items.length === 1 ? "" : "s"}
-                        </span>
-                      </p>
-                      <p className="text-ink-3 text-[11.5px] leading-snug">
-                        {teacher.items.join(" · ")}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : undefined
-        }
-        asideTitle="Load per teacher"
-        asideOpen={showLoad}
-        onAsideClose={() => setShowLoad(false)}
-      >
         <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, tab)}>
           <DataTable<TeachingRow>
             id="teaching"
@@ -332,11 +296,12 @@ export function TeachingWorkspace({
               description:
                 rows.length === 0
                   ? "Add subjects to a grade on the Subjects page first."
-                  : "Try another section or search.",
+                  : "Try another section, teacher filter or search.",
             }}
           />
         </PageFrame.Body>
-      </PageFrame.Split>
+        </>
+      )}
     </PageFrame>
   );
 }
