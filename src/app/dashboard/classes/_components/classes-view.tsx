@@ -55,6 +55,7 @@ export type SectionRow = {
   gradeId: number;
   gradeName: string;
   classTeacher: string | null;
+  classTeacherNp: string | null;
   classTeacherId: number | null;
   students: number;
 };

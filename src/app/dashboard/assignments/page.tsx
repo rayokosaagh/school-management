@@ -60,7 +60,7 @@ export default async function AssignmentsPage() {
   const loadStaff = [
     ...staff.map((s) => ({ ...s, isActive: true })),
     ...[...formerHolders.values()]
-      .map((s) => ({ id: s.id, fullName: s.fullName, photoId: s.photoId, designation: s.designation, isActive: false }))
+      .map((s) => ({ id: s.id, fullName: s.fullName, fullNameNp: s.fullNameNp, photoId: s.photoId, designation: s.designation, isActive: false }))
       .sort((a, b) => a.fullName.localeCompare(b.fullName)),
   ];
 
@@ -86,6 +86,7 @@ export default async function AssignmentsPage() {
         name: s.name,
         grade: { name: s.grade.name },
         classTeacher: s.classTeacher?.fullName ?? null,
+        classTeacherNp: s.classTeacher?.fullNameNp ?? null,
       }))}
       staff={loadStaff}
       yearLabel={currentYear.nameBS}

@@ -7,7 +7,7 @@ export function listSectionsWithAssignmentCounts(academicYearId: number) {
     orderBy: [{ grade: { order: "asc" } }, { name: "asc" }],
     include: {
       grade: true,
-      classTeacher: { select: { id: true, fullName: true } },
+      classTeacher: { select: { id: true, fullName: true, fullNameNp: true } },
       _count: { select: { assignments: true } },
     },
   });
@@ -18,7 +18,7 @@ export function listSectionsWithAssignmentCounts(academicYearId: number) {
 export async function getSectionTeachingPlan(sectionId: number) {
   const section = await prisma.section.findUnique({
     where: { id: sectionId },
-    include: { grade: true, classTeacher: { select: { id: true, fullName: true } } },
+    include: { grade: true, classTeacher: { select: { id: true, fullName: true, fullNameNp: true } } },
   });
   if (!section) return null;
 
@@ -30,7 +30,7 @@ export async function getSectionTeachingPlan(sectionId: number) {
     }),
     prisma.teacherAssignment.findMany({
       where: { sectionId },
-      include: { staff: { select: { id: true, fullName: true, isActive: true } } },
+      include: { staff: { select: { id: true, fullName: true, fullNameNp: true, isActive: true } } },
     }),
   ]);
 
@@ -113,7 +113,7 @@ export function listTeachingLoad(academicYearId: number) {
       { section: { name: "asc" } },
     ],
     include: {
-      staff: { select: { id: true, fullName: true, isActive: true, designation: true, photoId: true } },
+      staff: { select: { id: true, fullName: true, fullNameNp: true, isActive: true, designation: true, photoId: true } },
       section: { include: { grade: true } },
       subjectOffering: { include: { subject: true } },
     },

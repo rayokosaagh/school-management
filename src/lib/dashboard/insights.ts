@@ -29,6 +29,7 @@ export type MarksGap = {
 export type WatchedPupil = {
   id: number;
   name: string;
+  nameNp: string | null;
   section: string;
   absences: number;
 };
@@ -184,6 +185,7 @@ async function pupilsToWatch(
     select: {
       id: true,
       fullName: true,
+      fullNameNp: true,
       enrollments: {
         where: { academicYearId },
         select: { section: { select: { name: true, grade: { select: { name: true } } } } },
@@ -200,6 +202,7 @@ async function pupilsToWatch(
     return [{
       id: student.id,
       name: student.fullName,
+      nameNp: student.fullNameNp,
       section: enrolment ? `${enrolment.section.grade.name} ${enrolment.section.name}` : "—",
       absences: row._count._all,
     }];

@@ -3,6 +3,7 @@ import type { TeachingRow } from "./teaching-workspace";
 export type LoadStaff = {
   id: number;
   fullName: string;
+  fullNameNp: string | null;
   photoId: number | null;
   /// Two people can share a name, and an accountant holding no classes is not
   /// the same finding as a teacher holding none.

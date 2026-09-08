@@ -37,6 +37,7 @@ export type InvoiceRow = {
   number: string;
   enrollmentId: number;
   student: string;
+  studentNp: string | null;
   admissionNo: string;
   section: string;
   issuedOn: Date;
@@ -178,6 +179,7 @@ export async function feeWorkspace(academicYearId: number, now = new Date()) {
         number: invoice.number,
         enrollmentId: enrollment.id,
         student: enrollment.student.fullName,
+        studentNp: enrollment.student.fullNameNp,
         admissionNo: enrollment.student.admissionNo,
         section,
         issuedOn: invoice.issuedOn,
@@ -206,6 +208,7 @@ export async function feeWorkspace(academicYearId: number, now = new Date()) {
       balances.push({
         enrollmentId: enrollment.id,
         name: enrollment.student.fullName,
+        nameNp: enrollment.student.fullNameNp,
         admissionNo: enrollment.student.admissionNo,
         section,
         gradeId: enrollment.section.gradeId,
@@ -227,6 +230,7 @@ export async function feeWorkspace(academicYearId: number, now = new Date()) {
     balances.push({
       enrollmentId: enrollment.id,
       name: enrollment.student.fullName,
+      nameNp: enrollment.student.fullNameNp,
       admissionNo: enrollment.student.admissionNo,
       section,
       gradeId: enrollment.section.gradeId,
@@ -440,6 +444,7 @@ export async function pupilFees(enrollmentId: number, now = new Date()) {
   return {
     student: {
       name: enrollment.student.fullName,
+      nameNp: enrollment.student.fullNameNp,
       admissionNo: enrollment.student.admissionNo,
       section: `${enrollment.section.grade.name} ${enrollment.section.name}`,
     },

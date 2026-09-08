@@ -97,7 +97,10 @@ export default async function FeePrintPage({
             </div>
             <div>
               <dt><TranslatedText>Student</TranslatedText></dt>
-              <dd>{invoice.student.name}</dd>
+              <dd>
+                {invoice.student.name}
+                {invoice.student.nameNp ? <span className="np">{invoice.student.nameNp}</span> : null}
+              </dd>
             </div>
             <div>
               <dt><TranslatedText>Class</TranslatedText></dt>
@@ -184,7 +187,10 @@ export default async function FeePrintPage({
           <dl className="sheet-facts">
             <div>
               <dt><TranslatedText>Student</TranslatedText></dt>
-              <dd>{statement.student.name}</dd>
+              <dd>
+                {statement.student.name}
+                {statement.student.nameNp ? <span className="np">{statement.student.nameNp}</span> : null}
+              </dd>
             </div>
             <div>
               <dt><TranslatedText>Class</TranslatedText></dt>
@@ -273,7 +279,10 @@ export default async function FeePrintPage({
             </div>
             <div>
               <dt><TranslatedText>Student</TranslatedText></dt>
-              <dd>{receipt.student.name}</dd>
+              <dd>
+                {receipt.student.name}
+                {receipt.student.nameNp ? <span className="np">{receipt.student.nameNp}</span> : null}
+              </dd>
             </div>
             <div>
               <dt><TranslatedText>Class</TranslatedText></dt>

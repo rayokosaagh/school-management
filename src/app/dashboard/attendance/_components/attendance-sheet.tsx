@@ -8,6 +8,7 @@ import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PersonName } from "@/components/ui/person-name";
 import { cn } from "@/lib/utils";
 import { type ActionState, saveAttendance } from "../actions";
 
@@ -53,6 +54,7 @@ const STATUSES = [
 export type SheetRow = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   rollNo: number;
   status: string;
   note: string | null;
@@ -204,7 +206,7 @@ export function AttendanceSheet({
                 <span className="text-ink-3 w-8 shrink-0 font-mono text-[12px] tabular-nums">
                   {row.rollNo}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm">{row.fullName}</span>
+                <PersonName en={row.fullName} np={row.fullNameNp} className="flex-1 text-sm font-normal" />
 
                 {/* A real radio group underneath: the inputs still post with the
                     form and arrow keys still move between options. Only the

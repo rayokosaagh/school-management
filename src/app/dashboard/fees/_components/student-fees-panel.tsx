@@ -21,6 +21,7 @@ import { Amount } from "./money-cells";
 import { SetupHeader } from "./setup-header";
 import { ServiceRoster } from "./service-roster";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName, personSearch } from "@/components/ui/person-name";
 import { StudentPicker, type StudentChoice } from "./student-picker";
 import { addStudentFee, billStudentFee, saveStudentFee, unregisterStudentFee } from "../student-fee-actions";
 import type { FeeActionState } from "../actions";
@@ -172,7 +173,7 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
         <div className="flex min-w-0 items-center gap-2.5">
           <StudentAvatar photoId={null} name={row.original.name} className="size-8 rounded-lg text-xs" />
           <div className="min-w-0">
-            <p className="truncate font-medium">{row.original.name}</p>
+            <PersonName en={row.original.name} np={row.original.nameNp} />
             <p className="text-ink-3 truncate text-xs">{row.original.admissionNo}</p>
           </div>
         </div>
@@ -253,7 +254,7 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
           columns={columns}
           getRowId={student => String(student.id)}
           sectionOf={student => student.section}
-          searchOf={student => `${student.name} ${student.admissionNo} ${student.section}`}
+          searchOf={student => `${personSearch(student.name, student.nameNp)} ${student.admissionNo} ${student.section}`}
           noun="student"
           disabled={busy}
           initialSort={[{ id: "student", desc: false }]}

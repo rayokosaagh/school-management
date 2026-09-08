@@ -13,14 +13,14 @@ export async function transportWorkspace(academicYearId: number, now = new Date(
     prisma.academicYear.findUnique({ where: { id: academicYearId }, select: { nameBS: true } }),
     prisma.enrollment.findMany({
       where: { academicYearId, student: { status: "ACTIVE" } },
-      select: { id: true, student: { select: { fullName: true, admissionNo: true } }, section: { select: { name: true, grade: { select: { name: true } } } } },
+      select: { id: true, student: { select: { fullName: true, fullNameNp: true, admissionNo: true } }, section: { select: { name: true, grade: { select: { name: true } } } } },
       orderBy: [{ section: { grade: { order: "asc" } } }, { rollNo: "asc" }],
     }),
     prisma.transportRegistration.findMany({
       where: { enrollment: { academicYearId } },
       orderBy: [{ enrollment: { student: { fullName: "asc" } } }, { id: "asc" }],
       include: { enrollment: { select: {
-        student: { select: { fullName: true, admissionNo: true } },
+        student: { select: { fullName: true, fullNameNp: true, admissionNo: true } },
         section: { select: { name: true, grade: { select: { name: true } } } },
         invoices: {
           where: { academicYearId, periodMonth: { gt: 0 }, OR: [
@@ -35,11 +35,11 @@ export async function transportWorkspace(academicYearId: number, now = new Date(
   if (!year) throw new FeeError("Choose an existing academic year.");
   const today = schoolDate(now);
   return {
-    enrollments: enrollments.map((e) => ({ id: e.id, name: e.student.fullName, admissionNo: e.student.admissionNo, section: `${e.section.grade.name} ${e.section.name}` })),
+    enrollments: enrollments.map((e) => ({ id: e.id, name: e.student.fullName, nameNp: e.student.fullNameNp, admissionNo: e.student.admissionNo, section: `${e.section.grade.name} ${e.section.name}` })),
     registrations: registrations.map((r) => ({
       id: r.id, enrollmentId: r.enrollmentId, pickupLocation: r.pickupLocation,
       monthlyAmount: r.monthlyAmount, startMonth: r.startMonth, isActive: r.isActive,
-      name: r.enrollment.student.fullName, admissionNo: r.enrollment.student.admissionNo,
+      name: r.enrollment.student.fullName, nameNp: r.enrollment.student.fullNameNp, admissionNo: r.enrollment.student.admissionNo,
       section: `${r.enrollment.section.grade.name} ${r.enrollment.section.name}`,
       billedMonths: [...new Set(r.enrollment.invoices.map((invoice) => invoice.periodMonth))].sort((a, b) => a - b),
     })),

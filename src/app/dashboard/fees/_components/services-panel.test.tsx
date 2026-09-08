@@ -17,7 +17,7 @@ const PLAN = {
   selectedIds: [11],
   assignments: [{ id: 1, enrollmentId: 11, isActive: true, billedMonths: [1] }],
 };
-const STUDENTS = [{ id: 11, name: "Sita Rai", admissionNo: "0012", section: "Grade 4 A" }];
+const STUDENTS = [{ id: 11, name: "Sita Rai", nameNp: "सीता राई", admissionNo: "0012", section: "Grade 4 A" }];
 const MONTHS = [{ month: 1, started: true }, { month: 2, started: false }];
 const EMPTY_PANEL = {
   academicYearId: 1,
@@ -70,7 +70,7 @@ describe("the service rail", () => {
       },
       transport: {
         enrollments: STUDENTS,
-        registrations: [{ id: 1, enrollmentId: 11, name: "Sita Rai", admissionNo: "0012", section: "Grade 4 A", pickupLocation: "North stop", monthlyAmount: 900, startMonth: 1, isActive: true, billedMonths: [] }],
+        registrations: [{ id: 1, enrollmentId: 11, name: "Sita Rai", nameNp: "सीता राई", admissionNo: "0012", section: "Grade 4 A", pickupLocation: "North stop", monthlyAmount: 900, startMonth: 1, isActive: true, billedMonths: [] }],
         months: MONTHS,
       },
     }));

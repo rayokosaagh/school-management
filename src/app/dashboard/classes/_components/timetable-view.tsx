@@ -6,6 +6,7 @@ import { AlertTriangle, CalendarDays, Coffee, Info, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import { FieldSelect } from "@/components/ui/select";
+import { PersonName, personLabel } from "@/components/ui/person-name";
 import {
   DAY_NAMES,
   buildDayColumn,
@@ -289,7 +290,7 @@ export function WeekGrid({
                               if (elsewhere && !mine) {
                                 return {
                                   value: String(option.subjectOfferingId),
-                                  label: `${option.subjectName} — ${option.staffName} is in ${elsewhere}`,
+                                  label: `${option.subjectName} — ${personLabel(option.staffName!, option.staffNameNp)} is in ${elsewhere}`,
                                   disabled: true,
                                 };
                               }
@@ -302,10 +303,14 @@ export function WeekGrid({
                         />
 
                         {cell ? (
-                          <p className="text-ink-3 mt-0.5 truncate pl-3 text-[11.5px]">
-                            {cell.staffName}
-                            <TranslatedText>{cell.room ? ` · ${cell.room}` : ""}</TranslatedText>
-                          </p>
+                          <PersonName
+                            en={cell.staffName}
+                            np={cell.staffNameNp}
+                            suffix={
+                              <TranslatedText>{cell.room ? ` · ${cell.room}` : ""}</TranslatedText>
+                            }
+                            className="text-ink-3 mt-0.5 pl-3 text-[11.5px] font-normal"
+                          />
                         ) : (
                           /* An empty slot reads as a gap in the week, not as a
                              control waiting to be filled. */
@@ -505,7 +510,7 @@ export function ClashBanner({ clashes }: { clashes: Clash[] }) {
           {clashes.length}<TranslatedText> clash</TranslatedText><TranslatedText>{clashes.length === 1 ? "" : "es"}</TranslatedText>
         </span>
         <TranslatedText>{" · "}</TranslatedText>
-        {clashes[0].staffName}<TranslatedText> is in</TranslatedText><TranslatedText>{" "}</TranslatedText>
+        {personLabel(clashes[0].staffName, clashes[0].staffNameNp)}<TranslatedText> is in</TranslatedText><TranslatedText>{" "}</TranslatedText>
         {clashes[0].sections.map((s) => s.label).join(" and ")}<TranslatedText> during</TranslatedText><TranslatedText>{" "}</TranslatedText>
         {clashes[0].periodName}
         <TranslatedText>{clashes.length > 1 ? ", and others" : ""}</TranslatedText>

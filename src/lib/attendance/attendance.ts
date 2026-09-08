@@ -23,11 +23,11 @@ export async function getSheet(sectionId: number, date: Date) {
     prisma.enrollment.findMany({
       where: { sectionId, academicYearId: section.academicYearId },
       orderBy: { rollNo: "asc" },
-      include: { student: { select: { id: true, fullName: true, status: true } } },
+      include: { student: { select: { id: true, fullName: true, fullNameNp: true, status: true } } },
     }),
     prisma.attendanceSession.findUnique({
       where: { sectionId_date: { sectionId, date } },
-      include: { records: true, takenBy: { select: { fullName: true } } },
+      include: { records: true, takenBy: { select: { fullName: true, fullNameNp: true } } },
     }),
   ]);
 
@@ -37,12 +37,14 @@ export async function getSheet(sectionId: number, date: Date) {
     section,
     taken: Boolean(session),
     takenBy: session?.takenBy?.fullName ?? null,
+    takenByNp: session?.takenBy?.fullNameNp ?? null,
     takenAt: session?.takenAt ?? null,
     rows: enrollments
       .filter((e) => e.student.status === "ACTIVE")
       .map((e) => ({
         studentId: e.student.id,
         fullName: e.student.fullName,
+        fullNameNp: e.student.fullNameNp,
         rollNo: e.rollNo,
         status: (byStudent.get(e.student.id)?.status ?? "PRESENT") as AttendanceStatus,
         note: byStudent.get(e.student.id)?.note ?? null,
@@ -132,18 +134,26 @@ export async function monthlyRegister(
   const sessions = await prisma.attendanceSession.findMany({
     where: { sectionId, date: { gte: from, lte: to } },
     orderBy: { date: "asc" },
-    include: { records: { include: { student: { select: { id: true, fullName: true } } } } },
+    include: { records: { include: { student: { select: { id: true, fullName: true, fullNameNp: true } } } } },
   });
 
   const totals = new Map<
     number,
-    { fullName: string; present: number; absent: number; late: number; leave: number }
+    {
+      fullName: string;
+      fullNameNp: string | null;
+      present: number;
+      absent: number;
+      late: number;
+      leave: number;
+    }
   >();
 
   for (const session of sessions) {
     for (const record of session.records) {
       const row = totals.get(record.studentId) ?? {
         fullName: record.student.fullName,
+        fullNameNp: record.student.fullNameNp,
         present: 0,
         absent: 0,
         late: 0,
@@ -252,6 +262,7 @@ export async function classAttendanceStats(
 export type StudentAttendanceStat = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   admissionNo: string;
   photoId: number | null;
   status: string;
@@ -278,6 +289,7 @@ export type ClassAttendanceDetail = {
 type StudentAttendanceSource = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   admissionNo: string;
   photoId: number | null;
   status: string;
@@ -303,6 +315,7 @@ export function summarizeStudentAttendance(
   return {
     studentId: source.studentId,
     fullName: source.fullName,
+    fullNameNp: source.fullNameNp,
     admissionNo: source.admissionNo,
     photoId: source.photoId,
     status: source.status,
@@ -341,7 +354,14 @@ export async function classStudentAttendance(
             rollNo: true,
             enrolledOn: true,
             student: {
-              select: { id: true, fullName: true, admissionNo: true, photoId: true, status: true },
+              select: {
+                id: true,
+                fullName: true,
+                fullNameNp: true,
+                admissionNo: true,
+                photoId: true,
+                status: true,
+              },
             },
           },
         },
@@ -378,6 +398,7 @@ export async function classStudentAttendance(
         {
           studentId: enrollment.student.id,
           fullName: enrollment.student.fullName,
+          fullNameNp: enrollment.student.fullNameNp,
           admissionNo: enrollment.student.admissionNo,
           photoId: enrollment.student.photoId,
           status: enrollment.student.status,
@@ -421,6 +442,7 @@ export async function absenteesOn(academicYearId: number, date: Date) {
         select: {
           id: true,
           fullName: true,
+          fullNameNp: true,
           guardians: {
             where: { isPrimary: true },
             take: 1,
@@ -435,6 +457,7 @@ export async function absenteesOn(academicYearId: number, date: Date) {
   return records.map((r) => ({
     studentId: r.student.id,
     fullName: r.student.fullName,
+    fullNameNp: r.student.fullNameNp,
     section: `${r.session.section.grade.name} ${r.session.section.name}`,
     guardian: r.student.guardians[0] ?? null,
   }));

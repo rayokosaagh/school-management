@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { RecordTable, StatusPill, type Tone } from "@/components/ui/record-table";
 import { ROLE_DESCRIPTION, ROLE_LABEL } from "@/lib/auth/roles";
 import { FieldSelect } from "@/components/ui/select";
+import { PersonName, personLabel, personSearch } from "@/components/ui/person-name";
 import {
   type AccountState,
   addAccount,
@@ -42,9 +43,10 @@ export type AccountRow = {
   createdLabel: string;
   staffId: number | null;
   staffName: string | null;
+  staffNameNp: string | null;
 };
 
-export type StaffOption = { id: number; fullName: string; taken: boolean };
+export type StaffOption = { id: number; fullName: string; fullNameNp: string | null; taken: boolean };
 
 /// Teacher permissions are scoped through the staff link, so a teacher account
 /// without one can reach nothing at all.
@@ -126,7 +128,7 @@ export function AccountEditor({
               { value: "", label: "Not linked" },
               ...staff
                 .filter((s) => !s.taken || s.id === account.staffId)
-                .map((s) => ({ value: String(s.id), label: s.fullName })),
+                .map((s) => ({ value: String(s.id), label: personLabel(s.fullName, s.fullNameNp) })),
             ]}
           />
           <Button type="submit" variant="outline" size="sm" disabled={linking}><TranslatedText>
@@ -235,7 +237,7 @@ export function Accounts({
               { value: "", label: "Not linked" },
               ...staff
                 .filter((s) => !s.taken)
-                .map((s) => ({ value: String(s.id), label: s.fullName })),
+                .map((s) => ({ value: String(s.id), label: personLabel(s.fullName, s.fullNameNp) })),
             ]}
           />
         </div>
@@ -276,7 +278,7 @@ export function Accounts({
       getKey={(a) => a.id}
       // Name, email and the linked staff member are the three things somebody
       // scanning a long list already knows enough to type.
-      getSearchText={(a) => `${a.username} ${a.email ?? ""} ${a.staffName ?? ""}`}
+      getSearchText={(a) => `${a.username} ${a.email ?? ""} ${personSearch(a.staffName ?? "", a.staffNameNp)}`}
       searchPlaceholder="Search accounts"
       empty="No accounts yet."
       filters={[
@@ -315,7 +317,7 @@ export function Accounts({
           span: 3,
           render: (a) =>
             a.staffName ? (
-              <span className="truncate">{a.staffName}</span>
+              <PersonName en={a.staffName} np={a.staffNameNp} className="font-normal" />
             ) : stranded(a) ? (
               <StatusPill tone="warning"><TranslatedText>Reaches nothing</TranslatedText></StatusPill>
             ) : (

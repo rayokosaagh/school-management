@@ -148,10 +148,12 @@ export default async function SettingsPage({
                 }),
                 staffId: a.staff?.id ?? null,
                 staffName: a.staff?.fullName ?? null,
+                staffNameNp: a.staff?.fullNameNp ?? null,
               }))}
               staff={staff.map((s) => ({
                 id: s.id,
                 fullName: s.fullName,
+                fullNameNp: s.fullNameNp,
                 taken: s.userId !== null,
               }))}
             currentUserId={Number(session.user.id)}

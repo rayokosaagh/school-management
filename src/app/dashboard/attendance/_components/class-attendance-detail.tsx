@@ -8,6 +8,7 @@ import { useMemo, useState } from "react";
 import { AttendanceMap } from "@/components/ui/attendance-map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PersonName, personSearch } from "@/components/ui/person-name";
 import { Segmented } from "@/components/ui/segmented";
 import { StatusDot } from "@/components/ui/status-dot";
 import { StudentAvatar } from "@/components/ui/student-avatar";
@@ -37,7 +38,12 @@ export function ClassAttendanceDetailView({
     return detail.students.filter((student) => {
       if (filter === "attention" && !needsAttention(student)) return false;
       if (filter === "notes" && student.notes.length === 0) return false;
-      return !q || `${student.fullName} ${student.admissionNo} ${student.rollNo}`.toLowerCase().includes(q);
+      return (
+        !q ||
+        `${personSearch(student.fullName, student.fullNameNp)} ${student.admissionNo} ${student.rollNo}`
+          .toLowerCase()
+          .includes(q)
+      );
     });
   }, [detail.students, filter, query]);
 
@@ -107,7 +113,7 @@ function StudentAttendanceCard({ student, to }: { student: StudentAttendanceStat
       <div className="flex flex-wrap items-center gap-3">
         <StudentAvatar photoId={student.photoId} name={student.fullName} className="size-9 rounded-lg text-xs" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{student.fullName}</p>
+          <PersonName en={student.fullName} np={student.fullNameNp} className="text-sm" />
           <p className="text-ink-3 text-[11.5px]"><TranslatedText>Roll </TranslatedText><span className="font-mono">{student.rollNo}</span> · {student.admissionNo} · {studentStatusLabel(student.status)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

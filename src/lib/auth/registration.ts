@@ -84,7 +84,7 @@ export function listAccounts() {
       email: true,
       role: true,
       createdAt: true,
-      staff: { select: { id: true, fullName: true } },
+      staff: { select: { id: true, fullName: true, fullNameNp: true } },
     },
   });
 }

@@ -109,7 +109,7 @@ export async function getMarksSheet(
     prisma.enrollment.findMany({
       where: { sectionId, academicYearId: section.academicYearId },
       orderBy: { rollNo: "asc" },
-      include: { student: { select: { id: true, fullName: true, status: true } } },
+      include: { student: { select: { id: true, fullName: true, fullNameNp: true, status: true } } },
     }),
     prisma.mark.findMany({ where: { examTermId, subjectOfferingId } }),
   ]);
@@ -128,6 +128,7 @@ export async function getMarksSheet(
         return {
           studentId: e.student.id,
           fullName: e.student.fullName,
+          fullNameNp: e.student.fullNameNp,
           rollNo: e.rollNo,
           theory: mark?.theory ?? null,
           practical: mark?.practical ?? null,
@@ -244,7 +245,7 @@ export async function getLedger(examTermId: number, sectionId: number) {
     prisma.enrollment.findMany({
       where: { sectionId, academicYearId: section.academicYearId },
       orderBy: { rollNo: "asc" },
-      include: { student: { select: { id: true, fullName: true, status: true } } },
+      include: { student: { select: { id: true, fullName: true, fullNameNp: true, status: true } } },
     }),
     prisma.mark.findMany({ where: { examTermId } }),
   ]);
@@ -276,6 +277,7 @@ export async function getLedger(examTermId: number, sectionId: number) {
       return {
         studentId: e.student.id,
         fullName: e.student.fullName,
+        fullNameNp: e.student.fullNameNp,
         rollNo: e.rollNo,
         subjects,
         overall,

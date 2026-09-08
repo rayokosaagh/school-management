@@ -69,7 +69,7 @@ export async function loadSnapshot(
         orderBy: { student: { fullName: "asc" } },
         include: {
           student: {
-            select: { id: true, fullName: true, admissionNo: true, photoId: true },
+            select: { id: true, fullName: true, fullNameNp: true, admissionNo: true, photoId: true },
           },
         },
       }),
@@ -157,6 +157,7 @@ export async function loadSnapshot(
           studentId: e.studentId,
           enrollmentId: e.id,
           fullName: e.student.fullName,
+          fullNameNp: e.student.fullNameNp,
           admissionNo: e.student.admissionNo,
           photoId: e.student.photoId,
           sectionId: e.sectionId,

@@ -11,14 +11,14 @@ vi.mock("@/components/ui/toast", () => ({ useToastedActionState: () => [{}, () =
 import { AccountEditor, Accounts, type AccountRow } from "./accounts";
 
 const STAFF = [
-  { id: 40, fullName: "Deepak Karki", taken: false },
-  { id: 13, fullName: "Sita Sharma", taken: true },
+  { id: 40, fullName: "Deepak Karki", fullNameNp: null, taken: false },
+  { id: 13, fullName: "Sita Sharma", fullNameNp: "सीता शर्मा", taken: true },
 ];
 
 function account(over: Partial<AccountRow> = {}): AccountRow {
   return {
     id: 2, username: "sita", email: "sita@local.com", role: "TEACHER",
-    createdLabel: "29 Aug 2026", staffId: 13, staffName: "Sita Sharma", ...over,
+    createdLabel: "29 Aug 2026", staffId: 13, staffName: "Sita Sharma", staffNameNp: "सीता शर्मा", ...over,
   };
 }
 

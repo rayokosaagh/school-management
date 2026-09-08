@@ -103,6 +103,7 @@ export default async function ClassesPage({
       gradeId: g.id,
       gradeName: g.name,
       classTeacher: s.classTeacher?.fullName ?? null,
+      classTeacherNp: s.classTeacher?.fullNameNp ?? null,
       classTeacherId: s.classTeacherId,
       students: s._count.enrollments,
     })),

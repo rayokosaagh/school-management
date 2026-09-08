@@ -188,6 +188,7 @@ function student(id: number, sectionId: number, over: Partial<SnapshotStudent> =
     studentId: id,
     enrollmentId: 900 + id,
     fullName: `Student ${id}`,
+    fullNameNp: null,
     admissionNo: String(id),
     photoId: null,
     sectionId,

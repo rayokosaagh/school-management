@@ -21,7 +21,7 @@ export function listGradesWithSections(academicYearId: number) {
         where: { academicYearId },
         orderBy: { name: "asc" },
         include: {
-          classTeacher: { select: { id: true, fullName: true } },
+          classTeacher: { select: { id: true, fullName: true, fullNameNp: true } },
           _count: { select: { enrollments: true } },
         },
       },

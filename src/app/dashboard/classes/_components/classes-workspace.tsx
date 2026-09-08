@@ -36,6 +36,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useToastedActionState } from "@/components/ui/toast";
+import { personLabel, personSearch } from "@/components/ui/person-name";
 import { shortGrade } from "@/lib/registry/grade-label";
 import { assignClassTeacher } from "@/app/dashboard/teachers/actions";
 import { AddGradeForm, AddSectionForm, AddYearForm } from "./classes-forms";
@@ -83,7 +84,7 @@ export function ClassesWorkspace({
   years: YearRow[];
   grades: GradeRow[];
   sections: SectionRow[];
-  staff: { id: number; fullName: string }[];
+  staff: { id: number; fullName: string; fullNameNp: string | null }[];
   exams: { id: number; name: string }[];
   academicYearId: number | null;
   yearLabel: string;
@@ -125,7 +126,7 @@ export function ClassesWorkspace({
   const teacherOptions = useMemo(
     () => [
       { value: "", label: "No class teacher" },
-      ...staff.map((s) => ({ value: String(s.id), label: s.fullName })),
+      ...staff.map((s) => ({ value: String(s.id), label: personLabel(s.fullName, s.fullNameNp) })),
     ],
     [staff],
   );
@@ -160,7 +161,7 @@ export function ClassesWorkspace({
     const q = query.trim().toLowerCase();
     return sections.filter((s) => {
       if (tab !== ALL && String(s.gradeId) !== tab) return false;
-      if (q && !`${s.gradeName} ${s.name} ${s.classTeacher ?? ""}`.toLowerCase().includes(q))
+      if (q && !`${s.gradeName} ${s.name} ${personSearch(s.classTeacher ?? "", s.classTeacherNp)}`.toLowerCase().includes(q))
         return false;
       return true;
     });

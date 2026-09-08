@@ -74,7 +74,12 @@ export default async function AttendancePage({
         const sheet = await getSheet(s.id, date);
         return {
           id: s.id,
-          sheet: { rows: sheet.rows, taken: sheet.taken, takenBy: sheet.takenBy ?? null },
+          sheet: {
+            rows: sheet.rows,
+            taken: sheet.taken,
+            takenBy: sheet.takenBy ?? null,
+            takenByNp: sheet.takenByNp ?? null,
+          },
           error: null as string | null,
         };
       } catch (e) {

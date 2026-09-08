@@ -12,6 +12,7 @@ import type { TodayPeriod } from "@/lib/dashboard/teacher-schedule";
 import { formatMinute } from "@/lib/timetable/schedule";
 import { formatBs } from "@/lib/date/bs";
 import { cn, focusRing as focus } from "@/lib/utils";
+import { PersonName } from "@/components/ui/person-name";
 import { TranslatedText } from "@/components/i18n/language-provider";
 
 function Panel({ title, description, action, children }: {
@@ -296,7 +297,7 @@ export function PupilsToWatch({ pupils }: { pupils: WatchedPupil[] }) {
                 {pupil.absences}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block break-words text-sm font-medium">{pupil.name}</span>
+                <PersonName en={pupil.name} np={pupil.nameNp} className="text-sm" />
                 <span className="text-ink-3 mt-0.5 block text-xs">{pupil.section}</span>
               </span>
               <span className="text-ink-3 text-xs"><TranslatedText>days away</TranslatedText></span>

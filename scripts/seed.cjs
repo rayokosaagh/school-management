@@ -11,6 +11,18 @@
  *   node scripts/seed.cjs --attendance  also fills roll calls up to today
  */
 require("dotenv").config();
+
+// The same suggestion the admission form offers when someone types an English
+// name: seeded pupils are named in both scripts, exactly as the hand-entered
+// ones are. Guarded because this is a .ts module being type-stripped — on a
+// runtime that cannot, seeding still works and the Nepali name is simply
+// left unset, which is what it was before.
+let transliterateName = () => null;
+try {
+  ({ transliterateName } = require("../src/lib/nepali/transliterate.ts"));
+} catch {
+  console.warn("  (no transliterator on this runtime — pupils get no Nepali name)");
+}
 const { Client } = require("pg");
 
 const WITH_PEOPLE = process.argv.includes("--people");
@@ -253,14 +265,15 @@ async function seedPeople(c) {
       born.setDate(1 + Math.floor(rand() * 27));
 
       const s = await c.query(
-        `INSERT INTO "Student" ("admissionNo","firstName","middleName","lastName","fullName",dob,gender,address,"admittedOn",status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'ACTIVE') RETURNING id`,
+        `INSERT INTO "Student" ("admissionNo","firstName","middleName","lastName","fullName","fullNameNp",dob,gender,address,"admittedOn",status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'ACTIVE') RETURNING id`,
         [
           String(admission++),
           first,
           middle,
           last,
           full,
+          transliterateName(full) || null,
           born.toISOString().slice(0, 10),
           female ? "FEMALE" : "MALE",
           pick(PLACES),

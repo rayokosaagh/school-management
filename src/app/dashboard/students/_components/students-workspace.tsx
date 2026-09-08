@@ -14,6 +14,7 @@ import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { PageFrame } from "@/components/ui/page-frame";
+import { PersonName } from "@/components/ui/person-name";
 import { RegisterTabs, registerTabId, type RegisterTab } from "@/components/ui/register-tabs";
 import { Segmented } from "@/components/ui/segmented";
 import { FieldSelect } from "@/components/ui/select";
@@ -192,12 +193,7 @@ export function StudentsWorkspace({
       ...(tab === ALL ? [recordIdColumn, rollColumn] : [rollColumn, recordIdColumn]),
       {
         id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false,
-        cell: ({ row }) => (
-          <span className="font-medium">
-            {row.original.fullName}
-            {row.original.fullNameNp ? <span className="font-devanagari text-ink-3 block text-[11.5px] leading-tight font-normal">{row.original.fullNameNp}</span> : null}
-          </span>
-        ),
+        cell: ({ row }) => <PersonName en={row.original.fullName} np={row.original.fullNameNp} />,
       },
       { id: "section", accessorKey: "sectionLabel", header: "Class", cell: ({ getValue }) => <span className="text-ink-2">{String(getValue())}</span> },
       { id: "dob", accessorKey: "dobLabel", header: "Born (BS)", meta: { mono: true } satisfies ColumnMeta },

@@ -1,6 +1,7 @@
 import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName } from "@/components/ui/person-name";
 import type { HonoursStudent } from "@/lib/honours/honours";
 import { podiumStudents } from "@/lib/honours/podium";
 import { ordinal } from "@/lib/honours/score";
@@ -69,9 +70,11 @@ export function Podium({ students }: { students: HonoursStudent[] }) {
                   )}
                 />
                 <span className="w-full min-w-0">
-                  <span className="block truncate font-medium group-hover:underline">
-                    {student.fullName}
-                  </span>
+                  <PersonName
+                    en={student.fullName}
+                    np={student.fullNameNp}
+                    className="group-hover:underline"
+                  />
                   <span className="text-ink-3 block text-[12px]"><TranslatedText>Roll </TranslatedText>{student.rollNo}</span>
                 </span>
                 <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] tabular-nums">

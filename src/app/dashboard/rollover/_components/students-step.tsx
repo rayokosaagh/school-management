@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName } from "@/components/ui/person-name";
 import type { PlannedStudent, RolloverPlan, StudentDecision } from "@/lib/registry/rollover-plan";
 
 type Row = PlannedStudent & { decision: StudentDecision; toLabel: string | null };
@@ -116,7 +117,7 @@ export function StudentsStep({
                     className="size-8 rounded-lg"
                   />
                   <div className="min-w-0">
-                    <p className="truncate text-sm">{row.fullName}</p>
+                    <PersonName en={row.fullName} np={row.fullNameNp} className="text-sm font-normal" />
                     <p className="text-ink-3 font-mono text-xs">{row.admissionNo}</p>
                   </div>
                   <p className="text-ink-3 ml-4 w-28 font-mono text-xs tabular-nums">

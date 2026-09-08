@@ -165,6 +165,9 @@ export function PupilPane({
       title={student.name}
       subtitle={
         <>
+          {student.nameNp ? (
+            <span className="font-devanagari text-ink-2">{student.nameNp} · </span>
+          ) : null}
           {student.section} · <span className="font-mono">{student.admissionNo}</span>
         </>
       }

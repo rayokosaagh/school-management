@@ -64,6 +64,7 @@ export async function getTeacherWeek(
 export type Clash = {
   staffId: number;
   staffName: string;
+  staffNameNp: string | null;
   dayOfWeek: number;
   schoolPeriodId: number;
   periodName: string;
@@ -89,7 +90,7 @@ export async function listTeacherClashes(
       section: { select: { name: true, grade: { select: { name: true } } } },
       assignment: {
         select: {
-          staff: { select: { id: true, fullName: true } },
+          staff: { select: { id: true, fullName: true, fullNameNp: true } },
           subjectOffering: { select: { subject: { select: { name: true } } } },
         },
       },
@@ -103,6 +104,7 @@ export async function listTeacherClashes(
     const entry = bySlot.get(key) ?? {
       staffId: staff.id,
       staffName: staff.fullName,
+      staffNameNp: staff.fullNameNp,
       dayOfWeek: lesson.dayOfWeek,
       schoolPeriodId: lesson.schoolPeriodId,
       periodName: lesson.schoolPeriod.name,

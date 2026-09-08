@@ -74,6 +74,7 @@ export type SnapshotStudent = {
   studentId: number;
   enrollmentId: number;
   fullName: string;
+  fullNameNp: string | null;
   admissionNo: string;
   photoId: number | null;
   sectionId: number;
@@ -113,6 +114,7 @@ export type StageCount = { create: number; existing: number; skipped: number };
 export type PlannedStudent = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   photoId: number | null;
   admissionNo: string;
   fromSectionId: number;
@@ -316,6 +318,7 @@ export function buildPlan(
     const planned: PlannedStudent = {
       studentId: s.studentId,
       fullName: s.fullName,
+      fullNameNp: s.fullNameNp,
       photoId: s.photoId,
       admissionNo: s.admissionNo,
       fromSectionId: from.id,

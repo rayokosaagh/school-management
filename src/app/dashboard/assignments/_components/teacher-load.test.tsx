@@ -5,7 +5,7 @@ import { TeacherLoadView } from "./teacher-load";
 import type { TeachingRow } from "./teaching-workspace";
 
 const person = (id: number, fullName: string, over: object = {}) =>
-  ({ id, fullName, photoId: null, designation: "Teacher", isActive: true, ...over });
+  ({ id, fullName, fullNameNp: null, photoId: null, designation: "Teacher", isActive: true, ...over });
 
 const slot = (staffId: number | null, offeringId = 10): TeachingRow => ({
   sectionId: 1, offeringId, sectionLabel: "Class 1 A", subjectName: "Math",
@@ -23,8 +23,8 @@ describe("teacher load photos", () => {
     const html = renderToStaticMarkup(createElement(TeacherLoadView, {
       rows: [],
       staff: [
-        { id: 1, fullName: "Asha Rai", photoId: 42, designation: "Teacher", isActive: true },
-        { id: 2, fullName: "Ram Shah", photoId: null, designation: "Teacher", isActive: true },
+        { id: 1, fullName: "Asha Rai", fullNameNp: "आशा राई", photoId: 42, designation: "Teacher", isActive: true },
+        { id: 2, fullName: "Ram Shah", fullNameNp: null, photoId: null, designation: "Teacher", isActive: true },
       ],
       chosen: {},
       onManage: () => {},

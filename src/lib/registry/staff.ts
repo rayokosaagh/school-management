@@ -36,7 +36,7 @@ export function listActiveStaffForSelect() {
   return prisma.staff.findMany({
     where: { isActive: true },
     orderBy: { fullName: "asc" },
-    select: { id: true, fullName: true, designation: true, photoId: true },
+    select: { id: true, fullName: true, fullNameNp: true, designation: true, photoId: true },
   });
 }
 

@@ -60,6 +60,7 @@ describe("summarizeStudentAttendance", () => {
       {
         studentId: 5,
         fullName: "Asha Rai",
+        fullNameNp: "आशा राई",
         admissionNo: "0012",
         photoId: null,
         status: "ACTIVE",

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PersonName } from "@/components/ui/person-name";
 import { evaluate, type Scheme } from "@/lib/assessment/grading";
 import { type ActionState, saveMarksSheet } from "../actions";
 
@@ -14,6 +15,7 @@ const EMPTY: ActionState = {};
 export type MarksRow = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   rollNo: number;
   theory: number | null;
   practical: number | null;
@@ -120,7 +122,9 @@ export function MarksGrid({
               return (
                 <tr key={row.studentId} className="border-b last:border-0">
                   <td className="py-1.5 pr-3 tabular-nums">{row.rollNo}</td>
-                  <td className="py-1.5 pr-3">{row.fullName}</td>
+                  <td className="py-1.5 pr-3">
+                    <PersonName en={row.fullName} np={row.fullNameNp} />
+                  </td>
                   <td className="py-1.5 pr-3">
                     <Input
                       name={`theory-${row.studentId}`}

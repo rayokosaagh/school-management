@@ -35,6 +35,7 @@ import {
 import { Segmented } from "@/components/ui/segmented";
 import { FieldSelect } from "@/components/ui/select";
 import { useToastedActionState } from "@/components/ui/toast";
+import { personLabel } from "@/components/ui/person-name";
 import { shortGrade } from "@/lib/registry/grade-label";
 import type { DayShapeSummary } from "@/lib/timetable/day-shapes";
 import { DAY_NAMES, cellAt, type BellPeriod } from "@/lib/timetable/schedule";
@@ -91,7 +92,7 @@ type TimetableEditProps = {
   selectedId: number | null;
   grid: ClientSectionGrid | null;
   clashes: Clash[];
-  teachers: { id: number; fullName: string }[];
+  teachers: { id: number; fullName: string; fullNameNp: string | null }[];
   selectedTeacherId: number | null;
   teacherWeek: WeekPeriod[];
   bookings: Booking[];
@@ -321,7 +322,7 @@ export function TimetableEditView({
               className="h-8 min-w-[220px]"
               options={[
                 { value: "", label: "Pick a teacher" },
-                ...teachers.map((t) => ({ value: String(t.id), label: t.fullName })),
+                ...teachers.map((t) => ({ value: String(t.id), label: personLabel(t.fullName, t.fullNameNp) })),
               ]}
             />
             <ClashBanner clashes={clashes} />

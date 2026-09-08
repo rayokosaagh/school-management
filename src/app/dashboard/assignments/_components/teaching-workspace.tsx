@@ -17,6 +17,7 @@ import {
 import { FieldSelect } from "@/components/ui/select";
 import { Segmented } from "@/components/ui/segmented";
 import { useToastedActionState } from "@/components/ui/toast";
+import { personLabel } from "@/components/ui/person-name";
 import { sectionCode } from "@/lib/register-codes";
 import { assignSubjectTeacher, type ActionState } from "../actions";
 import { TeacherLoadView } from "./teacher-load";
@@ -40,6 +41,7 @@ type Section = {
   name: string;
   grade: { name: string };
   classTeacher: string | null;
+  classTeacherNp: string | null;
 };
 
 const ALL = "all";
@@ -96,7 +98,7 @@ export function TeachingWorkspace({
   const teacherOptions = useMemo(
     () => [
       { value: "", label: "Unassigned" },
-      ...staff.map((s) => ({ value: String(s.id), label: s.fullName })),
+      ...staff.map((s) => ({ value: String(s.id), label: personLabel(s.fullName, s.fullNameNp) })),
     ],
     [staff],
   );
@@ -268,14 +270,16 @@ export function TeachingWorkspace({
           options={[
             { value: ALL, label: "All teachers" },
             { value: "unassigned", label: "Unassigned slots" },
-            ...staff.map((person) => ({ value: String(person.id), label: person.fullName })),
+            ...staff.map((person) => ({ value: String(person.id), label: personLabel(person.fullName, person.fullNameNp) })),
           ]}
         />
         {teacherFilter !== ALL ? <Button variant="ghost" size="sm" onClick={() => setTeacherFilter(ALL)}><TranslatedText>Clear teacher filter</TranslatedText></Button> : null}
         {currentSection ? (
           <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap"><TranslatedText>
             Class teacher:</TranslatedText><TranslatedText>{" "}</TranslatedText>
-          {currentSection.classTeacher ?? "not set"}
+          {currentSection.classTeacher
+            ? personLabel(currentSection.classTeacher, currentSection.classTeacherNp)
+            : "not set"}
           </span>
         ) : null}
         <span className="flex-1" />

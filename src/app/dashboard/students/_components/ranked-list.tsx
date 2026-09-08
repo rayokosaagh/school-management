@@ -1,6 +1,7 @@
 import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName } from "@/components/ui/person-name";
 import type { HonoursStudent } from "@/lib/honours/honours";
 import { rankedListRows } from "@/lib/honours/podium";
 import { ordinal } from "@/lib/honours/score";
@@ -25,9 +26,11 @@ function Row({ s }: { s: HonoursStudent }) {
         </span>
         <StudentAvatar photoId={s.photoId} name={s.fullName} className="size-8 rounded-lg text-xs" />
         <span className="min-w-0">
-          <span className="block truncate font-medium">
-            {s.fullName} <span className="text-ink-3 font-normal"><TranslatedText> · Roll </TranslatedText>{s.rollNo}</span>
-          </span>
+          <PersonName
+            en={s.fullName}
+            np={s.fullNameNp}
+            suffix={<span className="text-ink-3 font-normal"><TranslatedText> · Roll </TranslatedText>{s.rollNo}</span>}
+          />
           <span className="flex flex-wrap gap-x-3">
             <Pillar label="Exam" value={s.pillars.exams} />
             <Pillar label="Att" value={s.pillars.attendance} />

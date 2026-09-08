@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldSelect } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PersonName, personLabel, personSearch } from "@/components/ui/person-name";
 import { clampPageIndex } from "@/lib/table/paging";
 import { cn } from "@/lib/utils";
 
-export type StudentChoice = { id: number; name: string; admissionNo: string; section: string };
+export type StudentChoice = { id: number; name: string; nameNp: string | null; admissionNo: string; section: string };
 
 export function StudentPicker({ students, selectedIds, onSelectionChange, multiple = false, disabled = false }: {
   students: StudentChoice[];
@@ -29,7 +30,7 @@ export function StudentPicker({ students, selectedIds, onSelectionChange, multip
   const sections = [...new Set(students.map(student => student.section))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
   const filtered = students.filter(student =>
     (section === "" || student.section === section) &&
-    (query === "" || `${student.name} ${student.admissionNo}`.toLocaleLowerCase().includes(query)),
+    (query === "" || `${personSearch(student.name, student.nameNp)} ${student.admissionNo}`.toLocaleLowerCase().includes(query)),
   );
   const pageSize = 10;
   const safePage = clampPageIndex(page, filtered.length, pageSize);
@@ -77,9 +78,9 @@ export function StudentPicker({ students, selectedIds, onSelectionChange, multip
             {visible.map(student => (
               <TableRow key={student.id} data-state={selected.has(student.id) ? "selected" : undefined} onClick={() => choose(student.id)} className={cn("border-line", selected.has(student.id) && "bg-brand-tint hover:bg-brand-tint", disabled ? "opacity-60" : "cursor-pointer")}>
                 <TableCell className="px-4 py-3">
-                  <input type={multiple ? "checkbox" : "radio"} name={`${id}-selection`} value={student.id} checked={selected.has(student.id)} onChange={() => choose(student.id)} onClick={event => event.stopPropagation()} disabled={disabled} aria-label={`Select ${student.name}, ${student.admissionNo}, ${student.section}`} className="accent-brand focus-visible:ring-brand size-4 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none" />
+                  <input type={multiple ? "checkbox" : "radio"} name={`${id}-selection`} value={student.id} checked={selected.has(student.id)} onChange={() => choose(student.id)} onClick={event => event.stopPropagation()} disabled={disabled} aria-label={`Select ${personLabel(student.name, student.nameNp)}, ${student.admissionNo}, ${student.section}`} className="accent-brand focus-visible:ring-brand size-4 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none" />
                 </TableCell>
-                <TableCell className="max-w-72 py-3 whitespace-normal"><p className="break-words text-sm font-medium">{student.name}</p><p className="text-ink-3 mt-1 break-words text-xs">{student.admissionNo}</p></TableCell>
+                <TableCell className="max-w-72 py-3 whitespace-normal"><PersonName en={student.name} np={student.nameNp} className="text-sm" /><p className="text-ink-3 mt-1 break-words text-xs">{student.admissionNo}</p></TableCell>
                 <TableCell className="text-ink-2 py-3 pr-4 text-xs whitespace-normal">{student.section}</TableCell>
               </TableRow>
             ))}

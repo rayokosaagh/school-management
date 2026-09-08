@@ -16,6 +16,7 @@ export type GridOption = {
   /// grid can say why the option cannot be picked.
   staffId: number | null;
   staffName: string | null;
+  staffNameNp: string | null;
 };
 
 export type GridCell = {
@@ -28,6 +29,7 @@ export type GridCell = {
   tone: number;
   staffId: number;
   staffName: string;
+  staffNameNp: string | null;
   room: string;
 };
 
@@ -78,7 +80,7 @@ export async function getSectionGrid(
       where: { sectionId },
       select: {
         subjectOfferingId: true,
-        staff: { select: { id: true, fullName: true } },
+        staff: { select: { id: true, fullName: true, fullNameNp: true } },
       },
     }),
     prisma.timetablePeriod.findMany({
@@ -92,7 +94,7 @@ export async function getSectionGrid(
         assignment: {
           select: {
             subjectOfferingId: true,
-            staff: { select: { id: true, fullName: true } },
+            staff: { select: { id: true, fullName: true, fullNameNp: true } },
             subjectOffering: {
               select: { subjectId: true, subject: { select: { name: true } } },
             },
@@ -130,6 +132,7 @@ export async function getSectionGrid(
         tone: tones.get(offering.subjectId) ?? 0,
         staffId: staff?.id ?? null,
         staffName: staff?.fullName ?? null,
+        staffNameNp: staff?.fullNameNp ?? null,
       };
     }),
     cells: lessons.map((lesson) => ({
@@ -141,6 +144,7 @@ export async function getSectionGrid(
       tone: tones.get(lesson.assignment.subjectOffering.subjectId) ?? 0,
       staffId: lesson.assignment.staff.id,
       staffName: lesson.assignment.staff.fullName,
+      staffNameNp: lesson.assignment.staff.fullNameNp,
       room: lesson.room,
     })),
   };

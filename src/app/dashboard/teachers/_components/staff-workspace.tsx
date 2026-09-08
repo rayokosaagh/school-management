@@ -11,6 +11,7 @@ import { ConfirmSubmit } from "@/components/ui/confirm-submit";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { PageFrame } from "@/components/ui/page-frame";
+import { PersonName } from "@/components/ui/person-name";
 import { RegisterTabs, registerTabId, type RegisterTab } from "@/components/ui/register-tabs";
 import { FieldSelect } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -134,9 +135,7 @@ export function StaffWorkspace({
   const columns = useMemo<ColumnDef<StaffRow, unknown>[]>(
     () => [
       { id: "recordId", accessorFn: (r) => r.id, header: "ID", meta: { mono: true, width: "96px" } satisfies ColumnMeta, cell: ({ row }) => <span className="text-ink-3">{CODE.staff(row.original.id)}</span> },
-      { id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false, cell: ({ row }) => (
-        <span className="font-medium">{row.original.fullName}{row.original.fullNameNp ? <span className="font-devanagari text-ink-3 block text-[11.5px] leading-tight font-normal">{row.original.fullNameNp}</span> : null}</span>
-      ) },
+      { id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false, cell: ({ row }) => <PersonName en={row.original.fullName} np={row.original.fullNameNp} /> },
       { id: "designation", accessorKey: "designation", header: "Designation" },
       { id: "phone", accessorKey: "phone", header: "Phone", meta: { mono: true } satisfies ColumnMeta },
       // `assignments` counts subject-in-a-class pairings, not subjects: a

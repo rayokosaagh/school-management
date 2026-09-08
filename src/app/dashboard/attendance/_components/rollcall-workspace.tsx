@@ -8,6 +8,7 @@ import { useId, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageFrame } from "@/components/ui/page-frame";
+import { PersonName, personLabel } from "@/components/ui/person-name";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BsCalendar } from "@/components/ui/bs-calendar";
 import { Segmented } from "@/components/ui/segmented";
@@ -33,6 +34,7 @@ export type RollCallSection = {
 export type RegisterRow = {
   studentId: number;
   fullName: string;
+  fullNameNp: string | null;
   present: number;
   absent: number;
   late: number;
@@ -55,7 +57,10 @@ export function RollCallWorkspace({
 }: {
   sections: RollCallSection[];
   /// One entry per section, keyed by section id.
-  sheets: Record<number, { rows: SheetRow[]; taken: boolean; takenBy: string | null } | null>;
+  sheets: Record<
+    number,
+    { rows: SheetRow[]; taken: boolean; takenBy: string | null; takenByNp: string | null } | null
+  >;
   initialSectionId: number;
   /// Bikram Sambat, YYYY-MM-DD — what the sheet is keyed on.
   dateLabel: string;
@@ -283,7 +288,7 @@ export function RollCallWorkspace({
         </div>
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
           <TranslatedText>{sheet?.taken
-            ? `Taken${sheet.takenBy ? ` by ${sheet.takenBy}` : ""} · saving replaces it`
+            ? `Taken${sheet.takenBy ? ` by ${personLabel(sheet.takenBy, sheet.takenByNp)}` : ""} · saving replaces it`
             : "Not taken yet · everyone starts present"}</TranslatedText>
         </span>
         <span className="flex-1" />
@@ -326,7 +331,7 @@ export function RollCallWorkspace({
                       key={row.studentId}
                       className="flex items-baseline justify-between gap-3 px-4 py-2"
                     >
-                      <span className="min-w-0 truncate text-sm">{row.fullName}</span>
+                      <PersonName en={row.fullName} np={row.fullNameNp} className="text-sm font-normal" />
                       <span className="text-ink-3 shrink-0 font-mono text-[12px]">
                         {row.present}/{row.present + row.absent + row.late + row.leave} ·<TranslatedText>{" "}</TranslatedText>
                         {row.percent}%

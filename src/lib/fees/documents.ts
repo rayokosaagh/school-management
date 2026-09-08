@@ -61,6 +61,7 @@ export async function invoiceDocument(number: string) {
     yearBS: invoice.academicYear.nameBS,
     student: {
       name: invoice.enrollment.student.fullName,
+      nameNp: invoice.enrollment.student.fullNameNp,
       admissionNo: invoice.enrollment.student.admissionNo,
       rollNo: invoice.enrollment.rollNo,
       section: `${invoice.enrollment.section.grade.name} ${invoice.enrollment.section.name}`,
@@ -118,6 +119,7 @@ export async function receiptDocument(receiptNo: string) {
     paidBy: { name: payment.paidByName, phone: payment.paidByPhone },
     student: {
       name: first.enrollment.student.fullName,
+      nameNp: first.enrollment.student.fullNameNp,
       admissionNo: first.enrollment.student.admissionNo,
       section: `${first.enrollment.section.grade.name} ${first.enrollment.section.name}`,
     },
@@ -182,6 +184,7 @@ export async function statementDocument(receiptNos: string[]) {
   return {
     student: {
       name: enrollment.student.fullName,
+      nameNp: enrollment.student.fullNameNp,
       admissionNo: enrollment.student.admissionNo,
       section: `${enrollment.section.grade.name} ${enrollment.section.name}`,
     },

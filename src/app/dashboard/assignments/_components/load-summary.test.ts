@@ -3,7 +3,7 @@ import { summarizeLoad } from "./load-summary";
 import type { TeachingRow } from "./teaching-workspace";
 
 const person = (id: number, fullName: string, photoId: number | null, over: object = {}) =>
-  ({ id, fullName, photoId, designation: "Teacher", isActive: true, ...over });
+  ({ id, fullName, fullNameNp: null, photoId, designation: "Teacher", isActive: true, ...over });
 const staff = [person(1, "Asha Rai", 42), person(2, "Asha Rai", null), person(3, "Ram Shah", null)];
 const rows: TeachingRow[] = [
   { sectionId: 1, offeringId: 10, sectionLabel: "Class 1 A", subjectName: "Math", tone: 2, hasPractical: false, staffId: 1 },

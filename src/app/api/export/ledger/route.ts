@@ -39,6 +39,7 @@ export async function GET(request: Request) {
   const headers = [
     "Roll",
     "Name",
+    "Name (Nepali)",
     ...ledger.offerings.flatMap((o) => [`${o.name} (${o.fullMarks})`, `${o.name} Grade`]),
     "Total",
     "Percent",
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
   const rows: Cell[][] = ledger.students.map((s) => [
     s.rollNo,
     safeText(s.fullName),
+    safeText(s.fullNameNp),
     ...s.subjects.flatMap((sub) => [
       // Absent is its own value; a blank means not marked, and neither is zero.
       sub.result.isAbsent ? "Ab" : (sub.result.total ?? ""),

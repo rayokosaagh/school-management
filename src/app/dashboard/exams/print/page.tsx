@@ -82,7 +82,10 @@ export default async function PrintMarksheetsPage({
           <dl className="sheet-facts">
             <div>
               <dt><TranslatedText>Name</TranslatedText></dt>
-              <dd>{student.fullName}</dd>
+              <dd>
+                {student.fullName}
+                {student.fullNameNp ? <span className="np">{student.fullNameNp}</span> : null}
+              </dd>
             </div>
             <div>
               <dt><TranslatedText>Class</TranslatedText></dt>

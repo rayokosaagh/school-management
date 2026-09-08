@@ -9,6 +9,7 @@ import { ClipboardCheck, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageFrame } from "@/components/ui/page-frame";
+import { PersonName } from "@/components/ui/person-name";
 import { cn } from "@/lib/utils";
 import {
   RegisterTabs,
@@ -52,6 +53,7 @@ export type LedgerView = {
     studentId: number;
     rollNo: number;
     fullName: string;
+    fullNameNp: string | null;
     cells: { offeringId: number; total: number | null; passed: boolean | null }[];
     grandTotal: number | null;
     gpa: number | null;
@@ -307,7 +309,9 @@ export function ExamsWorkspace({
                   {ledger.students.map((s) => (
                     <tr key={s.studentId} className="border-line border-b last:border-0">
                       <td className="py-1.5 pr-3 font-mono">{s.rollNo}</td>
-                      <td className="py-1.5 pr-3">{s.fullName}</td>
+                      <td className="py-1.5 pr-3">
+                        <PersonName en={s.fullName} np={s.fullNameNp} />
+                      </td>
                       {s.cells.map((cell) => (
                         <td key={cell.offeringId} className="py-1.5 pr-3 font-mono">
                           {cell.total === null ? (

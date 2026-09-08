@@ -21,6 +21,7 @@ import { Amount } from "./money-cells";
 import { SetupHeader } from "./setup-header";
 import { ServiceRoster } from "./service-roster";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName, personSearch } from "@/components/ui/person-name";
 import { StudentPicker } from "./student-picker";
 
 type TransportData = Awaited<ReturnType<typeof transportWorkspace>>;
@@ -191,7 +192,7 @@ export function TransportPanel({ academicYearId, yearLabel, data, onBusy }: { ac
         <div className="flex min-w-0 items-center gap-2.5">
           <StudentAvatar photoId={null} name={row.original.name} className="size-8 rounded-lg text-xs" />
           <div className="min-w-0">
-            <p className="truncate font-medium">{row.original.name}</p>
+            <PersonName en={row.original.name} np={row.original.nameNp} />
             <p className="text-ink-3 truncate text-xs">{row.original.admissionNo}</p>
           </div>
         </div>
@@ -272,7 +273,7 @@ export function TransportPanel({ academicYearId, yearLabel, data, onBusy }: { ac
           columns={columns}
           getRowId={registration => String(registration.id)}
           sectionOf={registration => registration.section}
-          searchOf={registration => `${registration.name} ${registration.admissionNo} ${registration.section} ${registration.pickupLocation}`}
+          searchOf={registration => `${personSearch(registration.name, registration.nameNp)} ${registration.admissionNo} ${registration.section} ${registration.pickupLocation}`}
           noun="registration"
           disabled={pending}
           initialSort={[{ id: "student", desc: false }]}
@@ -323,7 +324,7 @@ export function TransportPanel({ academicYearId, yearLabel, data, onBusy }: { ac
             {selectedStudent ? (
               <>
                 <div className="bg-brand-tint border-brand-tint-2 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4">
-                  <div className="min-w-0"><p className="break-words text-sm font-semibold">{selectedStudent.name}</p><p className="text-ink-3 mt-1 break-words text-xs">{selectedStudent.admissionNo} · {selectedStudent.section}</p></div>
+                  <div className="min-w-0"><PersonName en={selectedStudent.name} np={selectedStudent.nameNp} className="text-sm font-semibold" /><p className="text-ink-3 mt-1 break-words text-xs">{selectedStudent.admissionNo} · {selectedStudent.section}</p></div>
                   <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => setEnrollmentId("")}><TranslatedText>Change student</TranslatedText></Button>
                 </div>
                 <RegistrationFields key={`${academicYearId}-${enrollmentId}`} academicYearId={academicYearId} enrollmentId={enrollmentId} registration={selected} initialMonth={data.months.filter(month => month.started).at(-1)?.month ?? 1} state={state} action={action} pending={pending} />

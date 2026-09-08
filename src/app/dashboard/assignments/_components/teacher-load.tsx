@@ -10,6 +10,7 @@ import { Kpi } from "@/components/ui/kpi";
 import { FieldSelect } from "@/components/ui/select";
 import { Segmented } from "@/components/ui/segmented";
 import { StudentAvatar } from "@/components/ui/student-avatar";
+import { PersonName, personSearch } from "@/components/ui/person-name";
 import { cn } from "@/lib/utils";
 import { summarizeLoad, type LoadStaff, type TeacherLoad } from "./load-summary";
 import type { TeachingRow } from "./teaching-workspace";
@@ -49,7 +50,7 @@ export function TeacherLoadView({ rows, staff, chosen, onManage }: {
     if (filter === "assigned" && !person.assignments.length) return false;
     if (filter === "empty" && person.assignments.length) return false;
     if (filter === "former" && person.isActive) return false;
-    return !q || `${person.fullName} ${person.assignments.map((row) => `${row.subjectName} ${row.sectionLabel}`).join(" ")}`.toLowerCase().includes(q);
+    return !q || `${personSearch(person.fullName, person.fullNameNp)} ${person.assignments.map((row) => `${row.subjectName} ${row.sectionLabel}`).join(" ")}`.toLowerCase().includes(q);
   }).sort((a, b) => (
     sort === "name" ? 0 : sort === "least" ? a.assignments.length - b.assignments.length : b.assignments.length - a.assignments.length
   ) || a.fullName.localeCompare(b.fullName));
@@ -153,7 +154,7 @@ function TeacherCard({ person, maxLoad, onManage }: {
             className={cn("size-10 rounded-lg bg-none text-xs font-semibold", count ? "bg-brand-tint text-brand-text" : "bg-surface-2 text-ink-3")}
           />
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold">{person.fullName}</h2>
+            <PersonName en={person.fullName} np={person.fullNameNp} className="text-sm font-semibold" />
             <p className="text-ink-3 mt-0.5 truncate text-xs">
               {person.designation}
               {count ? ` · ${person.subjects.length} subject${person.subjects.length === 1 ? "" : "s"} · ${person.classCount} class${person.classCount === 1 ? "" : "es"}` : null}

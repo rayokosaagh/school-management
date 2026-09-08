@@ -161,6 +161,7 @@ export default async function ExamsPage({
           studentId: s.studentId,
           rollNo: s.rollNo,
           fullName: s.fullName,
+          fullNameNp: s.fullNameNp,
           cells: s.subjects.map((x) => ({
             offeringId: x.offeringId,
             total: x.result.total,

@@ -7,6 +7,7 @@ import { ReceiptText } from "lucide-react";
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type ColumnMeta } from "@/components/ui/data-table";
+import { PersonName } from "@/components/ui/person-name";
 import type { feeWorkspace } from "@/lib/fees/fees";
 import { Amount, Owed } from "./money-cells";
 
@@ -61,7 +62,7 @@ export function BalancesTab({
         header: "Student",
         cell: ({ row }) => (
           <div className="min-w-0">
-            <p className="truncate font-medium">{row.original.name}</p>
+            <PersonName en={row.original.name} np={row.original.nameNp} />
             <p className="text-ink-3 truncate text-xs">{row.original.admissionNo}</p>
           </div>
         ),
