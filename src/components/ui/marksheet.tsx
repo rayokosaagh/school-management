@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import type { ReactNode } from "react";
 import { StatusPill } from "@/components/ui/record-table";
 import type { SubjectResult, Overall } from "@/lib/assessment/grading";
@@ -46,16 +47,16 @@ export function Marksheet({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isPublished ? (
-            <StatusPill tone="positive">Published</StatusPill>
+            <StatusPill tone="positive"><TranslatedText>Published</TranslatedText></StatusPill>
           ) : (
-            <StatusPill tone="warning">Draft</StatusPill>
+            <StatusPill tone="warning"><TranslatedText>Draft</TranslatedText></StatusPill>
           )}
           {overall.complete ? (
             <StatusPill tone={overall.passedAll ? "positive" : "critical"}>
-              {overall.passedAll ? "Passed" : `Failed ${overall.subjectsFailed}`}
+              <TranslatedText>{overall.passedAll ? "Passed" : `Failed ${overall.subjectsFailed}`}</TranslatedText>
             </StatusPill>
           ) : (
-            <StatusPill>Incomplete</StatusPill>
+            <StatusPill><TranslatedText>Incomplete</TranslatedText></StatusPill>
           )}
         </div>
       </div>
@@ -64,12 +65,12 @@ export function Marksheet({
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left text-xs">
-              <th className="py-2 pr-3 font-medium">Subject</th>
-              <th className="py-2 pr-3 font-medium">Theory</th>
-              {hasPractical ? <th className="py-2 pr-3 font-medium">Practical</th> : null}
-              <th className="py-2 pr-3 font-medium">Total</th>
-              <th className="py-2 pr-3 font-medium">Grade</th>
-              <th className="py-2 font-medium">Remarks</th>
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Subject</TranslatedText></th>
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Theory</TranslatedText></th>
+              {hasPractical ? <th className="py-2 pr-3 font-medium"><TranslatedText>Practical</TranslatedText></th> : null}
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Total</TranslatedText></th>
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Grade</TranslatedText></th>
+              <th className="py-2 font-medium"><TranslatedText>Remarks</TranslatedText></th>
             </tr>
           </thead>
           <tbody>
@@ -99,13 +100,13 @@ export function Marksheet({
                   )}
                 </td>
                 <td className="text-muted-foreground py-1.5 text-xs">
-                  {result.isAbsent
+                  <TranslatedText>{result.isAbsent
                     ? "Absent"
                     : result.failedParts.length > 0
                       ? `Failed ${result.failedParts.join(" and ")}`
                       : result.total === null
                         ? "Not marked"
-                        : ""}
+                        : ""}</TranslatedText>
                 </td>
               </tr>
             ))}
@@ -143,10 +144,10 @@ export function Marksheet({
       </div>
 
       {!overall.complete ? (
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs"><TranslatedText>
           Some subjects are not marked yet, so the percentage, GPA and position are
           withheld rather than shown from a partial result.
-        </p>
+        </TranslatedText></p>
       ) : null}
     </div>
   );

@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { TranslatedText, useTranslatedChildren } from "@/components/i18n/language-provider"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -74,7 +75,7 @@ function DialogContent({
           >
             <XIcon
             />
-            <span className="sr-only">Close</span>
+            <span className="sr-only"><TranslatedText>Close</TranslatedText></span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
@@ -111,15 +112,16 @@ function DialogFooter({
     >
       {children}
       {showCloseButton && (
-        <DialogPrimitive.Close render={<Button variant="outline" />}>
+        <DialogPrimitive.Close render={<Button variant="outline" />}><TranslatedText>
           Close
-        </DialogPrimitive.Close>
+        </TranslatedText></DialogPrimitive.Close>
       )}
     </div>
   )
 }
 
-function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
+function DialogTitle({ className, children, ...props }: DialogPrimitive.Title.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
@@ -128,14 +130,18 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
         className
       )}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </DialogPrimitive.Title>
   )
 }
 
 function DialogDescription({
   className,
+  children,
   ...props
 }: DialogPrimitive.Description.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
@@ -144,7 +150,9 @@ function DialogDescription({
         className
       )}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </DialogPrimitive.Description>
   )
 }
 

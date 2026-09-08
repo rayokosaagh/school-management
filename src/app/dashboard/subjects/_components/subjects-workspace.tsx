@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { BookOpen, FlaskConical, Library, NotebookPen, Plus, Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
@@ -207,21 +209,21 @@ export function SubjectsWorkspace({
           />
           <Sheet>
             <SheetTrigger render={<Button size="sm" />}>
-              <Plus data-icon="inline-start" aria-hidden="true" />
+              <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Add
-            </SheetTrigger>
+            </TranslatedText></SheetTrigger>
             <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
               <SheetHeader>
-                <SheetTitle>Add a subject</SheetTitle>
-                <SheetDescription>
+                <SheetTitle><TranslatedText>Add a subject</TranslatedText></SheetTitle>
+                <SheetDescription><TranslatedText>
                   A subject is school-wide; its marks are set per grade.
-                </SheetDescription>
+                </TranslatedText></SheetDescription>
               </SheetHeader>
               <div className="space-y-6 px-4 pb-6">
                 <AddSubjectForm />
                 {academicYearId && subjects.length > 0 && grades.length > 0 ? (
                   <div className="border-line space-y-3 border-t pt-5">
-                    <p className="text-sm font-medium">Add a subject to a grade</p>
+                    <p className="text-sm font-medium"><TranslatedText>Add a subject to a grade</TranslatedText></p>
                     <AddOfferingForm
                       subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
                       grades={grades}
@@ -275,9 +277,9 @@ export function SubjectsWorkspace({
         ) : null}
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {view === "curriculum"
+          <TranslatedText>{view === "curriculum"
             ? `${visibleOfferings.length} taught`
-            : `${visibleSubjects.length} subject${visibleSubjects.length === 1 ? "" : "s"}`}
+            : `${visibleSubjects.length} subject${visibleSubjects.length === 1 ? "" : "s"}`}</TranslatedText>
         </span>
       </PageFrame.Toolbar>
 

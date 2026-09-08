@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -54,12 +56,12 @@ export function SubjectDetail({ row, onDone }: { row: SubjectRow; onDone: () => 
       <form key={row.name} action={editAction} className="space-y-4">
         <input type="hidden" name="subjectId" value={row.id} />
         <div className="space-y-2">
-          <Label htmlFor={`subn-${row.id}`}>Subject</Label>
+          <Label htmlFor={`subn-${row.id}`}><TranslatedText>Subject</TranslatedText></Label>
           <Input id={`subn-${row.id}`} name="name" defaultValue={row.name} required />
         </div>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
+            <TranslatedText>{saving ? "Saving…" : "Save changes"}</TranslatedText>
           </Button>
           <Status state={editState} />
         </div>
@@ -70,14 +72,14 @@ export function SubjectDetail({ row, onDone }: { row: SubjectRow; onDone: () => 
           <input type="hidden" name="subjectId" value={row.id} />
           <ConfirmSubmit label="Delete subject" confirmLabel="Delete?" pending={deleting} />
         </form>
-        <Button type="button" variant="ghost" onClick={onDone}>
+        <Button type="button" variant="ghost" onClick={onDone}><TranslatedText>
           Close
-        </Button>
+        </TranslatedText></Button>
         <Status state={delState} />
       </div>
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         Blocked while the subject is still offered to any grade.
-      </p>
+      </TranslatedText></p>
     </div>
   );
 }
@@ -101,7 +103,7 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
         <input type="hidden" name="offeringId" value={row.id} />
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor={`oft-${row.id}`}>Theory full marks</Label>
+            <Label htmlFor={`oft-${row.id}`}><TranslatedText>Theory full marks</TranslatedText></Label>
             <Input
               id={`oft-${row.id}`}
               name="fullMarksTheory"
@@ -111,7 +113,7 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`opt-${row.id}`}>Theory pass marks</Label>
+            <Label htmlFor={`opt-${row.id}`}><TranslatedText>Theory pass marks</TranslatedText></Label>
             <Input
               id={`opt-${row.id}`}
               name="passMarksTheory"
@@ -129,14 +131,14 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
             checked={hasPractical}
             onChange={(e) => setHasPractical(e.target.checked)}
             className="border-input size-4 rounded border"
-          />
+          /><TranslatedText>
           This subject has a practical
-        </label>
+        </TranslatedText></label>
 
         {hasPractical ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor={`ofp-${row.id}`}>Practical full marks</Label>
+              <Label htmlFor={`ofp-${row.id}`}><TranslatedText>Practical full marks</TranslatedText></Label>
               <Input
                 id={`ofp-${row.id}`}
                 name="fullMarksPractical"
@@ -145,7 +147,7 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`opp-${row.id}`}>Practical pass marks</Label>
+              <Label htmlFor={`opp-${row.id}`}><TranslatedText>Practical pass marks</TranslatedText></Label>
               <Input
                 id={`opp-${row.id}`}
                 name="passMarksPractical"
@@ -155,14 +157,14 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-xs"><TranslatedText>
             Turning the practical off clears its marks rather than keeping them hidden.
-          </p>
+          </TranslatedText></p>
         )}
 
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
+            <TranslatedText>{saving ? "Saving…" : "Save changes"}</TranslatedText>
           </Button>
           <Status state={editState} />
         </div>
@@ -173,16 +175,16 @@ export function OfferingDetail({ row, onDone }: { row: OfferingRow; onDone: () =
           <input type="hidden" name="offeringId" value={row.id} />
           <ConfirmSubmit label="Remove from grade" confirmLabel="Remove?" pending={deleting} />
         </form>
-        <Button type="button" variant="ghost" onClick={onDone}>
+        <Button type="button" variant="ghost" onClick={onDone}><TranslatedText>
           Close
-        </Button>
+        </TranslatedText></Button>
         <Status state={delState} />
       </div>
       {row.assignments > 0 ? (
         <p className="text-muted-foreground text-xs">
-          {row.assignments} teacher assignment{row.assignments === 1 ? "" : "s"} use this;
+          {row.assignments}<TranslatedText> teacher assignment</TranslatedText><TranslatedText>{row.assignments === 1 ? "" : "s"}</TranslatedText><TranslatedText> use this;
           removal is blocked until those are cleared.
-        </p>
+        </TranslatedText></p>
       ) : null}
     </div>
   );
@@ -222,7 +224,7 @@ export function SubjectsView({ rows }: { rows: SubjectRow[] }) {
           span: 2,
           render: (r) => (
             <StatusPill tone={r.offerings > 0 ? "positive" : "neutral"}>
-              {r.offerings} grade{r.offerings === 1 ? "" : "s"}
+              {r.offerings}<TranslatedText> grade</TranslatedText><TranslatedText>{r.offerings === 1 ? "" : "s"}</TranslatedText>
             </StatusPill>
           ),
         },

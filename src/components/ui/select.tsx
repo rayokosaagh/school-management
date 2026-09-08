@@ -5,6 +5,7 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
+import { useLanguage, useTranslatedChildren } from "@/components/i18n/language-provider"
 
 const Select = SelectPrimitive.Root
 
@@ -124,6 +125,7 @@ function SelectItem({
   children,
   ...props
 }: SelectPrimitive.Item.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -134,7 +136,7 @@ function SelectItem({
       {...props}
     >
       <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
-        {children}
+        {translatedChildren}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
         render={
@@ -227,14 +229,16 @@ function FieldSelect({
   "aria-label"?: string
 }) {
   const { "aria-label": ariaLabel, ...root } = props
+  const { t } = useLanguage()
+  const translatedOptions = options.map((option) => ({ ...option, label: t(option.label) }))
   return (
-    <SelectPrimitive.Root items={options} {...root}>
+    <SelectPrimitive.Root items={translatedOptions} {...root}>
       <SelectTrigger
         size="none"
         className={cn(fieldTriggerClass, className)}
-        aria-label={ariaLabel}
+        aria-label={ariaLabel ? t(ariaLabel) : ariaLabel}
       >
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder ? t(placeholder) : placeholder} />
       </SelectTrigger>
       {/* Opens below the field rather than over it — the popup is ours, so it
           should behave like the rest of the app, not like a native menu. */}
@@ -244,7 +248,7 @@ function FieldSelect({
         anchor={anchor}
         className={contentClassName}
       >
-        {options.map((option) => (
+        {translatedOptions.map((option) => (
           <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
             {option.label}
           </SelectItem>

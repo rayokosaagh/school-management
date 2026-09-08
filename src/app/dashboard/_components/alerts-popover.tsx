@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import Link from "next/link";
 import { Bell, ChevronRight } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,11 +22,11 @@ export function AlertsPopover({ items }: { items: DueItem[] }) {
         ) : null}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-1">
-        <p className="text-ink-3 px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.1em] uppercase">
+        <p className="text-ink-3 px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
           Needs attention
-        </p>
+        </TranslatedText></p>
         {n === 0 ? (
-          <p className="text-ink-3 px-3 pb-3 text-sm">Everything is up to date.</p>
+          <p className="text-ink-3 px-3 pb-3 text-sm"><TranslatedText>Everything is up to date.</TranslatedText></p>
         ) : (
           <ul className="pb-1">
             {items.map((item) => (

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -88,9 +90,9 @@ export function ConfirmSubmit({
         variant="ghost"
         size={icon ? "xs" : size}
         onClick={() => setArmed(false)}
-      >
+      ><TranslatedText>
         Cancel
-      </Button>
+      </TranslatedText></Button>
     </span>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Pencil, Phone, X } from "lucide-react";
 import { useState } from "react";
 import { AttendanceStrip } from "@/components/ui/attendance-strip";
@@ -56,7 +58,7 @@ export function StudentPane({
           {summary.fullNameNp ? <span className="font-devanagari text-ink-2">{summary.fullNameNp} · </span> : null}
           {/* The page redirects when there is no current-year enrolment, so the
               pane never opens without one. */}
-          {summary.enrollment ? <>{summary.enrollment.sectionLabel} · Roll <span className="font-mono">{summary.enrollment.rollNo}</span></> : null}
+          {summary.enrollment ? <>{summary.enrollment.sectionLabel}<TranslatedText> · Roll </TranslatedText><span className="font-mono">{summary.enrollment.rollNo}</span></> : null}
         </>
       }
       initials={initialsOf(summary.fullName)}
@@ -65,13 +67,13 @@ export function StudentPane({
         <>
           <Button size="sm" variant={editing ? "outline" : "default"} onClick={() => setEditing((v) => !v)}>
             {editing ? <X data-icon="inline-start" aria-hidden="true" /> : <Pencil data-icon="inline-start" aria-hidden="true" />}
-            {editing ? "Cancel" : "Edit"}
+            <TranslatedText>{editing ? "Cancel" : "Edit"}</TranslatedText>
           </Button>
           {primary ? (
             <Button size="sm" variant="outline" nativeButton={false} render={<a href={`tel:${primary.phone}`} />}>
-              <Phone data-icon="inline-start" aria-hidden="true" />
+              <Phone data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Call guardian
-            </Button>
+            </TranslatedText></Button>
           ) : null}
           {onClose ? <Button size="sm" variant="ghost" className="ml-auto" aria-label="Close details" onClick={onClose}><X aria-hidden="true" /></Button> : null}
         </>
@@ -109,20 +111,20 @@ export function StudentPane({
               {summary.guardians.map((g) => (
                 <li key={g.id} className="flex items-center gap-2.5">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{g.fullName} <span className="text-ink-3 font-normal">· {RELATION[g.relation] ?? g.relation}{g.isPrimary ? " · primary" : ""}</span></p>
-                    <p className="text-ink-3 font-mono text-xs tabular-nums">{g.phone}{g.occupation ? ` · ${g.occupation}` : ""}</p>
+                    <p className="truncate font-medium">{g.fullName} <span className="text-ink-3 font-normal">· {RELATION[g.relation] ?? g.relation}<TranslatedText>{g.isPrimary ? " · primary" : ""}</TranslatedText></span></p>
+                    <p className="text-ink-3 font-mono text-xs tabular-nums">{g.phone}<TranslatedText>{g.occupation ? ` · ${g.occupation}` : ""}</TranslatedText></p>
                   </div>
                 </li>
               ))}
-              {summary.guardians.length === 0 ? <li className="text-ink-3 text-sm">No guardian on record.</li> : null}
+              {summary.guardians.length === 0 ? <li className="text-ink-3 text-sm"><TranslatedText>No guardian on record.</TranslatedText></li> : null}
             </ul>
           </DetailPane.Section>
 
           <DetailPane.Section label="Attendance this year">
             <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
-              {summary.attendance.percent == null ? "—" : `${summary.attendance.percent}%`}
+              <TranslatedText>{summary.attendance.percent == null ? "—" : `${summary.attendance.percent}%`}</TranslatedText>
               <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal">
-                {summary.attendance.recorded === 0 ? "no roll calls yet" : `present · ${summary.attendance.recorded} days recorded`}
+                <TranslatedText>{summary.attendance.recorded === 0 ? "no roll calls yet" : `present · ${summary.attendance.recorded} days recorded`}</TranslatedText>
               </span>
             </p>
             <AttendanceStrip days={summary.attendance.days} size="lg" className="mt-2 w-full" />
@@ -130,19 +132,19 @@ export function StudentPane({
 
           <DetailPane.Section label="Marks">
             {summary.exams.length === 0 ? (
-              <p className="text-ink-3 text-sm">No marks entered this year.</p>
+              <p className="text-ink-3 text-sm"><TranslatedText>No marks entered this year.</TranslatedText></p>
             ) : (
               <ul className="space-y-1.5">
                 {summary.exams.map((e) => (
                   <li key={e.termId} className="grid grid-cols-[1fr_auto_auto] items-center gap-2.5 text-[12.5px]">
                     <span>
-                      {e.name}{" "}
-                      <StatusDot tone={e.isPublished ? "ok" : "neutral"} className="ml-1">{e.isPublished ? "Published" : "Draft"}</StatusDot>
+                      {e.name}<TranslatedText>{" "}</TranslatedText>
+                      <StatusDot tone={e.isPublished ? "ok" : "neutral"} className="ml-1"><TranslatedText>{e.isPublished ? "Published" : "Draft"}</TranslatedText></StatusDot>
                     </span>
                     <span className="bg-line h-1.5 w-[90px] overflow-hidden rounded-full" aria-hidden="true">
                       <i className="bg-brand block h-full" style={{ width: `${e.percent ?? 0}%` }} />
                     </span>
-                    <span className="w-10 text-right font-mono tabular-nums">{e.percent == null ? "—" : `${e.percent}%`}</span>
+                    <span className="w-10 text-right font-mono tabular-nums"><TranslatedText>{e.percent == null ? "—" : `${e.percent}%`}</TranslatedText></span>
                   </li>
                 ))}
               </ul>
@@ -155,7 +157,7 @@ export function StudentPane({
             <ul className="space-y-1.5 text-[12.5px]">
               {summary.history.map((h) => (
                 <li key={`${h.year}-${h.sectionLabel}`}>
-                  <span className="text-ink-3 font-mono tabular-nums">{h.enrolledOnBs}</span>&nbsp;&nbsp;{h.year} · {h.sectionLabel}, roll {h.rollNo}
+                  <span className="text-ink-3 font-mono tabular-nums">{h.enrolledOnBs}</span><TranslatedText>&nbsp;&nbsp;</TranslatedText>{h.year} · {h.sectionLabel}<TranslatedText>, roll </TranslatedText>{h.rollNo}
                 </li>
               ))}
             </ul>

@@ -4,6 +4,7 @@ import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+import { useTranslatedChildren } from "@/components/i18n/language-provider"
 
 function Tabs({
   className,
@@ -53,7 +54,8 @@ function TabsList({
   )
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+function TabsTrigger({ className, children, ...props }: TabsPrimitive.Tab.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -65,7 +67,9 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
         className
       )}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </TabsPrimitive.Tab>
   )
 }
 

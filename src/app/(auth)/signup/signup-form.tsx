@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, AtSign, Eye, EyeOff, Lock, User } from "lucide-react";
@@ -26,16 +28,16 @@ export function SignupForm() {
       <div className="mx-auto w-full max-w-xs space-y-6">
         <div className="space-y-2 text-center">
           <Logo className="mx-auto h-16 w-16" />
-          <h1 className="text-3xl font-semibold">Create an account</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-semibold"><TranslatedText>Create an account</TranslatedText></h1>
+          <p className="text-muted-foreground"><TranslatedText>
             Get set up to manage students, teachers and classes.
-          </p>
+          </TranslatedText></p>
         </div>
 
         <form action={formAction} className="space-y-5">
           <div className="space-y-6">
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username"><TranslatedText>Username</TranslatedText></Label>
               <div className="relative mt-2.5">
                 <Input
                   id="username"
@@ -54,7 +56,7 @@ export function SignupForm() {
             </div>
 
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email"><TranslatedText>Email</TranslatedText></Label>
               <div className="relative mt-2.5">
                 <Input
                   id="email"
@@ -72,7 +74,7 @@ export function SignupForm() {
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password"><TranslatedText>Password</TranslatedText></Label>
               <div className="relative mt-2.5">
                 <Input
                   id="password"
@@ -106,9 +108,9 @@ export function SignupForm() {
               <p
                 id="password-hint"
                 className="text-muted-foreground mt-2 text-xs"
-              >
+              ><TranslatedText>
                 At least 8 characters.
-              </p>
+              </TranslatedText></p>
             </div>
           </div>
 
@@ -119,18 +121,18 @@ export function SignupForm() {
           )}
 
           <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Creating account…" : "Create account"}
+            <TranslatedText>{pending ? "Creating account…" : "Create account"}</TranslatedText>
             {!pending && <ArrowRight className="h-4 w-4" />}
           </Button>
 
-          <div className="text-center text-sm">
-            Already have an account?{" "}
+          <div className="text-center text-sm"><TranslatedText>
+            Already have an account?</TranslatedText><TranslatedText>{" "}</TranslatedText>
             <Link
               href="/login"
               className="text-primary font-medium hover:underline"
-            >
+            ><TranslatedText>
               Sign in
-            </Link>
+            </TranslatedText></Link>
           </div>
         </form>
       </div>

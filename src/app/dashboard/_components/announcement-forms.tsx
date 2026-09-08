@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Megaphone, Pin, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import type { AnnouncementAudience } from "@/generated/prisma/enums";
@@ -63,7 +65,7 @@ export function AnnouncementForm({
       {existing ? <input type="hidden" name="announcementId" value={existing.id} /> : null}
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-title`}>Title</Label>
+        <Label htmlFor={`${id}-title`}><TranslatedText>Title</TranslatedText></Label>
         <Input
           id={`${id}-title`}
           name="title"
@@ -75,7 +77,7 @@ export function AnnouncementForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-body`}>Message</Label>
+        <Label htmlFor={`${id}-body`}><TranslatedText>Message</TranslatedText></Label>
         <Textarea
           id={`${id}-body`}
           name="body"
@@ -88,7 +90,7 @@ export function AnnouncementForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-audience`}>Who is it for?</Label>
+        <Label htmlFor={`${id}-audience`}><TranslatedText>Who is it for?</TranslatedText></Label>
         {/* React posts the value, so the picker cannot drift out of step with
             what is submitted the way an uncontrolled select would. */}
         <input type="hidden" name="audience" value={audience} />
@@ -121,24 +123,24 @@ export function AnnouncementForm({
         />
         <span className="min-w-0">
           <span className="flex items-center gap-1.5 text-sm font-medium">
-            <Pin className="size-3.5" aria-hidden="true" />
+            <Pin className="size-3.5" aria-hidden="true" /><TranslatedText>
             Keep it at the top
-          </span>
-          <span className="text-ink-3 mt-1 block text-xs leading-5">
+          </TranslatedText></span>
+          <span className="text-ink-3 mt-1 block text-xs leading-5"><TranslatedText>
             For the few notices that stay true all year, such as exam week or the fee deadline.
-          </span>
+          </TranslatedText></span>
         </span>
       </label>
 
       <Button type="submit" disabled={pending} className="w-full">
         {existing ? null : <Plus data-icon="inline-start" aria-hidden="true" />}
-        {pending
+        <TranslatedText>{pending
           ? existing
             ? "Saving…"
             : "Posting…"
           : existing
             ? "Save changes"
-            : "Post announcement"}
+            : "Post announcement"}</TranslatedText>
       </Button>
     </form>
   );
@@ -168,9 +170,9 @@ export function ManageAnnouncements({ items }: { items: AnnouncementCard[] }) {
 
   if (items.length === 0) {
     return (
-      <p className="text-ink-3 text-sm leading-6">
+      <p className="text-ink-3 text-sm leading-6"><TranslatedText>
         Nothing posted yet. Your first announcement appears on every dashboard it is addressed to.
-      </p>
+      </TranslatedText></p>
     );
   }
 
@@ -186,7 +188,7 @@ export function ManageAnnouncements({ items }: { items: AnnouncementCard[] }) {
               </p>
               <p className="text-ink-3 mt-1 text-xs">
                 {AUDIENCE_LABEL[item.audience]} · {formatBs(item.createdAt, "DD MMM YYYY")}
-                {item.expiresOn ? ` · until ${formatBs(item.expiresOn, "DD MMM YYYY")}` : ""}
+                <TranslatedText>{item.expiresOn ? ` · until ${formatBs(item.expiresOn, "DD MMM YYYY")}` : ""}</TranslatedText>
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -197,7 +199,7 @@ export function ManageAnnouncements({ items }: { items: AnnouncementCard[] }) {
                 aria-expanded={editing === item.id}
                 onClick={() => setEditing((open) => (open === item.id ? null : item.id))}
               >
-                {editing === item.id ? "Close" : "Edit"}
+                <TranslatedText>{editing === item.id ? "Close" : "Edit"}</TranslatedText>
               </Button>
               <Withdraw item={item} />
             </div>
@@ -216,8 +218,8 @@ export function ManageAnnouncements({ items }: { items: AnnouncementCard[] }) {
 export function ComposeHeading() {
   return (
     <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-      <Megaphone className="text-brand size-4" aria-hidden="true" />
+      <Megaphone className="text-brand size-4" aria-hidden="true" /><TranslatedText>
       Write an announcement
-    </h3>
+    </TranslatedText></h3>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { AlertTriangle, Info } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -44,12 +46,12 @@ export function YearStep({
   return (
     <div className="max-w-2xl space-y-6">
       <Callout icon={Info} tint="blue">
-        <p className="font-medium">Prepare first. Activate when the school is ready.</p>
-        <p className="mt-1">Existing records stay in {sourceYear.nameBS}. Fee prices, transport and other service registrations do not copy; set them up separately for the new year.</p>
-        <p className="mt-1">Student decisions take effect when you confirm, even if you leave the current year unchanged. There is no undo button.</p>
+        <p className="font-medium"><TranslatedText>Prepare first. Activate when the school is ready.</TranslatedText></p>
+        <p className="mt-1"><TranslatedText>Existing records stay in </TranslatedText>{sourceYear.nameBS}<TranslatedText>. Fee prices, transport and other service registrations do not copy; set them up separately for the new year.</TranslatedText></p>
+        <p className="mt-1"><TranslatedText>Student decisions take effect when you confirm, even if you leave the current year unchanged. There is no undo button.</TranslatedText></p>
       </Callout>
       <section className="space-y-2">
-        <Label htmlFor="target-year">Roll {sourceYear.nameBS} into</Label>
+        <Label htmlFor="target-year"><TranslatedText>Roll </TranslatedText>{sourceYear.nameBS}<TranslatedText> into</TranslatedText></Label>
         <div className="flex gap-2">
           <FieldSelect
             id="target-year"
@@ -71,7 +73,7 @@ export function YearStep({
         </div>
         <div className="flex items-end gap-2 pt-2">
           <div className="space-y-1">
-            <Label htmlFor="new-year">Or create a year</Label>
+            <Label htmlFor="new-year"><TranslatedText>Or create a year</TranslatedText></Label>
             <Input
               id="new-year"
               value={newYear}
@@ -105,20 +107,20 @@ export function YearStep({
               }
             }}
           >
-            {creating ? "Creating…" : "Create"}
+            <TranslatedText>{creating ? "Creating…" : "Create"}</TranslatedText>
           </Button>
         </div>
         {createError ? <p role="alert" className="text-destructive text-sm">{createError}</p> : null}
-        <p className="text-ink-3 text-xs">Creating a year saves an empty year only. It does not promote students or activate it.</p>
+        <p className="text-ink-3 text-xs"><TranslatedText>Creating a year saves an empty year only. It does not promote students or activate it.</TranslatedText></p>
       </section>
 
       <section className="space-y-3">
-        <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">
+        <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
           What to copy
-        </p>
-        <p className="text-ink-2 text-sm">
+        </TranslatedText></p>
+        <p className="text-ink-2 text-sm"><TranslatedText>
           Sections always copy — promoted students need somewhere to land.
-        </p>
+        </TranslatedText></p>
         {(
           [
             ["copyOfferings", "Subject offerings, with their full and pass marks"],
@@ -137,7 +139,7 @@ export function YearStep({
       </section>
 
       <section className="space-y-2">
-        <Label htmlFor="roll-order">New roll numbers</Label>
+        <Label htmlFor="roll-order"><TranslatedText>New roll numbers</TranslatedText></Label>
         <FieldSelect
           id="roll-order"
           aria-label="Roll number order"
@@ -176,18 +178,18 @@ export function YearStep({
 
         {plan && plan.blockers.length === 0 ? (
           <Callout icon={Info} tint="blue">
-            {plan.sections.create} section(s), {plan.offerings.create} offering(s),{" "}
-            {plan.assignments.create} assignment(s) and {plan.timetable.create} timetable period(s)
+            {plan.sections.create}<TranslatedText> section(s), </TranslatedText>{plan.offerings.create}<TranslatedText> offering(s),</TranslatedText><TranslatedText>{" "}</TranslatedText>
+            {plan.assignments.create}<TranslatedText> assignment(s) and </TranslatedText>{plan.timetable.create}<TranslatedText> timetable period(s)
             would be created.
-          </Callout>
+          </TranslatedText></Callout>
         ) : null}
       </div>
 
       {/* Step 2 renders only when plan is set — without this check a stale or
           in-flight preview would strand the operator on a blank panel. */}
-      <Button disabled={targetYearId === null || pending || creating || !plan} onClick={onContinue}>
+      <Button disabled={targetYearId === null || pending || creating || !plan} onClick={onContinue}><TranslatedText>
         Continue to students
-      </Button>
+      </TranslatedText></Button>
     </div>
   );
 }

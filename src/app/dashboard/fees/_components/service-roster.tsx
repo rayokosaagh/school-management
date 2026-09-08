@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
@@ -146,14 +148,14 @@ export function ServiceRoster<T>({
       {selection && selection.ids.length > 0 ? (
         <div className="border-brand-tint-2 bg-brand-tint flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2">
           <p role="status" className="text-brand-text text-xs font-medium">
-            {selection.ids.length} selected
-          </p>
+            {selection.ids.length}<TranslatedText> selected
+          </TranslatedText></p>
           <span className="flex-1" />
           <div className="flex flex-wrap items-center gap-2">
             {bulkActions}
-            <Button type="button" variant="ghost" size="sm" onClick={() => selection.onChange([])}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => selection.onChange([])}><TranslatedText>
               Clear
-            </Button>
+            </TranslatedText></Button>
           </div>
         </div>
       ) : null}

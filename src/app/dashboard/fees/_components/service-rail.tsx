@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { FieldSelect } from "@/components/ui/select";
@@ -39,15 +41,15 @@ export function ServiceRail({
   return (
     <aside className="border-line bg-surface-2/50 min-w-0 rounded-t-xl border-b p-4 lg:rounded-tr-none lg:rounded-bl-xl lg:border-r lg:border-b-0 lg:p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Services</h3>
+        <h3 className="text-sm font-semibold"><TranslatedText>Services</TranslatedText></h3>
         <span className="text-ink-3 text-xs">
-          {services.length} {services.length === 1 ? "service" : "services"}
+          {services.length} <TranslatedText>{services.length === 1 ? "service" : "services"}</TranslatedText>
         </span>
       </div>
-      <p className="text-ink-3 mb-4 text-xs leading-5">
+      <p className="text-ink-3 mb-4 text-xs leading-5"><TranslatedText>
         Transport, library and anything else charged to the pupils who take it. Only registered
         students are billed.
-      </p>
+      </TranslatedText></p>
 
       <div className="lg:hidden">
         <FieldSelect

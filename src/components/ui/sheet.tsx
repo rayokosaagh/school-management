@@ -6,6 +6,7 @@ import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { TranslatedText, useTranslatedChildren } from "@/components/i18n/language-provider"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -72,7 +73,7 @@ function SheetContent({
           >
             <XIcon
             />
-            <span className="sr-only">Close</span>
+            <span className="sr-only"><TranslatedText>Close</TranslatedText></span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Popup>
@@ -100,7 +101,8 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
+function SheetTitle({ className, children, ...props }: SheetPrimitive.Title.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
@@ -109,20 +111,26 @@ function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
         className
       )}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </SheetPrimitive.Title>
   )
 }
 
 function SheetDescription({
   className,
+  children,
   ...props
 }: SheetPrimitive.Description.Props) {
+  const translatedChildren = useTranslatedChildren(children)
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
       className={cn("text-sm text-muted-foreground", className)}
       {...props}
-    />
+    >
+      {translatedChildren}
+    </SheetPrimitive.Description>
   )
 }
 

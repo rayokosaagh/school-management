@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { getLetterhead, getSchool, saveSchool } from "./school";
+import { normalizeLanguage } from "@/lib/i18n/translations";
 
 // The school profile is a single row, so this test has to put back whatever was
 // there before rather than delete it.
@@ -14,6 +15,7 @@ afterAll(async () => {
       address: original.address,
       phone: original.phone,
       email: original.email,
+      language: normalizeLanguage(original.language),
     });
   } else {
     await prisma.schoolProfile.deleteMany({});
@@ -78,5 +80,17 @@ describe.skipIf(!process.env.DB_TESTS)("school profile", () => {
     expect(letterhead.configured).toBe(true);
     expect(letterhead.name).toBe("__test Letterhead School");
     expect(letterhead.address).toBe("Kathmandu-11");
+  });
+
+  it("uses the Nepali school name when the interface is Nepali", async () => {
+    await saveSchool({
+      name: "__test Janata School",
+      nameNp: "जनता विद्यालय",
+      language: "ne",
+    });
+    const letterhead = await getLetterhead();
+    expect(letterhead.language).toBe("ne");
+    expect(letterhead.displayName).toBe("जनता विद्यालय");
+    expect(letterhead.name).toBe("__test Janata School");
   });
 });

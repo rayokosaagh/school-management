@@ -1,9 +1,10 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {
   return (
     <div className="mx-auto w-full max-w-[1480px] space-y-5" role="status" aria-busy="true" aria-label="Loading your overview">
-      <span className="sr-only">Loading your overview…</span>
+      <span className="sr-only"><TranslatedText>Loading your overview…</TranslatedText></span>
       <div className="space-y-2"><Skeleton className="h-3 w-28" /><Skeleton className="h-7 w-36" /></div>
       <div className="bg-brand-deep flex flex-wrap items-center justify-between gap-6 rounded-2xl p-6 sm:p-8">
         <div className="w-full max-w-xl space-y-4">

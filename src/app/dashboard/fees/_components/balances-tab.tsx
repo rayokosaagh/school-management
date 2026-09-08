@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { ReceiptText } from "lucide-react";
 import { useMemo } from "react";
@@ -88,7 +90,7 @@ export function BalancesTab({
               <p className="text-ink-3 truncate text-xs">{scoped.label}</p>
             </div>
           ) : (
-            <Badge variant="outline">Not billed</Badge>
+            <Badge variant="outline"><TranslatedText>Not billed</TranslatedText></Badge>
           );
         },
       },

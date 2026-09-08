@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { ChevronRight, KeyRound, Pencil, Phone, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -19,7 +21,7 @@ const CLASS_CHIP =
 
 /// Shared with the table so a status reads the same in both places.
 export function StaffStatus({ isActive }: { isActive: boolean }) {
-  return <StatusDot tone={isActive ? "ok" : "neutral"}>{isActive ? "Active" : "Inactive"}</StatusDot>;
+  return <StatusDot tone={isActive ? "ok" : "neutral"}><TranslatedText>{isActive ? "Active" : "Inactive"}</TranslatedText></StatusDot>;
 }
 
 function initialsOf(name: string) {
@@ -60,7 +62,7 @@ function OtherYears({ count, children }: { count: number; children: React.ReactN
           data-icon="inline-start"
           className={cn("transition-transform", open && "rotate-90")}
         />
-        {count === 1 ? "1 other year" : `${count} other years`}
+        <TranslatedText>{count === 1 ? "1 other year" : `${count} other years`}</TranslatedText>
       </Button>
       {open ? <div className="mt-2.5 space-y-3.5">{children}</div> : null}
     </div>
@@ -114,8 +116,8 @@ function ReachBar({
         })}
       </ul>
       <p className="text-ink-3 mt-1 text-[11.5px]">
-        {covered} of {ladder.length} grades
-        {classes.length > covered ? ` · ${classes.length} classes` : null}
+        {covered}<TranslatedText> of </TranslatedText>{ladder.length}<TranslatedText> grades
+        </TranslatedText>{classes.length > covered ? ` · ${classes.length} classes` : null}
       </p>
     </div>
   );
@@ -145,12 +147,12 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
         <>
           <Button size="sm" variant={editing ? "outline" : "default"} onClick={() => setEditing((v) => !v)}>
             {editing ? <X data-icon="inline-start" aria-hidden="true" /> : <Pencil data-icon="inline-start" aria-hidden="true" />}
-            {editing ? "Cancel" : "Edit"}
+            <TranslatedText>{editing ? "Cancel" : "Edit"}</TranslatedText>
           </Button>
           <Button size="sm" variant="outline" nativeButton={false} render={<a href={`tel:${summary.phone}`} />}>
-            <Phone data-icon="inline-start" aria-hidden="true" />
+            <Phone data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Call
-          </Button>
+          </TranslatedText></Button>
           {onClose ? <Button size="sm" variant="ghost" className="ml-auto" aria-label="Close details" onClick={onClose}><X aria-hidden="true" /></Button> : null}
         </>
       }
@@ -193,17 +195,17 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                 nativeButton={false}
                 render={<Link href={`/dashboard/settings?view=privacy&staff=${summary.staffId}`} />}
               >
-                <KeyRound data-icon="inline-start" aria-hidden="true" />
+                <KeyRound data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                 Set up sign-in
-              </Button>
+              </TranslatedText></Button>
             ) : null}
           </DetailPane.Section>
 
           <DetailPane.Section label="Class teacher of">
-            {summary.sectionsLed.length === 0 ? <p className="text-ink-3 text-sm">Not a class teacher.</p> : (
+            {summary.sectionsLed.length === 0 ? <p className="text-ink-3 text-sm"><TranslatedText>Not a class teacher.</TranslatedText></p> : (
               <>
                 {ledNow.length === 0 ? (
-                  <p className="text-ink-3 text-sm">Not a class teacher this year.</p>
+                  <p className="text-ink-3 text-sm"><TranslatedText>Not a class teacher this year.</TranslatedText></p>
                 ) : (
                   // The year is the section's own heading now, so it is not
                   // repeated against every line.
@@ -217,18 +219,18 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
           </DetailPane.Section>
 
           <DetailPane.Section label="Teaching load">
-            {summary.load.length === 0 ? <p className="text-ink-3 text-sm">No subjects assigned.</p> : (
+            {summary.load.length === 0 ? <p className="text-ink-3 text-sm"><TranslatedText>No subjects assigned.</TranslatedText></p> : (
               <>
                 {loadNow.length === 0 ? (
-                  <p className="text-ink-3 text-sm">No subjects this year.</p>
+                  <p className="text-ink-3 text-sm"><TranslatedText>No subjects this year.</TranslatedText></p>
                 ) : null}
                 {loadNow.map((y) => (
                   <div key={y.year}>
                     <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
                       <span>{y.year}</span>
                       <span>
-                        {y.subjectCount} {y.subjectCount === 1 ? "subject" : "subjects"} · {y.classCount}{" "}
-                        {y.classCount === 1 ? "class" : "classes"}
+                        {y.subjectCount} <TranslatedText>{y.subjectCount === 1 ? "subject" : "subjects"}</TranslatedText> · {y.classCount}<TranslatedText>{" "}</TranslatedText>
+                        <TranslatedText>{y.classCount === 1 ? "class" : "classes"}</TranslatedText>
                       </span>
                     </p>
                     <ul className="space-y-2.5">
@@ -260,8 +262,8 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                       <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
                         <span>{y.year}</span>
                         <span>
-                          {y.subjectCount} {y.subjectCount === 1 ? "subject" : "subjects"} · {y.classCount}{" "}
-                          {y.classCount === 1 ? "class" : "classes"}
+                          {y.subjectCount} <TranslatedText>{y.subjectCount === 1 ? "subject" : "subjects"}</TranslatedText> · {y.classCount}<TranslatedText>{" "}</TranslatedText>
+                          <TranslatedText>{y.classCount === 1 ? "class" : "classes"}</TranslatedText>
                         </span>
                       </p>
                       <ul className="space-y-2.5">
@@ -289,7 +291,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
           <DetailPane.Section label="Roll calls">
             <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
               {summary.rollCallsTaken}
-              <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal">taken in total</span>
+              <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal"><TranslatedText>taken in total</TranslatedText></span>
             </p>
           </DetailPane.Section>
         </>

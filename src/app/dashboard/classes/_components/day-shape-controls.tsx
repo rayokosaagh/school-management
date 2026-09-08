@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { AlertTriangle, Eraser } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,9 +43,9 @@ export function WeekdayShapeBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-ink-3 shrink-0 text-[11px] font-medium tracking-[0.1em] uppercase">
+        <span className="text-ink-3 shrink-0 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
           Day shape
-        </span>
+        </TranslatedText></span>
         {workingDays.map((day) => (
           <label key={day} className="flex items-center gap-1">
             <span className="text-ink-3 text-[11px] font-medium">
@@ -128,12 +130,12 @@ function WeekdayShapeDialog({
   return (
     <Modal open={pending !== null} title={`Change ${dayName}'s day shape`} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-ink-3 text-sm">
-          Switch {dayName} to <span className="text-ink font-medium">{targetShape?.name}</span>.
+        <p className="text-ink-3 text-sm"><TranslatedText>
+          Switch </TranslatedText>{dayName}<TranslatedText> to </TranslatedText><span className="text-ink font-medium">{targetShape?.name}</span>.
         </p>
 
         {loading ? (
-          <p className="text-ink-3 text-sm">Checking for lessons this would strand…</p>
+          <p className="text-ink-3 text-sm"><TranslatedText>Checking for lessons this would strand…</TranslatedText></p>
         ) : null}
 
         {preview ? (
@@ -164,15 +166,15 @@ function WeekdayShapeDialog({
             disabled={loading || applying || preview === null}
             onClick={confirm}
           >
-            {applying
+            <TranslatedText>{applying
               ? "Applying…"
               : destructive
                 ? `Delete ${preview?.count} and switch`
-                : "Switch"}
+                : "Switch"}</TranslatedText>
           </Button>
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}><TranslatedText>
             Cancel
-          </Button>
+          </TranslatedText></Button>
         </div>
       </div>
     </Modal>
@@ -204,9 +206,9 @@ export function ClearTimetableButton({
         onClick={() => setOpen(true)}
         disabled={sectionId === null}
       >
-        <Eraser data-icon="inline-start" aria-hidden="true" />
+        <Eraser data-icon="inline-start" aria-hidden="true" /><TranslatedText>
         Clear timetable
-      </Button>
+      </TranslatedText></Button>
       <ClearTimetableDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -300,7 +302,7 @@ function ClearTimetableDialog({
           ]}
         />
 
-        {loading ? <p className="text-ink-3 text-sm">Counting…</p> : null}
+        {loading ? <p className="text-ink-3 text-sm"><TranslatedText>Counting…</TranslatedText></p> : null}
 
         {count !== null ? (
           <Callout icon={AlertTriangle} tint={count > 0 ? "rose" : "green"}>
@@ -321,11 +323,11 @@ function ClearTimetableDialog({
             disabled={loading || applying || !count}
             onClick={confirm}
           >
-            {applying ? "Clearing…" : `Clear ${count ?? 0} lesson${count === 1 ? "" : "s"}`}
+            <TranslatedText>{applying ? "Clearing…" : `Clear ${count ?? 0} lesson${count === 1 ? "" : "s"}`}</TranslatedText>
           </Button>
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}><TranslatedText>
             Cancel
-          </Button>
+          </TranslatedText></Button>
         </div>
       </div>
     </Modal>

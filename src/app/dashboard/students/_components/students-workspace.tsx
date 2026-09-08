@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, GraduationCap, Plus, Search, Trophy, UserPlus } from "lucide-react";
 import Link from "next/link";
@@ -234,18 +236,18 @@ export function StudentsWorkspace({
             ]}
           />
           <Button variant="outline" nativeButton={false} render={<a href={exportHref} download />}>
-            <Download data-icon="inline-start" aria-hidden="true" />
+            <Download data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Export CSV
-          </Button>
+          </TranslatedText></Button>
           <Sheet open={addOpen} onOpenChange={setAddOpen}>
             <SheetTrigger render={<Button />}>
-              <Plus data-icon="inline-start" aria-hidden="true" />
+              <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Admit student
-            </SheetTrigger>
+            </TranslatedText></SheetTrigger>
             <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
               <SheetHeader>
-                <SheetTitle>Admit a student</SheetTitle>
-                <SheetDescription>Dates are entered in Bikram Sambat and stored as Gregorian.</SheetDescription>
+                <SheetTitle><TranslatedText>Admit a student</TranslatedText></SheetTitle>
+                <SheetDescription><TranslatedText>Dates are entered in Bikram Sambat and stored as Gregorian.</TranslatedText></SheetDescription>
               </SheetHeader>
               <div className="px-4 pb-6">
                 <AddStudentForm sections={sections} academicYearId={academicYearId} suggestedAdmissionNo={suggestedAdmissionNo} />
@@ -263,9 +265,9 @@ export function StudentsWorkspace({
               title="No sections yet"
               description="Add a section on the Classes page and enrol students before ranking them."
               action={
-                <Button nativeButton={false} render={<Link href="/dashboard/classes" />}>
+                <Button nativeButton={false} render={<Link href="/dashboard/classes" />}><TranslatedText>
                   Go to Classes
-                </Button>
+                </TranslatedText></Button>
               }
             />
           </PageFrame.Body>
@@ -285,7 +287,7 @@ export function StudentsWorkspace({
             </label>
             <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "")} options={[{ value: "ACTIVE", label: "Status: Active" }, { value: "LEFT", label: "Status: Left" }, { value: "GRADUATED", label: "Status: Graduated" }, { value: "", label: "Status: Any" }]} className="h-8 w-44 shrink-0" />
             <span className="flex-1" />
-            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} {visible.length === 1 ? "student" : "students"}{selectedRow ? " · 1 selected" : ""}</span>
+            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} <TranslatedText>{visible.length === 1 ? "student" : "students"}</TranslatedText><TranslatedText>{selectedRow ? " · 1 selected" : ""}</TranslatedText></span>
           </PageFrame.Toolbar>
 
           {notice ? (
@@ -321,7 +323,7 @@ export function StudentsWorkspace({
                   tint: "green",
                   title: rows.length === 0 ? "No students admitted yet" : "No students match",
                   description: rows.length === 0 ? "Admit the first student to start the roll." : "Try another section, status or search.",
-                  action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" />Admit student</Button> : undefined,
+                  action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>Admit student</TranslatedText></Button> : undefined,
                 }}
               />
             </PageFrame.Body>

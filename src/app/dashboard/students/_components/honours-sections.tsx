@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BsDateField } from "@/components/ui/bs-date-field";
@@ -83,9 +85,9 @@ export function HonoursSections({
         <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
           {honours.position === null ? "—" : ordinal(honours.position)}
           <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal">
-            {honours.position === null
+            <TranslatedText>{honours.position === null
               ? "awaiting a published result"
-              : `of ${honours.classSize} · score ${honours.overall?.toFixed(1)}`}
+              : `of ${honours.classSize} · score ${honours.overall?.toFixed(1)}`}</TranslatedText>
           </span>
         </p>
         <dl className="mt-2.5 grid grid-cols-4 gap-x-3">
@@ -108,7 +110,7 @@ export function HonoursSections({
                     : "text-bad font-mono tabular-nums"
                 }
               >
-                {c.kind === "MERIT" ? "+" : "−"}
+                <TranslatedText>{c.kind === "MERIT" ? "+" : "−"}</TranslatedText>
                 {c.points}
               </span>
               <span className="min-w-0 flex-1 truncate">{c.note}</span>
@@ -119,41 +121,41 @@ export function HonoursSections({
             </li>
           ))}
           {honours.conduct.length === 0 ? (
-            <li className="text-ink-3">No merits or demerits recorded.</li>
+            <li className="text-ink-3"><TranslatedText>No merits or demerits recorded.</TranslatedText></li>
           ) : null}
         </ul>
         {addingConduct ? (
           <form action={conductAction} className="mt-3 grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
             <input type="hidden" name="studentId" value={studentId} />
             <div className="space-y-1">
-              <Label htmlFor={`ck-${studentId}`}>Kind</Label>
+              <Label htmlFor={`ck-${studentId}`}><TranslatedText>Kind</TranslatedText></Label>
               <FieldSelect id={`ck-${studentId}`} name="kind" defaultValue="MERIT" options={CONDUCT_KIND_OPTIONS} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor={`cp-${studentId}`}>Points</Label>
+              <Label htmlFor={`cp-${studentId}`}><TranslatedText>Points</TranslatedText></Label>
               <Input id={`cp-${studentId}`} name="points" type="number" min={1} max={100} defaultValue={5} required />
             </div>
             <BsDateField id={`cd-${studentId}`} name="dateBs" label="Date (BS)" defaultValue={today} required />
             <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor={`cn-${studentId}`}>What happened</Label>
+              <Label htmlFor={`cn-${studentId}`}><TranslatedText>What happened</TranslatedText></Label>
               <Input id={`cn-${studentId}`} name="note" maxLength={200} placeholder="A few words" required />
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
               <Button type="submit" size="sm" disabled={savingConduct}>
-                {savingConduct ? "Saving…" : "Save"}
+                <TranslatedText>{savingConduct ? "Saving…" : "Save"}</TranslatedText>
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setAddingConduct(false)}>
-                <X data-icon="inline-start" aria-hidden="true" />
+                <X data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                 Cancel
-              </Button>
+              </TranslatedText></Button>
               {conductState.error ? <p className="text-destructive text-sm">{conductState.error}</p> : null}
             </div>
           </form>
         ) : (
           <Button size="sm" variant="outline" className="mt-3" onClick={() => setAddingConduct(true)}>
-            <Plus data-icon="inline-start" aria-hidden="true" />
+            <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Add merit or demerit
-          </Button>
+          </TranslatedText></Button>
         )}
       </DetailPane.Section>
 
@@ -163,7 +165,7 @@ export function HonoursSections({
             <li key={a.id} className="flex items-center gap-2">
               <span className="text-ink-3 font-mono tabular-nums">{a.dateBs}</span>
               <span className="min-w-0 flex-1 truncate">
-                {a.name}{" "}
+                {a.name}<TranslatedText>{" "}</TranslatedText>
                 <span className="text-ink-3">
                   · {a.level[0]}
                   {a.level.slice(1).toLowerCase()}
@@ -176,17 +178,17 @@ export function HonoursSections({
               </form>
             </li>
           ))}
-          {honours.activities.length === 0 ? <li className="text-ink-3">No activities recorded.</li> : null}
+          {honours.activities.length === 0 ? <li className="text-ink-3"><TranslatedText>No activities recorded.</TranslatedText></li> : null}
         </ul>
         {addingActivity ? (
           <form action={activityAction} className="mt-3 grid gap-2 rounded-lg border border-dashed p-3 sm:grid-cols-2">
             <input type="hidden" name="studentId" value={studentId} />
             <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor={`an-${studentId}`}>Activity</Label>
+              <Label htmlFor={`an-${studentId}`}><TranslatedText>Activity</TranslatedText></Label>
               <Input id={`an-${studentId}`} name="name" maxLength={80} placeholder="Science fair, football, debate…" required />
             </div>
             <div className="space-y-1">
-              <Label htmlFor={`al-${studentId}`}>Result</Label>
+              <Label htmlFor={`al-${studentId}`}><TranslatedText>Result</TranslatedText></Label>
               <FieldSelect
                 id={`al-${studentId}`}
                 name="level"
@@ -200,7 +202,7 @@ export function HonoursSections({
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor={`ap-${studentId}`}>Points</Label>
+              <Label htmlFor={`ap-${studentId}`}><TranslatedText>Points</TranslatedText></Label>
               <Input
                 id={`ap-${studentId}`}
                 name="points"
@@ -215,20 +217,20 @@ export function HonoursSections({
             <BsDateField id={`ad-${studentId}`} name="dateBs" label="Date (BS)" defaultValue={today} required />
             <div className="flex flex-wrap items-center gap-2 sm:col-span-2">
               <Button type="submit" size="sm" disabled={savingActivity}>
-                {savingActivity ? "Saving…" : "Save"}
+                <TranslatedText>{savingActivity ? "Saving…" : "Save"}</TranslatedText>
               </Button>
               <Button type="button" size="sm" variant="ghost" onClick={() => setAddingActivity(false)}>
-                <X data-icon="inline-start" aria-hidden="true" />
+                <X data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                 Cancel
-              </Button>
+              </TranslatedText></Button>
               {activityState.error ? <p className="text-destructive text-sm">{activityState.error}</p> : null}
             </div>
           </form>
         ) : (
           <Button size="sm" variant="outline" className="mt-3" onClick={() => setAddingActivity(true)}>
-            <Plus data-icon="inline-start" aria-hidden="true" />
+            <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Add activity
-          </Button>
+          </TranslatedText></Button>
         )}
       </DetailPane.Section>
     </>

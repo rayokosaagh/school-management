@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 // The Timetable view, embedded inside Classes rather than owning its own
 // route. Two shapes:
 //
@@ -219,9 +221,9 @@ export function TimetableEditView({
               size="sm"
               onClick={() => write(selectedCell, "")}
             >
-              <Eraser data-icon="inline-start" aria-hidden="true" />
+              <Eraser data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Clear
-            </Button>
+            </TranslatedText></Button>
           ) : undefined
         }
       >
@@ -251,9 +253,9 @@ export function TimetableEditView({
                 onClick={() =>
                   write(selectedCell, String(current.subjectOfferingId), room)
                 }
-              >
+              ><TranslatedText>
                 Save
-              </Button>
+              </TranslatedText></Button>
             </div>
           </DetailPane.Section>
         ) : null}
@@ -303,9 +305,9 @@ export function TimetableEditView({
             title="Set the school day first"
             description="A timetable is built from the school's periods, so those come before the grid."
             action={
-              <Button type="button" size="sm" onClick={() => setView("day")}>
+              <Button type="button" size="sm" onClick={() => setView("day")}><TranslatedText>
                 Set the school day
-              </Button>
+              </TranslatedText></Button>
             }
           />
         </PageFrame.Body>
@@ -325,7 +327,7 @@ export function TimetableEditView({
             <ClashBanner clashes={clashes} />
             <span className="flex-1" />
             <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-              {teacherWeek.length} period{teacherWeek.length === 1 ? "" : "s"}
+              {teacherWeek.length}<TranslatedText> period</TranslatedText><TranslatedText>{teacherWeek.length === 1 ? "" : "s"}</TranslatedText>
             </span>
           </PageFrame.Toolbar>
           <PageFrame.Body>
@@ -438,12 +440,12 @@ export function TeacherWeekView({
   return (
     <>
       <PageFrame.Toolbar>
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap"><TranslatedText>
           Your week · read-only
-        </span>
+        </TranslatedText></span>
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {teacherWeek.length} period{teacherWeek.length === 1 ? "" : "s"}
+          {teacherWeek.length}<TranslatedText> period</TranslatedText><TranslatedText>{teacherWeek.length === 1 ? "" : "s"}</TranslatedText>
         </span>
       </PageFrame.Toolbar>
       <PageFrame.Body>

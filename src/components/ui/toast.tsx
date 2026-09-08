@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -13,6 +14,8 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/i18n/language-provider";
+import { translateInterface } from "@/lib/i18n/translations";
 
 export type ToastTone = "success" | "error" | "info";
 
@@ -41,6 +44,7 @@ const STYLES: Record<ToastTone, { ring: string; icon: typeof Info; tint: string 
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const { language, t } = useLanguage();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const nextId = useRef(1);
   const reduce = useReducedMotion();
@@ -92,11 +96,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   >
                     <Icon className="size-4" />
                   </span>
-                  <p className="min-w-0 flex-1 pt-1 text-sm">{toast.message}</p>
+                  <p className="min-w-0 flex-1 pt-1 text-sm">{translateInterface(language, toast.message)}</p>
                   <button
                     type="button"
                     onClick={() => dismiss(toast.id)}
-                    aria-label="Dismiss"
+                    aria-label={t("Dismiss")}
                     className="hover:bg-muted focus-visible:ring-ring/50 grid size-7 shrink-0 place-items-center rounded-lg focus-visible:ring-3 focus-visible:outline-none"
                   >
                     <X className="size-3.5" />
@@ -156,6 +160,15 @@ export function useToastedActionState<
   initialState: Awaited<S>,
 ) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  const { language } = useLanguage();
   useActionToast(state);
-  return [state, formAction, pending] as const;
+  const localizedState = useMemo(
+    () => ({
+      ...state,
+      error: state.error ? translateInterface(language, state.error) : undefined,
+      success: state.success ? translateInterface(language, state.success) : undefined,
+    }) as Awaited<S>,
+    [language, state],
+  );
+  return [localizedState, formAction, pending] as const;
 }

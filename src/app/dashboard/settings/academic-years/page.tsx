@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,9 @@ export default async function RolloverPage() {
         title="No academic year is current"
         description="A rollover moves one year into the next, so there has to be a year to move out of. Set one on the Classes page."
         action={
-          <Button render={<Link href="/dashboard/classes" />} nativeButton={false}>
+          <Button render={<Link href="/dashboard/classes" />} nativeButton={false}><TranslatedText>
             Open Classes
-          </Button>
+          </TranslatedText></Button>
         }
       />
     );

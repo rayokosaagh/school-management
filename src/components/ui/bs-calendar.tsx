@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -93,17 +95,17 @@ export function BsCalendar({
             size="xs"
             variant={step === "year" ? "default" : "outline"}
             onClick={() => setStep("year")}
-          >
+          ><TranslatedText>
             Year
-          </Button>
+          </TranslatedText></Button>
           <Button
             type="button"
             size="xs"
             variant={step === "month" ? "default" : "outline"}
             onClick={() => setStep("month")}
-          >
+          ><TranslatedText>
             Month
-          </Button>
+          </TranslatedText></Button>
         </div>
       </div>
 
@@ -199,9 +201,9 @@ export function BsCalendar({
                 })}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm"><TranslatedText>
                 That month is outside the supported range.
-              </p>
+              </TranslatedText></p>
             )}
           </motion.div>
         ) : null}
@@ -221,9 +223,9 @@ export function BsCalendar({
             setStep("day");
             onChange(`${today.year}-${pad(today.month)}-${pad(today.day)}`);
           }}
-        >
+        ><TranslatedText>
           Today
-        </Button>
+        </TranslatedText></Button>
       </div>
     </div>
   );

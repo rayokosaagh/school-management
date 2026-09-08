@@ -5,6 +5,7 @@ import { TINT_CLASSES, type Tint } from "@/components/ui/page-shell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
+import { TranslatedText, useLanguage } from "@/components/i18n/language-provider";
 
 /// Mirrors the `split` breakpoint declared in `globals.css`. Kept here so the
 /// JS branch below and the CSS grid track cannot drift apart.
@@ -51,10 +52,11 @@ export function PageFrame({
   children: React.ReactNode;
   className?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       {breadcrumb ? (
-        <nav aria-label="Breadcrumb" className="text-ink-3 pb-2 text-[12.5px]">
+        <nav aria-label={t("Breadcrumb")} className="text-ink-3 pb-2 text-[12.5px]">
           {breadcrumb}
         </nav>
       ) : null}
@@ -81,13 +83,13 @@ export function PageFrame({
           ) : null}
           <div className="min-w-0">
             {breadcrumb ? null : (
-              <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{eyebrow}</p>
+              <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{t(eyebrow)}</p>
             )}
             <h1 className={cn("flex flex-wrap items-baseline gap-x-2.5", breadcrumb ? null : "mt-0.5")}>
-              {title}
-              {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{meta}</span> : null}
+              {t(title)}
+              {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{typeof meta === "string" ? t(meta) : meta}</span> : null}
             </h1>
-            {subtitle ? <p className="text-ink-3 mt-1 text-sm leading-6">{subtitle}</p> : null}
+            {subtitle ? <p className="text-ink-3 mt-1 text-sm leading-6">{typeof subtitle === "string" ? t(subtitle) : subtitle}</p> : null}
           </div>
         </div>
         {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
@@ -97,8 +99,8 @@ export function PageFrame({
   );
 }
 
-function Tabs({ children }: { children: React.ReactNode }) {
-  return <div className="-mx-4 px-4 shell:-mx-6 shell:px-6">{children}</div>;
+function Tabs({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <div className={cn("-mx-4 px-4 shell:-mx-6 shell:px-6", className)}>{children}</div>;
 }
 
 function Toolbar({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -124,6 +126,7 @@ function Split({
   asideOpen?: boolean;
   onAsideClose?: () => void;
 }) {
+  const { t } = useLanguage();
   const reduce = useReducedMotion();
   // One branch or the other, never both: `aside` is a single node, and
   // rendering it twice would duplicate its ids, its form controls and its
@@ -149,8 +152,8 @@ function Split({
         <Sheet open={!!asideOpen} onOpenChange={(open) => { if (!open) onAsideClose?.(); }}>
           <SheetContent side="right" className="w-full max-w-md overflow-y-auto p-0">
             <SheetHeader className="sr-only">
-              <SheetTitle>{asideTitle ?? "Details"}</SheetTitle>
-              <SheetDescription>Details for the selected row.</SheetDescription>
+              <SheetTitle>{t(asideTitle ?? "Details")}</SheetTitle>
+              <SheetDescription><TranslatedText>Details for the selected row.</TranslatedText></SheetDescription>
             </SheetHeader>
             {aside}
           </SheetContent>

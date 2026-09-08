@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useEffect, useState, useTransition } from "react";
 import { AlertTriangle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,7 +111,7 @@ export function DeleteYearDialog({
   return (
     <Modal open={open} title={`Delete academic year ${year.nameBS}`} onClose={onClose}>
       <div className="space-y-5">
-        {loading ? <p className="text-muted-foreground text-sm">Loading…</p> : null}
+        {loading ? <p className="text-muted-foreground text-sm"><TranslatedText>Loading…</TranslatedText></p> : null}
         {loadError ? (
           <Callout icon={AlertTriangle} tint="rose">
             {loadError}
@@ -117,10 +119,10 @@ export function DeleteYearDialog({
         ) : null}
 
         {summary?.year.isCurrent ? (
-          <Callout icon={AlertTriangle} tint="rose">
-            Academic year {summary.year.nameBS} is the current year. Switch to another
+          <Callout icon={AlertTriangle} tint="rose"><TranslatedText>
+            Academic year </TranslatedText>{summary.year.nameBS}<TranslatedText> is the current year. Switch to another
             year before deleting it.
-          </Callout>
+          </TranslatedText></Callout>
         ) : null}
 
         {summary && !summary.year.isCurrent ? (
@@ -137,7 +139,7 @@ export function DeleteYearDialog({
             </div>
 
             <div className="space-y-1.5 border-t pt-4">
-              <p className="text-sm font-medium">Download a copy first</p>
+              <p className="text-sm font-medium"><TranslatedText>Download a copy first</TranslatedText></p>
               <ul className="space-y-1">
                 {EXPORTS.map((e) => (
                   <li key={e.kind}>
@@ -157,15 +159,15 @@ export function DeleteYearDialog({
               <Checkbox
                 checked={createRestorePoint}
                 onCheckedChange={(checked) => setCreateRestorePoint(checked === true)}
-              />
+              /><TranslatedText>
               Create a restore point first
-            </label>
+            </TranslatedText></label>
 
             {summary.hasData ? (
               <div className="space-y-2">
-                <Label htmlFor="delete-year-confirm">
-                  Type {summary.year.nameBS} to confirm
-                </Label>
+                <Label htmlFor="delete-year-confirm"><TranslatedText>
+                  Type </TranslatedText>{summary.year.nameBS}<TranslatedText> to confirm
+                </TranslatedText></Label>
                 <Input
                   id="delete-year-confirm"
                   value={typedName}
@@ -173,9 +175,9 @@ export function DeleteYearDialog({
                   autoComplete="off"
                   inputMode="numeric"
                 />
-                <p className="text-muted-foreground text-xs">
+                <p className="text-muted-foreground text-xs"><TranslatedText>
                   This year holds data, so it needs a typed confirmation.
-                </p>
+                </TranslatedText></p>
               </div>
             ) : null}
 
@@ -192,11 +194,11 @@ export function DeleteYearDialog({
                 disabled={!canDelete || deleting}
                 onClick={runDelete}
               >
-                {deleting ? "Deleting…" : `Delete ${summary.year.nameBS}`}
+                <TranslatedText>{deleting ? "Deleting…" : `Delete ${summary.year.nameBS}`}</TranslatedText>
               </Button>
-              <Button type="button" variant="ghost" onClick={onClose}>
+              <Button type="button" variant="ghost" onClick={onClose}><TranslatedText>
                 Cancel
-              </Button>
+              </TranslatedText></Button>
             </div>
           </>
         ) : null}

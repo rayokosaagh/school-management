@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { BookOpen, CalendarCheck, CalendarDays, Check, ChevronRight, Coins, Copy, Pencil, Search, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { StatusDot } from "@/components/ui/status-dot";
@@ -48,7 +50,7 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
     setDraft(previous => ({ ...previous, [key]: { seed: savedAt(key), value } }));
   }
   function choose(gradeId: number) { setSelectedId(gradeId); setCopyFrom(""); }
-  if (!selected) return <p className="text-ink-3 p-6 text-sm">Add a class before setting its prices.</p>;
+  if (!selected) return <p className="text-ink-3 p-6 text-sm"><TranslatedText>Add a class before setting its prices.</TranslatedText></p>;
   const gradeId = selected.id;
   const changed = changes(gradeId);
   // Every class fee is always on screen, blank meaning "not charged" — what an
@@ -93,9 +95,9 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
         <div className="mb-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5">
             <span aria-hidden="true" className="bg-brand-tint text-brand-text grid size-8 shrink-0 place-items-center rounded-lg"><BookOpen className="size-4" /></span>
-            <h3 className="text-sm font-semibold">Classes</h3>
+            <h3 className="text-sm font-semibold"><TranslatedText>Classes</TranslatedText></h3>
           </div>
-          <span className="text-ink-3 text-xs">{grades.length} classes</span>
+          <span className="text-ink-3 text-xs">{grades.length}<TranslatedText> classes</TranslatedText></span>
         </div>
         <div className="lg:hidden"><FieldSelect aria-label="Class to price" value={String(gradeId)} onValueChange={value => choose(Number(value))} disabled={pending} options={grades.map(grade => ({ value: String(grade.id), label: `${grade.name}${changes(grade.id) ? " · Unsaved" : ""}` }))} /></div>
         <div className="hidden lg:block">
@@ -111,13 +113,13 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
                       pricing" scanned as prose in a list of twelve; the colour
                       is what the eye is actually looking for. */}
                   <StatusDot tone={count ? "bad" : configured ? "ok" : "warn"} className="mt-1 text-xs">
-                    {count ? `${count} unsaved ${count === 1 ? "change" : "changes"}` : configured ? "Configured" : "Needs pricing"}
+                    <TranslatedText>{count ? `${count} unsaved ${count === 1 ? "change" : "changes"}` : configured ? "Configured" : "Needs pricing"}</TranslatedText>
                   </StatusDot>
                 </span>
                 <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
               </button>;
             })}
-            {!matches.length ? <p className="text-ink-3 px-3 py-5 text-sm">No matching classes.</p> : null}
+            {!matches.length ? <p className="text-ink-3 px-3 py-5 text-sm"><TranslatedText>No matching classes.</TranslatedText></p> : null}
           </nav>
         </div>
       </aside>
@@ -144,10 +146,10 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
           />
           <div className="space-y-7 p-5 sm:p-7">
             {grades.length > 1 && active.length > 0 ? <details className="border-line rounded-lg border border-dashed p-4">
-              <summary className="text-ink-2 cursor-pointer text-sm font-medium">Copy saved prices from another class</summary>
-              <Label htmlFor={`${id}-copy`} className="sr-only">Use another class’s saved prices</Label>
-              <div className="mt-2 flex flex-wrap gap-2"><FieldSelect id={`${id}-copy`} aria-label="Copy prices from" value={copyFrom} onValueChange={value => setCopyFrom(value ?? "")} disabled={pending} className="min-w-0 flex-1 basis-40" options={[{ value: "", label: "Choose a class" }, ...grades.filter(grade => grade.id !== gradeId).map(grade => ({ value: String(grade.id), label: grade.name }))]} /><Button type="button" variant="outline" disabled={!copyFrom || pending} onClick={copyPrices}><Copy data-icon="inline-start" />Copy prices</Button></div>
-              <p className="text-ink-3 mt-2 text-xs leading-5">Replaces this class’s draft, including cleared fees. Review before saving.</p>
+              <summary className="text-ink-2 cursor-pointer text-sm font-medium"><TranslatedText>Copy saved prices from another class</TranslatedText></summary>
+              <Label htmlFor={`${id}-copy`} className="sr-only"><TranslatedText>Use another class’s saved prices</TranslatedText></Label>
+              <div className="mt-2 flex flex-wrap gap-2"><FieldSelect id={`${id}-copy`} aria-label="Copy prices from" value={copyFrom} onValueChange={value => setCopyFrom(value ?? "")} disabled={pending} className="min-w-0 flex-1 basis-40" options={[{ value: "", label: "Choose a class" }, ...grades.filter(grade => grade.id !== gradeId).map(grade => ({ value: String(grade.id), label: grade.name }))]} /><Button type="button" variant="outline" disabled={!copyFrom || pending} onClick={copyPrices}><Copy data-icon="inline-start" /><TranslatedText>Copy prices</TranslatedText></Button></div>
+              <p className="text-ink-3 mt-2 text-xs leading-5"><TranslatedText>Replaces this class’s draft, including cleared fees. Review before saving.</TranslatedText></p>
             </details> : null}
             {bands.map(band => <section key={band.label} aria-label={band.label}>
               <div className="mb-4"><h4 className="text-sm font-semibold">{band.label}</h4><p className="text-ink-3 mt-1 text-xs">{band.note}</p></div>
@@ -155,12 +157,12 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
                 const key = cellKey(gradeId, head.id);
                 return <div key={key} className="border-line flex flex-wrap items-center gap-3 rounded-lg border p-4">
                   <Label htmlFor={`${id}-${key}`} className="min-w-0 flex-1 basis-32 break-words">{head.name}</Label>
-                  <div className="flex min-w-0 flex-1 basis-44 items-center gap-2"><span className="text-ink-3 text-sm">Rs.</span><Input id={`${id}-${key}`} aria-label={`${head.name} for ${selected.name}`} value={shown(key)} onChange={event => edit(key, event.target.value)} type="number" min={1} max={2147483647} step={1} inputMode="numeric" placeholder="Amount" className={cn("min-w-0 text-right tabular-nums", shown(key) !== savedAt(key) && "border-brand bg-brand-tint/30")} /><Button type="button" variant="ghost" size="icon" aria-label={`Clear ${head.name} for ${selected.name}`} onClick={() => edit(key, "")}><Trash2 className="size-4" /></Button></div>
+                  <div className="flex min-w-0 flex-1 basis-44 items-center gap-2"><span className="text-ink-3 text-sm"><TranslatedText>Rs.</TranslatedText></span><Input id={`${id}-${key}`} aria-label={`${head.name} for ${selected.name}`} value={shown(key)} onChange={event => edit(key, event.target.value)} type="number" min={1} max={2147483647} step={1} inputMode="numeric" placeholder="Amount" className={cn("min-w-0 text-right tabular-nums", shown(key) !== savedAt(key) && "border-brand bg-brand-tint/30")} /><Button type="button" variant="ghost" size="icon" aria-label={`Clear ${head.name} for ${selected.name}`} onClick={() => edit(key, "")}><Trash2 className="size-4" /></Button></div>
                 </div>;
               })}</div>
-              {!visible.some(head => (head.frequency === "MONTHLY") === band.monthly) ? <p className="text-ink-3 bg-surface-2/60 rounded-lg px-4 py-5 text-sm">No {band.monthly ? "monthly" : "admission or yearly"} fee types exist yet.</p> : null}
+              {!visible.some(head => (head.frequency === "MONTHLY") === band.monthly) ? <p className="text-ink-3 bg-surface-2/60 rounded-lg px-4 py-5 text-sm"><TranslatedText>No </TranslatedText><TranslatedText>{band.monthly ? "monthly" : "admission or yearly"}</TranslatedText><TranslatedText> fee types exist yet.</TranslatedText></p> : null}
             </section>)}
-            <p className="text-ink-3 text-xs leading-5">Leave a fee blank, or clear it, to stop charging this class. Existing bills stay unchanged. Add new fee types in Manage fee types; transportation and per-student charges are in Services.</p>
+            <p className="text-ink-3 text-xs leading-5"><TranslatedText>Leave a fee blank, or clear it, to stop charging this class. Existing bills stay unchanged. Add new fee types in Manage fee types; transportation and per-student charges are in Services.</TranslatedText></p>
           </div>
         </fieldset>
         <footer className="bg-surface border-line sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-4 rounded-b-xl border-t p-5 sm:px-7">
@@ -171,11 +173,11 @@ export function FeeMatrix({ academicYearId, yearLabel, grades, heads, structures
               {changed ? <Pencil className="size-3.5" /> : <Check className="size-4" />}
             </span>
             <div>
-              <p className="text-sm font-medium">{pending ? "Saving class prices…" : changed ? `${changed} unsaved ${changed === 1 ? "change" : "changes"}` : "No unsaved changes"}</p>
-              <p className="text-ink-3 mt-0.5 text-xs">{otherDrafts ? `Drafts in ${otherDrafts} other ${otherDrafts === 1 ? "class are" : "classes are"} kept separately.` : "Only this class will be saved."}</p>
+              <p className="text-sm font-medium"><TranslatedText>{pending ? "Saving class prices…" : changed ? `${changed} unsaved ${changed === 1 ? "change" : "changes"}` : "No unsaved changes"}</TranslatedText></p>
+              <p className="text-ink-3 mt-0.5 text-xs"><TranslatedText>{otherDrafts ? `Drafts in ${otherDrafts} other ${otherDrafts === 1 ? "class are" : "classes are"} kept separately.` : "Only this class will be saved."}</TranslatedText></p>
             </div>
           </div>
-          <div className="flex w-full gap-2 sm:w-auto"><Button type="button" variant="outline" onClick={discard} disabled={pending || !changed}>Discard</Button><Button type="submit" disabled={pending || !changed} className="flex-1 sm:flex-none"><Check data-icon="inline-start" />{pending ? "Saving…" : "Save class pricing"}</Button></div>
+          <div className="flex w-full gap-2 sm:w-auto"><Button type="button" variant="outline" onClick={discard} disabled={pending || !changed}><TranslatedText>Discard</TranslatedText></Button><Button type="submit" disabled={pending || !changed} className="flex-1 sm:flex-none"><Check data-icon="inline-start" /><TranslatedText>{pending ? "Saving…" : "Save class pricing"}</TranslatedText></Button></div>
           {state.error ? <p role="alert" className="text-bad w-full text-sm">{state.error}</p> : null}
         </footer>
       </form>

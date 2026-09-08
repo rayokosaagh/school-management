@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { ReceiptText, Search, WalletCards } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
@@ -219,25 +221,25 @@ export function FeesWorkspace({
       tint="rose"
       eyebrow="Finance"
       breadcrumb={
-        <>
-          Finance <span aria-hidden="true" className="mx-1.5">›</span>
-          <span className="text-ink-2 font-medium" aria-current="page">Fees</span>
+        <><TranslatedText>
+          Finance </TranslatedText><span aria-hidden="true" className="mx-1.5">›</span>
+          <span className="text-ink-2 font-medium" aria-current="page"><TranslatedText>Fees</TranslatedText></span>
         </>
       }
       title="Fees"
       subtitle={
         <>
-          {view === "setup"
+          <TranslatedText>{view === "setup"
             ? `Set what each class pays, then issue the bills for ${yearLabel}.`
-            : `Manage and collect fees for the academic year ${yearLabel}.`}
+            : `Manage and collect fees for the academic year ${yearLabel}.`}</TranslatedText>
           {/* The setup counts belong under the sentence they qualify, not out
               beside the step tabs where they read as a caption for whichever
               step happens to be open. */}
           {view === "setup" ? (
             <span className="text-ink-3 mt-1 block text-xs">
-              {activeHeadCount} active fee types <span aria-hidden="true">·</span> {pricedGradeCount} of{" "}
-              {grades.length} grades with fee plans
-            </span>
+              {activeHeadCount}<TranslatedText> active fee types </TranslatedText><span aria-hidden="true">·</span> {pricedGradeCount}<TranslatedText> of</TranslatedText><TranslatedText>{" "}</TranslatedText>
+              {grades.length}<TranslatedText> grades with fee plans
+            </TranslatedText></span>
           ) : null}
         </>
       }
@@ -286,14 +288,14 @@ export function FeesWorkspace({
               <WalletCards data-icon="inline-start" aria-hidden="true" />
               {/* The label is the first thing to go on a phone, where the row
                   already carries a three-way view switch. */}
-              <span className="hidden sm:inline">Record payment</span>
+              <span className="hidden sm:inline"><TranslatedText>Record payment</TranslatedText></span>
             </SheetTrigger> : null}
             <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
               <SheetHeader>
-                <SheetTitle>Record a payment</SheetTitle>
-                <SheetDescription>
+                <SheetTitle><TranslatedText>Record a payment</TranslatedText></SheetTitle>
+                <SheetDescription><TranslatedText>
                   The amount is split across the bill&rsquo;s lines and given a receipt number.
-                </SheetDescription>
+                </TranslatedText></SheetDescription>
               </SheetHeader>
               <div className="px-4 pb-6">
                 <CollectPaymentForm
@@ -392,7 +394,7 @@ export function FeesWorkspace({
             />
             <span className="flex-1" />
             <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-              {visibleBalances.length} student{visibleBalances.length === 1 ? "" : "s"}
+              {visibleBalances.length}<TranslatedText> student</TranslatedText><TranslatedText>{visibleBalances.length === 1 ? "" : "s"}</TranslatedText>
             </span>
           </PageFrame.Toolbar>
 

@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Mirrors the default "Balances" view in FeesWorkspace: breadcrumb, the
@@ -24,7 +25,7 @@ const COLUMNS = "grid grid-cols-[minmax(0,1fr)_140px_249px_120px_140px] items-ce
 export default function FeesLoading() {
   return (
     <div className="flex h-full min-h-0 flex-col" role="status" aria-busy="true" aria-label="Loading fees">
-      <span className="sr-only">Loading fees…</span>
+      <span className="sr-only"><TranslatedText>Loading fees…</TranslatedText></span>
 
       <div className="pb-2">
         <div className="flex h-[18px] items-center"><Skeleton className="h-3.5 w-24" /></div>

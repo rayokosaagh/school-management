@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import { GraduationCap, Info } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -30,7 +31,7 @@ export default async function StudentsPage({
           tint="green"
           title="No current academic year"
           description="Enrolments belong to a year. Set the current year on the Classes page first."
-          action={<Button nativeButton={false} render={<Link href="/dashboard/classes" />}>Go to Classes</Button>}
+          action={<Button nativeButton={false} render={<Link href="/dashboard/classes" />}><TranslatedText>Go to Classes</TranslatedText></Button>}
         />
       </PageFrame>
     );

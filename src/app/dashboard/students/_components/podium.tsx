@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
 import type { HonoursStudent } from "@/lib/honours/honours";
@@ -71,7 +72,7 @@ export function Podium({ students }: { students: HonoursStudent[] }) {
                   <span className="block truncate font-medium group-hover:underline">
                     {student.fullName}
                   </span>
-                  <span className="text-ink-3 block text-[12px]">Roll {student.rollNo}</span>
+                  <span className="text-ink-3 block text-[12px]"><TranslatedText>Roll </TranslatedText>{student.rollNo}</span>
                 </span>
                 <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
                   {student.overall?.toFixed(1)}

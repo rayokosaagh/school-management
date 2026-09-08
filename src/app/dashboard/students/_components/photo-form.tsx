@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { PhotoField } from "@/components/ui/photo-field";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,7 @@ export function StudentPhotoForm({
       <PhotoField photoId={photoId} alt={`Photo of ${name}`} size="lg" />
       <div className="mt-3 flex items-center gap-2">
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? "Saving…" : "Save photo"}
+          <TranslatedText>{pending ? "Saving…" : "Save photo"}</TranslatedText>
         </Button>
         {state.error ? <p className="text-destructive text-sm">{state.error}</p> : null}
       </div>

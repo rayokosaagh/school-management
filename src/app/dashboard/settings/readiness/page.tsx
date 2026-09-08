@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { requirePage } from "@/lib/auth/guard";
@@ -23,15 +24,15 @@ export default async function ReadinessPage({ searchParams }: { searchParams: Pr
   return (
     <PageFrame icon={<ShieldCheck />} tint="green" eyebrow="Settings" title="Operational checks"
       subtitle="Read-only financial reconciliation and a checklist for the next academic year. These checks do not certify the whole system."
-      breadcrumb={<><Link href="/dashboard/settings?view=data" className="hover:underline">Settings</Link> / Operational checks</>}>
+      breadcrumb={<><Link href="/dashboard/settings?view=data" className="hover:underline"><TranslatedText>Settings</TranslatedText></Link><TranslatedText> / Operational checks</TranslatedText></>}>
       <PageFrameBody className="space-y-5 overflow-y-auto p-4">
         <form className="flex flex-wrap items-center gap-3">
-          <label htmlFor="check-year" className="text-sm">Review academic year</label>
+          <label htmlFor="check-year" className="text-sm"><TranslatedText>Review academic year</TranslatedText></label>
           <select id="check-year" name="year" defaultValue={year?.id} className="border-line bg-surface rounded-lg border p-2 text-sm">
-            {years.map((row) => <option key={row.id} value={row.id}>{row.nameBS}{row.isCurrent ? " (current)" : ""}</option>)}
+            {years.map((row) => <option key={row.id} value={row.id}>{row.nameBS}<TranslatedText>{row.isCurrent ? " (current)" : ""}</TranslatedText></option>)}
           </select>
-          <Button type="submit" variant="secondary" disabled={!year}>Run checks</Button>
-          <span className="text-ink-3 text-xs">Does not switch the school&apos;s active year.</span>
+          <Button type="submit" variant="secondary" disabled={!year}><TranslatedText>Run checks</TranslatedText></Button>
+          <span className="text-ink-3 text-xs"><TranslatedText>Does not switch the school&apos;s active year.</TranslatedText></span>
         </form>
         {report && setup ? <>
           <SectionCard icon={ShieldCheck} tint={report.issues.length ? "rose" : "green"} title={report.issues.length ? `${report.issues.length} issue(s) need review` : "Ledger checks passed"}
@@ -39,23 +40,23 @@ export default async function ReadinessPage({ searchParams }: { searchParams: Pr
             <dl className="grid gap-4 sm:grid-cols-3">
               {[["Billed (excluding cancelled)", report.billed], ["Settled on active invoices", report.settled], ["Outstanding", report.outstanding]].map(([label, amount]) => <div key={label}><dt className="text-ink-3 text-xs">{label}</dt><dd className="mt-1 text-lg font-semibold">{money(Number(amount))}</dd></div>)}
             </dl>
-            {report.issues.length ? <Table className="mt-4"><TableHeader><TableRow><TableHead>Record</TableHead><TableHead>Check</TableHead></TableRow></TableHeader><TableBody>
+            {report.issues.length ? <Table className="mt-4"><TableHeader><TableRow><TableHead><TranslatedText>Record</TranslatedText></TableHead><TableHead><TranslatedText>Check</TranslatedText></TableHead></TableRow></TableHeader><TableBody>
               {report.issues.map((issue, index) => <TableRow key={index}><TableCell>{issue.entity} #{issue.id}</TableCell><TableCell className="whitespace-normal">{issue.problem}</TableCell></TableRow>)}
             </TableBody></Table> : null}
           </SectionCard>
           <SectionCard icon={ShieldCheck} tint="amber" title="Before changing academic years"
             description="These are manual completion checks, not an automatic readiness score.">
             <ul className="list-disc space-y-2 pl-5 text-sm">
-              <li>Reconcile outstanding {money(report.outstanding)} with the office ledger. Old debt stays in its original year; it is not automatically transferred or forgiven.</li>
-              <li>Review pricing: this year has {setup[0]} active class plans, {setup[1]} student-service plans and {setup[2]} active transport registrations. These do not automatically copy to another year.</li>
-              <li>Review promoted, retained, graduated and departed students. Graduation/departure statuses change when rollover is confirmed, even if activation is deferred.</li>
-              <li>Take a full backup and verify it in an isolated restore drill before a year transition.</li>
+              <li><TranslatedText>Reconcile outstanding </TranslatedText>{money(report.outstanding)}<TranslatedText> with the office ledger. Old debt stays in its original year; it is not automatically transferred or forgiven.</TranslatedText></li>
+              <li><TranslatedText>Review pricing: this year has </TranslatedText>{setup[0]}<TranslatedText> active class plans, </TranslatedText>{setup[1]}<TranslatedText> student-service plans and </TranslatedText>{setup[2]}<TranslatedText> active transport registrations. These do not automatically copy to another year.</TranslatedText></li>
+              <li><TranslatedText>Review promoted, retained, graduated and departed students. Graduation/departure statuses change when rollover is confirmed, even if activation is deferred.</TranslatedText></li>
+              <li><TranslatedText>Take a full backup and verify it in an isolated restore drill before a year transition.</TranslatedText></li>
             </ul>
           </SectionCard>
-        </> : <p>Create an academic year before running financial checks.</p>}
+        </> : <p><TranslatedText>Create an academic year before running financial checks.</TranslatedText></p>}
         <SectionCard icon={ShieldCheck} tint="blue" title="Backup and staff acceptance"
           description="No scheduled-backup or restore-verification status is available from this application.">
-          <p className="text-sm">Your deployment administrator must configure the backup job and off-site storage using the recovery runbook. Year-deletion restore points are not full backups. Complete a restore drill and staff testing on desktop, mobile and a slow connection before launch.</p>
+          <p className="text-sm"><TranslatedText>Your deployment administrator must configure the backup job and off-site storage using the recovery runbook. Year-deletion restore points are not full backups. Complete a restore drill and staff testing on desktop, mobile and a slow connection before launch.</TranslatedText></p>
         </SectionCard>
       </PageFrameBody>
     </PageFrame>

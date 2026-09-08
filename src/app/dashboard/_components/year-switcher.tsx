@@ -7,6 +7,7 @@ import { useToastedActionState } from "@/components/ui/toast";
 import { FieldSelect } from "@/components/ui/select";
 import type { YearDateStatus } from "@/lib/date/year-status";
 import { switchAcademicYear, type YearState } from "../actions";
+import { useLanguage } from "@/components/i18n/language-provider";
 
 const EMPTY: YearState = {};
 
@@ -27,6 +28,7 @@ export function YearSwitcher({
   /** Date position is independent of which year the school has activated. */
   yearStatus: YearDateStatus | null;
 }) {
+  const { t } = useLanguage();
   const [, action, pending] = useToastedActionState(switchAcademicYear, EMPTY);
   const card = useRef<HTMLDivElement>(null);
   const [yearId, setYearId] = useState(currentId === null ? "" : String(currentId));
@@ -54,8 +56,8 @@ export function YearSwitcher({
   if (years.length === 0) {
     if (!canManageRegistry) {
       return (
-        <span className="text-ink-3 px-2 text-xs" title="Ask your administrator to set up an academic year.">
-          No academic year
+        <span className="text-ink-3 px-2 text-xs" title={t("Ask your administrator to set up an academic year.")}>
+          {t("No academic year")}
         </span>
       );
     }
@@ -66,13 +68,13 @@ export function YearSwitcher({
           className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
         >
           <TriangleAlert className="size-4" />
-          Add an academic year
+          {t("Add an academic year")}
         </Link>
         <Link
           href="/dashboard/settings/academic-years"
           className="bg-tint-amber text-tint-amber-fg inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium"
         >
-          Roll last year into it
+          {t("Roll last year into it")}
         </Link>
       </div>
     );
@@ -94,18 +96,18 @@ export function YearSwitcher({
 
         <span className="min-w-0">
           <span className="text-muted-foreground block text-[10px] leading-none tracking-wider uppercase">
-            Academic year
+            {t("Academic year")}
           </span>
           <FieldSelect
             id="shell-year"
             name="academicYearId"
-            aria-label="Academic year"
+            aria-label={t("Academic year")}
             value={yearId}
             onValueChange={choose}
             disabled={pending}
             options={[
               ...(currentId === null
-                ? [{ value: "", label: "None set", disabled: true }]
+                ? [{ value: "", label: t("None set"), disabled: true }]
                 : []),
               // Saying so in the option itself, because switching into an empty
               // year blanks every page and that looks like a fault.
@@ -129,9 +131,9 @@ export function YearSwitcher({
         {currentId !== null && (yearStatus === "past" || yearStatus === "upcoming") ? (
           <span
             className="bg-tint-amber text-tint-amber-fg rounded-md px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap"
-            title={yearStatus === "upcoming" ? "This academic year has not started yet" : "This academic year has ended"}
+            title={t(yearStatus === "upcoming" ? "This academic year has not started yet" : "This academic year has ended")}
           >
-            {yearStatus === "upcoming" ? "Upcoming year" : "Past year"}
+            {t(yearStatus === "upcoming" ? "Upcoming year" : "Past year")}
           </span>
         ) : null}
       </div>

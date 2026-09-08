@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Fragment, useState } from "react";
 import { Check, CircleSlash, Clock, Plane } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
@@ -132,9 +134,9 @@ export function AttendanceSheet({
               setSelected(next ? new Set(rows.map((r) => r.studentId)) : new Set())
             }
             aria-label="Select all students"
-          />
+          /><TranslatedText>
           Select all
-        </label>
+        </TranslatedText></label>
         <span className="flex-1" />
         <div className="text-ink-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
           {STATUSES.map((s) => (
@@ -154,9 +156,9 @@ export function AttendanceSheet({
           className="border-brand/30 bg-brand-tint flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2"
         >
           <span className="text-brand-text text-[12.5px] font-medium">
-            {selected.size} selected
-          </span>
-          <span className="text-ink-3 text-[12.5px]">Mark them</span>
+            {selected.size}<TranslatedText> selected
+          </TranslatedText></span>
+          <span className="text-ink-3 text-[12.5px]"><TranslatedText>Mark them</TranslatedText></span>
           {STATUSES.map((s) => (
             <Button
               key={s.value}
@@ -169,21 +171,21 @@ export function AttendanceSheet({
             </Button>
           ))}
           <span className="bg-line mx-1 hidden h-4 w-px sm:block" aria-hidden="true" />
-          <Button type="button" size="xs" onClick={() => applyAndInvert("PRESENT")}>
+          <Button type="button" size="xs" onClick={() => applyAndInvert("PRESENT")}><TranslatedText>
             These present, rest absent
-          </Button>
-          <Button type="button" size="xs" onClick={() => applyAndInvert("ABSENT")}>
+          </TranslatedText></Button>
+          <Button type="button" size="xs" onClick={() => applyAndInvert("ABSENT")}><TranslatedText>
             These absent, rest present
-          </Button>
+          </TranslatedText></Button>
           <span className="flex-1" />
           <Button
             type="button"
             variant="ghost"
             size="xs"
             onClick={() => setSelected(new Set())}
-          >
+          ><TranslatedText>
             Clear
-          </Button>
+          </TranslatedText></Button>
         </div>
       ) : null}
 
@@ -264,7 +266,7 @@ export function AttendanceSheet({
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : taken ? "Update attendance" : "Save attendance"}
+          <TranslatedText>{pending ? "Saving…" : taken ? "Update attendance" : "Save attendance"}</TranslatedText>
         </Button>
         {state.error ? <p className="text-bad text-sm">{state.error}</p> : null}
       </div>

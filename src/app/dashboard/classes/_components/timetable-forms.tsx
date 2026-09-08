@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Coffee, Megaphone, Pencil, Plus, Trash2 } from "lucide-react";
 import { startTransition, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -80,13 +82,13 @@ export function SchoolDayForm({
         <ShapeSection shapes={shapes} dayShapeId={dayShapeId} onSelectShape={onSelectShape} />
 
         <section>
-          <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+          <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
             Working days
-          </h2>
+          </TranslatedText></h2>
           <WorkingDaysEditor workingDays={workingDays} />
-          <p className="text-ink-3 mt-2 text-[12.5px]">
+          <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
             Saturday is the weekly holiday in Nepal, so it is off by default.
-          </p>
+          </TranslatedText></p>
         </section>
 
         <BellEditor
@@ -174,9 +176,9 @@ function ShapeSection({
 
   return (
     <section>
-      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
         Day shapes
-      </h2>
+      </TranslatedText></h2>
 
       <div className="flex flex-wrap items-center gap-1.5">
         {shapes.map((shape) => {
@@ -195,7 +197,7 @@ function ShapeSection({
             >
               {shape.name}
               {shape.isDefault ? (
-                <span className="text-ink-3 ml-1.5 text-[11px] font-normal">default</span>
+                <span className="text-ink-3 ml-1.5 text-[11px] font-normal"><TranslatedText>default</TranslatedText></span>
               ) : null}
             </button>
           );
@@ -210,9 +212,9 @@ function ShapeSection({
             setRenaming(false);
           }}
         >
-          <Plus data-icon="inline-start" aria-hidden="true" />
+          <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           New shape
-        </Button>
+        </TranslatedText></Button>
 
         {selected ? (
           <Button
@@ -225,9 +227,9 @@ function ShapeSection({
               setCreating(false);
             }}
           >
-            <Pencil data-icon="inline-start" aria-hidden="true" />
+            <Pencil data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Rename
-          </Button>
+          </TranslatedText></Button>
         ) : null}
 
         {selected && !selected.isDefault ? (
@@ -237,9 +239,9 @@ function ShapeSection({
             size="sm"
             onClick={() => remove(selected)}
           >
-            <Trash2 data-icon="inline-start" aria-hidden="true" />
+            <Trash2 data-icon="inline-start" aria-hidden="true" /><TranslatedText>
             Delete
-          </Button>
+          </TranslatedText></Button>
         ) : null}
       </div>
 
@@ -269,7 +271,7 @@ function ShapeSection({
             onClick={submitCreate}
             disabled={createPending || name.trim() === ""}
           >
-            {createPending ? "Creating…" : "Create"}
+            <TranslatedText>{createPending ? "Creating…" : "Create"}</TranslatedText>
           </Button>
         </div>
       ) : null}
@@ -287,16 +289,16 @@ function ShapeSection({
             size="sm"
             onClick={submitRename}
             disabled={renamePending || renameValue.trim() === ""}
-          >
+          ><TranslatedText>
             Save
-          </Button>
+          </TranslatedText></Button>
         </div>
       ) : null}
 
-      <p className="text-ink-3 mt-2 text-[12.5px]">
+      <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
         A shape can only be deleted while no weekday runs it, and the default
         shape can never be deleted — every day falls back to it.
-      </p>
+      </TranslatedText></p>
     </section>
   );
 }
@@ -425,9 +427,9 @@ function BellEditor({
 
   return (
     <section>
-      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
         The school day
-      </h2>
+      </TranslatedText></h2>
 
       <ul className="space-y-1.5">
         {rows.map((row, i) => (
@@ -501,28 +503,28 @@ function BellEditor({
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={() => add("TEACHING")}>
-          <Plus data-icon="inline-start" aria-hidden="true" />
+          <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Add period
-        </Button>
+        </TranslatedText></Button>
         <Button type="button" variant="outline" size="sm" onClick={() => add("BREAK")}>
-          <Coffee data-icon="inline-start" aria-hidden="true" />
+          <Coffee data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Add break
-        </Button>
+        </TranslatedText></Button>
         <Button type="button" variant="outline" size="sm" onClick={() => add("EVENT")}>
-          <Megaphone data-icon="inline-start" aria-hidden="true" />
+          <Megaphone data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Add event
-        </Button>
+        </TranslatedText></Button>
         <span className="flex-1" />
         <Button type="button" size="sm" onClick={submitBell} disabled={bellPending}>
-          {bellPending ? "Saving…" : "Save school day"}
+          <TranslatedText>{bellPending ? "Saving…" : "Save school day"}</TranslatedText>
         </Button>
       </div>
 
-      <p className="text-ink-3 mt-2 text-[12.5px]">
+      <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
         Times move every lesson in that period with them. Removing a period
         deletes the lessons scheduled in it. An event takes no teacher or
         subject — its label is what shows in the grid.
-      </p>
+      </TranslatedText></p>
     </section>
   );
 }

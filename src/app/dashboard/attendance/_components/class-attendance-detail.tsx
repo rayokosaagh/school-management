@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { ArrowLeft, CalendarCheck, ExternalLink, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -47,12 +49,12 @@ export function ClassAttendanceDetailView({
         </Button>
         <div className="min-w-0 flex-1">
           <p className="font-medium">{detail.section}</p>
-          <p className="text-ink-3 text-xs">{periodLabel} · {detail.daysRecorded} roll call{detail.daysRecorded === 1 ? "" : "s"}</p>
+          <p className="text-ink-3 text-xs">{periodLabel} · {detail.daysRecorded}<TranslatedText> roll call</TranslatedText><TranslatedText>{detail.daysRecorded === 1 ? "" : "s"}</TranslatedText></p>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={() => onOpenRollCall(detail.sectionId)}>
-          <CalendarCheck data-icon="inline-start" aria-hidden="true" />
+          <CalendarCheck data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Open roll call
-        </Button>
+        </TranslatedText></Button>
       </div>
 
       <div className="border-line flex flex-wrap items-center gap-2 border-b px-4 py-3">
@@ -77,12 +79,12 @@ export function ClassAttendanceDetailView({
           ]}
           ariaLabel="Student attendance filter"
         />
-        <span className="text-ink-3 ml-auto text-xs">{students.length} shown</span>
+        <span className="text-ink-3 ml-auto text-xs">{students.length}<TranslatedText> shown</TranslatedText></span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {students.length === 0 ? (
-          <p className="text-ink-3 py-8 text-center text-sm">No students match this view.</p>
+          <p className="text-ink-3 py-8 text-center text-sm"><TranslatedText>No students match this view.</TranslatedText></p>
         ) : (
           <ul className="space-y-3">
             {students.map((student) => (
@@ -106,14 +108,14 @@ function StudentAttendanceCard({ student, to }: { student: StudentAttendanceStat
         <StudentAvatar photoId={student.photoId} name={student.fullName} className="size-9 rounded-lg text-xs" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{student.fullName}</p>
-          <p className="text-ink-3 text-[11.5px]">Roll <span className="font-mono">{student.rollNo}</span> · {student.admissionNo} · {studentStatusLabel(student.status)}</p>
+          <p className="text-ink-3 text-[11.5px]"><TranslatedText>Roll </TranslatedText><span className="font-mono">{student.rollNo}</span> · {student.admissionNo} · {studentStatusLabel(student.status)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <StatusDot tone="ok">{student.present} present</StatusDot>
-          <StatusDot tone="bad">{student.absent} absent</StatusDot>
-          <StatusDot tone="warn">{student.late} late</StatusDot>
-          <StatusDot tone="brand">{student.leave} leave</StatusDot>
-          <span className="font-mono text-sm font-semibold tabular-nums">{student.rate === null ? "—" : `${student.rate}%`}</span>
+          <StatusDot tone="ok">{student.present}<TranslatedText> present</TranslatedText></StatusDot>
+          <StatusDot tone="bad">{student.absent}<TranslatedText> absent</TranslatedText></StatusDot>
+          <StatusDot tone="warn">{student.late}<TranslatedText> late</TranslatedText></StatusDot>
+          <StatusDot tone="brand">{student.leave}<TranslatedText> leave</TranslatedText></StatusDot>
+          <span className="font-mono text-sm font-semibold tabular-nums"><TranslatedText>{student.rate === null ? "—" : `${student.rate}%`}</TranslatedText></span>
         </div>
         <Button
           variant="ghost"
@@ -143,13 +145,13 @@ function StudentAttendanceCard({ student, to }: { student: StudentAttendanceStat
           />
         </div>
       ) : (
-        <p className="text-ink-3 mt-3 text-xs">Not enrolled during this period.</p>
+        <p className="text-ink-3 mt-3 text-xs"><TranslatedText>Not enrolled during this period.</TranslatedText></p>
       )}
 
       {student.notes.length > 0 ? (
         <div className="border-line mt-3 border-t pt-3">
-          <p className="text-ink-3 mb-1.5 text-[11px] font-medium tracking-[0.08em] uppercase">
-            Notes · {student.notes.length}
+          <p className="text-ink-3 mb-1.5 text-[11px] font-medium tracking-[0.08em] uppercase"><TranslatedText>
+            Notes · </TranslatedText>{student.notes.length}
           </p>
           <ul className="space-y-1.5">
             {student.notes.map((note) => (

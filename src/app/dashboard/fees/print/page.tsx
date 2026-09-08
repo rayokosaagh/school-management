@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Info } from "lucide-react";
@@ -44,7 +45,7 @@ export default async function FeePrintPage({
       <h1>{school.name}</h1>
       {school.nameNp ? <p className="np">{school.nameNp}</p> : null}
       <p className="meta">{[school.address, school.phone, school.email].filter(Boolean).join(" · ")}</p>
-      <h2>{invoice ? "Fee invoice" : statement ? "Payment statement" : "Payment receipt"}</h2>
+      <h2><TranslatedText>{invoice ? "Fee invoice" : statement ? "Payment statement" : "Payment receipt"}</TranslatedText></h2>
     </header>
   );
 
@@ -56,9 +57,9 @@ export default async function FeePrintPage({
           href="/dashboard/fees"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" /><TranslatedText>
           Back to fees
-        </Link>
+        </TranslatedText></Link>
         <PrintButton
           label={
             invoice
@@ -72,10 +73,10 @@ export default async function FeePrintPage({
 
       {!school.configured ? (
         <Callout icon={Info} tint="amber">
-          <span className="no-print">
+          <span className="no-print"><TranslatedText>
             The school name and address are not set, so the letterhead below is a placeholder.
             Fill them in on the Settings page before printing for real.
-          </span>
+          </TranslatedText></span>
         </Callout>
       ) : null}
 
@@ -85,35 +86,35 @@ export default async function FeePrintPage({
 
           {invoice.status === "CANCELLED" ? (
             <p className="my-4 border-2 border-current p-3 text-sm">
-              <strong>CANCELLED — This invoice is retained for history only. No payment is due against it.</strong>
+              <strong><TranslatedText>CANCELLED — This invoice is retained for history only. No payment is due against it.</TranslatedText></strong>
             </p>
           ) : null}
 
           <dl className="sheet-facts">
             <div>
-              <dt>Invoice no.</dt>
+              <dt><TranslatedText>Invoice no.</TranslatedText></dt>
               <dd>{invoice.number}</dd>
             </div>
             <div>
-              <dt>Student</dt>
+              <dt><TranslatedText>Student</TranslatedText></dt>
               <dd>{invoice.student.name}</dd>
             </div>
             <div>
-              <dt>Class</dt>
+              <dt><TranslatedText>Class</TranslatedText></dt>
               <dd>
-                {invoice.student.section} · Roll {invoice.student.rollNo}
+                {invoice.student.section}<TranslatedText> · Roll </TranslatedText>{invoice.student.rollNo}
               </dd>
             </div>
             <div>
-              <dt>Issued</dt>
+              <dt><TranslatedText>Issued</TranslatedText></dt>
               <dd>{formatBs(invoice.issuedOn, "YYYY-MM-DD")}</dd>
             </div>
             <div>
-              <dt>Due by</dt>
+              <dt><TranslatedText>Due by</TranslatedText></dt>
               <dd>{invoice.dueOn ? formatBs(invoice.dueOn, "YYYY-MM-DD") : "—"}</dd>
             </div>
             <div>
-              <dt>For</dt>
+              <dt><TranslatedText>For</TranslatedText></dt>
               <dd>
                 {invoice.periodMonth > 0
                   ? `${BS_MONTHS[invoice.periodMonth - 1]} ${invoice.yearBS}`
@@ -125,8 +126,8 @@ export default async function FeePrintPage({
           <table className="sheet-table">
             <thead>
               <tr>
-                <th scope="col">Fee</th>
-                <th scope="col">Amount</th>
+                <th scope="col"><TranslatedText>Fee</TranslatedText></th>
+                <th scope="col"><TranslatedText>Amount</TranslatedText></th>
               </tr>
             </thead>
             <tbody>
@@ -138,7 +139,7 @@ export default async function FeePrintPage({
               ))}
               <tr>
                 <td>
-                  <strong>Total</strong>
+                  <strong><TranslatedText>Total</TranslatedText></strong>
                 </td>
                 <td>
                   <strong>{money(invoice.total)}</strong>
@@ -147,12 +148,12 @@ export default async function FeePrintPage({
               {invoice.paid > 0 && invoice.status !== "CANCELLED" ? (
                 <>
                   <tr>
-                    <td>Already paid</td>
+                    <td><TranslatedText>Already paid</TranslatedText></td>
                     <td>{money(invoice.paid)}</td>
                   </tr>
                   <tr>
                     <td>
-                      <strong>Still owed</strong>
+                      <strong><TranslatedText>Still owed</TranslatedText></strong>
                     </td>
                     <td>
                       <strong>{money(invoice.due)}</strong>
@@ -164,14 +165,14 @@ export default async function FeePrintPage({
           </table>
 
           {invoice.guardian ? (
-            <p className="mt-4 text-sm">
-              Guardian: {invoice.guardian.name} · {invoice.guardian.phone}
+            <p className="mt-4 text-sm"><TranslatedText>
+              Guardian: </TranslatedText>{invoice.guardian.name} · {invoice.guardian.phone}
             </p>
           ) : null}
 
           <div className="sheet-signs">
-            <span>Received by</span>
-            <span>School stamp</span>
+            <span><TranslatedText>Received by</TranslatedText></span>
+            <span><TranslatedText>School stamp</TranslatedText></span>
           </div>
         </article>
       ) : null}
@@ -182,27 +183,27 @@ export default async function FeePrintPage({
 
           <dl className="sheet-facts">
             <div>
-              <dt>Student</dt>
+              <dt><TranslatedText>Student</TranslatedText></dt>
               <dd>{statement.student.name}</dd>
             </div>
             <div>
-              <dt>Class</dt>
+              <dt><TranslatedText>Class</TranslatedText></dt>
               <dd>{statement.student.section}</dd>
             </div>
             <div>
-              <dt>Admission no.</dt>
+              <dt><TranslatedText>Admission no.</TranslatedText></dt>
               <dd>{statement.student.admissionNo}</dd>
             </div>
             <div>
-              <dt>Year</dt>
+              <dt><TranslatedText>Year</TranslatedText></dt>
               <dd>{statement.yearBS}</dd>
             </div>
             <div>
-              <dt>Receipts</dt>
+              <dt><TranslatedText>Receipts</TranslatedText></dt>
               <dd>{statement.rows.length}</dd>
             </div>
             <div>
-              <dt>Printed</dt>
+              <dt><TranslatedText>Printed</TranslatedText></dt>
               <dd>{formatBs(new Date(), "YYYY-MM-DD")}</dd>
             </div>
           </dl>
@@ -210,10 +211,10 @@ export default async function FeePrintPage({
           <table className="sheet-table">
             <thead>
               <tr>
-                <th scope="col">Receipt</th>
-                <th scope="col">Date</th>
-                <th scope="col">Paid towards</th>
-                <th scope="col">Amount</th>
+                <th scope="col"><TranslatedText>Receipt</TranslatedText></th>
+                <th scope="col"><TranslatedText>Date</TranslatedText></th>
+                <th scope="col"><TranslatedText>Paid towards</TranslatedText></th>
+                <th scope="col"><TranslatedText>Amount</TranslatedText></th>
               </tr>
             </thead>
             <tbody>
@@ -223,14 +224,14 @@ export default async function FeePrintPage({
                   <td>{formatBs(row.paidOn, "YYYY-MM-DD")}</td>
                   <td>
                     {row.paidTowards}
-                    {row.status !== "COMPLETED" ? " · reversed" : ""}
+                    <TranslatedText>{row.status !== "COMPLETED" ? " · reversed" : ""}</TranslatedText>
                   </td>
                   <td>{money(row.amount)}</td>
                 </tr>
               ))}
               <tr>
                 <td colSpan={3}>
-                  <strong>Total received</strong>
+                  <strong><TranslatedText>Total received</TranslatedText></strong>
                 </td>
                 <td>
                   <strong>{money(statement.total)}</strong>
@@ -244,15 +245,15 @@ export default async function FeePrintPage({
           {statement.reversed > 0 ? (
             <p className="mt-4 text-sm">
               <strong>
-                {statement.reversed} payment{statement.reversed === 1 ? " was" : "s were"} reversed
-                and {statement.reversed === 1 ? "is" : "are"} not included in the total.
-              </strong>
+                {statement.reversed}<TranslatedText> payment</TranslatedText><TranslatedText>{statement.reversed === 1 ? " was" : "s were"}</TranslatedText><TranslatedText> reversed
+                and </TranslatedText><TranslatedText>{statement.reversed === 1 ? "is" : "are"}</TranslatedText><TranslatedText> not included in the total.
+              </TranslatedText></strong>
             </p>
           ) : null}
 
           <div className="sheet-signs">
-            <span>Received by</span>
-            <span>School stamp</span>
+            <span><TranslatedText>Received by</TranslatedText></span>
+            <span><TranslatedText>School stamp</TranslatedText></span>
           </div>
         </article>
       ) : null}
@@ -263,30 +264,30 @@ export default async function FeePrintPage({
 
           <dl className="sheet-facts">
             <div>
-              <dt>Receipt no.</dt>
+              <dt><TranslatedText>Receipt no.</TranslatedText></dt>
               <dd>{receipt.receiptNo}</dd>
             </div>
             <div>
-              <dt>Date</dt>
+              <dt><TranslatedText>Date</TranslatedText></dt>
               <dd>{formatBs(receipt.paidOn, "YYYY-MM-DD")}</dd>
             </div>
             <div>
-              <dt>Student</dt>
+              <dt><TranslatedText>Student</TranslatedText></dt>
               <dd>{receipt.student.name}</dd>
             </div>
             <div>
-              <dt>Class</dt>
+              <dt><TranslatedText>Class</TranslatedText></dt>
               <dd>{receipt.student.section}</dd>
             </div>
             <div>
-              <dt>Against invoice</dt>
+              <dt><TranslatedText>Against invoice</TranslatedText></dt>
               <dd>{receipt.invoiceNumber}</dd>
             </div>
             <div>
-              <dt>Method</dt>
+              <dt><TranslatedText>Method</TranslatedText></dt>
               <dd>
-                {receipt.method === "CASH" ? "Cash" : "Bank transfer"}
-                {receipt.reference ? ` · ${receipt.reference}` : ""}
+                <TranslatedText>{receipt.method === "CASH" ? "Cash" : "Bank transfer"}</TranslatedText>
+                <TranslatedText>{receipt.reference ? ` · ${receipt.reference}` : ""}</TranslatedText>
               </dd>
             </div>
           </dl>
@@ -294,8 +295,8 @@ export default async function FeePrintPage({
           <table className="sheet-table">
             <thead>
               <tr>
-                <th scope="col">Paid towards</th>
-                <th scope="col">Amount</th>
+                <th scope="col"><TranslatedText>Paid towards</TranslatedText></th>
+                <th scope="col"><TranslatedText>Amount</TranslatedText></th>
               </tr>
             </thead>
             <tbody>
@@ -303,14 +304,14 @@ export default async function FeePrintPage({
                 <tr key={index}>
                   <td>
                     {line.description || line.feeType}
-                    {line.periodMonth > 0 ? ` · ${BS_MONTHS[line.periodMonth - 1]}` : ""}
+                    <TranslatedText>{line.periodMonth > 0 ? ` · ${BS_MONTHS[line.periodMonth - 1]}` : ""}</TranslatedText>
                   </td>
                   <td>{money(line.amount)}</td>
                 </tr>
               ))}
               <tr>
                 <td>
-                  <strong>Received</strong>
+                  <strong><TranslatedText>Received</TranslatedText></strong>
                 </td>
                 <td>
                   <strong>{money(receipt.amount)}</strong>
@@ -322,19 +323,19 @@ export default async function FeePrintPage({
           {/* A reversed payment must never read as valid proof of payment. */}
           {receipt.status !== "COMPLETED" ? (
             <p className="mt-4 text-sm">
-              <strong>This payment was reversed and is not valid proof of payment.</strong>
+              <strong><TranslatedText>This payment was reversed and is not valid proof of payment.</TranslatedText></strong>
             </p>
           ) : null}
 
           <p className="mt-4 text-sm">
-            {receipt.paidBy.name
+            <TranslatedText>{receipt.paidBy.name
               ? `Paid by ${receipt.paidBy.name}${receipt.paidBy.phone ? ` · ${receipt.paidBy.phone}` : ""}`
-              : "Payer not recorded."}
+              : "Payer not recorded."}</TranslatedText>
           </p>
 
           <div className="sheet-signs">
-            <span>{receipt.receivedBy ? `Received by ${receipt.receivedBy}` : "Received by"}</span>
-            <span>School stamp</span>
+            <span><TranslatedText>{receipt.receivedBy ? `Received by ${receipt.receivedBy}` : "Received by"}</TranslatedText></span>
+            <span><TranslatedText>School stamp</TranslatedText></span>
           </div>
         </article>
       ) : null}

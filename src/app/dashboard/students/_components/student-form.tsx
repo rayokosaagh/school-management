@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useToastedActionState } from "@/components/ui/toast";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -38,7 +40,7 @@ export function AddStudentForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="admissionNo">Admission number</Label>
+          <Label htmlFor="admissionNo"><TranslatedText>Admission number</TranslatedText></Label>
           <Input
             id="admissionNo"
             name="admissionNo"
@@ -47,7 +49,7 @@ export function AddStudentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="sectionId">Section</Label>
+          <Label htmlFor="sectionId"><TranslatedText>Section</TranslatedText></Label>
           <FieldSelect
             id="sectionId"
             name="sectionId"
@@ -59,7 +61,7 @@ export function AddStudentForm({
         </div>
         <NameFields idPrefix="student-" />
         <div className="space-y-2">
-          <Label htmlFor="gender">Gender</Label>
+          <Label htmlFor="gender"><TranslatedText>Gender</TranslatedText></Label>
           <FieldSelect
             id="gender"
             name="gender"
@@ -69,7 +71,7 @@ export function AddStudentForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+          <Label htmlFor="address"><TranslatedText>Address</TranslatedText></Label>
           <Input id="address" name="address" placeholder="Address" />
         </div>
         <BsDateField id="dob" name="dob" label="Date of birth" required />
@@ -77,10 +79,10 @@ export function AddStudentForm({
       </div>
 
       <div className="space-y-4 border-t pt-4">
-        <p className="text-sm font-medium">Primary guardian</p>
+        <p className="text-sm font-medium"><TranslatedText>Primary guardian</TranslatedText></p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="guardianRelation">Relation</Label>
+            <Label htmlFor="guardianRelation"><TranslatedText>Relation</TranslatedText></Label>
             <FieldSelect
               id="guardianRelation"
               name="guardianRelation"
@@ -90,7 +92,7 @@ export function AddStudentForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="guardianName">Name</Label>
+            <Label htmlFor="guardianName"><TranslatedText>Name</TranslatedText></Label>
             <Input
               id="guardianName"
               name="guardianName"
@@ -99,7 +101,7 @@ export function AddStudentForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="guardianPhone">Phone</Label>
+            <Label htmlFor="guardianPhone"><TranslatedText>Phone</TranslatedText></Label>
             <Input
               id="guardianPhone"
               name="guardianPhone"
@@ -109,15 +111,15 @@ export function AddStudentForm({
             />
           </div>
         </div>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs"><TranslatedText>
           This number is where absence and fee messages will go later.
-        </p>
+        </TranslatedText></p>
       </div>
 
       <div className="flex items-center gap-3">
         <Button type="submit" variant="action" size="xl" disabled={pending}>
           <PlusCircle />
-          {pending ? "Admitting…" : "Admit student"}
+          <TranslatedText>{pending ? "Admitting…" : "Admit student"}</TranslatedText>
         </Button>
         {state.error ? (
           <p className="text-destructive text-sm">{state.error}</p>

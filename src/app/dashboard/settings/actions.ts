@@ -12,6 +12,7 @@ import { PhotoError, readUpload } from "@/lib/registry/photos";
 import type { Role } from "@/generated/prisma/enums";
 import { numericField } from "@/lib/form";
 import type { AuditActor } from "@/lib/audit";
+import { isLanguage } from "@/lib/i18n/translations";
 import {
   CAPABILITIES,
   CAPABILITY_LABEL,
@@ -108,9 +109,11 @@ export async function updateSchool(
   const address = String(formData.get("address") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
+  const language = String(formData.get("language") ?? "en");
 
   if (name.length < 2) return { error: "Enter the school's name." };
   if (email && !isValidEmail(email)) return { error: "Enter a valid email address." };
+  if (!isLanguage(language)) return { error: "Choose a supported interface language." };
 
   let logo;
   try {
@@ -124,12 +127,13 @@ export async function updateSchool(
   }
 
   await saveSchool(
-    { name, nameNp, address, phone, email },
+    { name, nameNp, address, phone, email, language },
     { logo, removeLogo: formData.get("removeLogo") === "1" },
   );
 
   // The name and logo appear before sign-in as well as in the dashboard and
   // on printed marksheets.
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard", "layout");
   revalidatePath("/login");
   return { success: "School details saved." };

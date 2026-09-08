@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -78,9 +80,9 @@ export function StudentsStep({
           className="max-w-xs"
           aria-label="Search students"
         />
-        <Button className="ml-auto" onClick={onContinue}>
+        <Button className="ml-auto" onClick={onContinue}><TranslatedText>
           Continue to review
-        </Button>
+        </TranslatedText></Button>
       </div>
 
       {visible.map((group) => {
@@ -93,15 +95,15 @@ export function StudentsStep({
               <h2 className="text-sm font-medium">{group.label}</h2>
               <span className="text-ink-3 font-mono text-xs">{group.rows.length}</span>
               {graduating ? (
-                <span className="text-ink-3 text-xs">leaving school</span>
+                <span className="text-ink-3 text-xs"><TranslatedText>leaving school</TranslatedText></span>
               ) : null}
               <div className="ml-auto flex gap-2">
-                <Button size="xs" variant="ghost" onClick={() => onBulk(ids, "PROMOTE")}>
+                <Button size="xs" variant="ghost" onClick={() => onBulk(ids, "PROMOTE")}><TranslatedText>
                   All promote
-                </Button>
-                <Button size="xs" variant="ghost" onClick={() => onBulk(ids, "RETAIN")}>
+                </TranslatedText></Button>
+                <Button size="xs" variant="ghost" onClick={() => onBulk(ids, "RETAIN")}><TranslatedText>
                   All retain
-                </Button>
+                </TranslatedText></Button>
               </div>
             </header>
 
@@ -118,10 +120,10 @@ export function StudentsStep({
                     <p className="text-ink-3 font-mono text-xs">{row.admissionNo}</p>
                   </div>
                   <p className="text-ink-3 ml-4 w-28 font-mono text-xs tabular-nums">
-                    {row.total === null ? "no marks" : `${row.total} marks`}
+                    <TranslatedText>{row.total === null ? "no marks" : `${row.total} marks`}</TranslatedText>
                   </p>
                   <p className="text-ink-3 w-20 font-mono text-xs tabular-nums">
-                    {row.attendancePercent === null ? "—" : `${row.attendancePercent}%`}
+                    <TranslatedText>{row.attendancePercent === null ? "—" : `${row.attendancePercent}%`}</TranslatedText>
                   </p>
                   <p className="text-ink-2 ml-auto w-32 truncate text-right text-xs">
                     {row.decision === "LEFT"

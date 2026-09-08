@@ -27,6 +27,7 @@ import { hideableColumnIds } from "@/lib/table/columns";
 import { clampPageIndex } from "@/lib/table/paging";
 import { DEFAULT_PREFS, PAGE_SIZES, loadPrefs, savePrefs, type TablePrefs } from "@/lib/table/prefs";
 import { cn } from "@/lib/utils";
+import { TranslatedText, useLanguage } from "@/components/i18n/language-provider";
 
 /// A click that lands on a control inside a row belongs to that control, not
 /// to the row. Without this, opening the class-teacher dropdown on Classes
@@ -84,6 +85,7 @@ export function DataTable<T>({
   initialSort?: SortingState;
   className?: string;
 }) {
+  const { t } = useLanguage();
   const reduce = useReducedMotion();
   const [prefs, setPrefs] = useState<TablePrefs>(DEFAULT_PREFS);
   // Read once on mount; later changes to `initialSort` are ignored by design.
@@ -202,7 +204,7 @@ export function DataTable<T>({
                     indeterminate={!pageAllChosen && pageSomeChosen}
                     onCheckedChange={togglePage}
                     disabled={selectableOnPage.length === 0}
-                    aria-label={pageAllChosen ? "Clear this page" : "Select this page"}
+                    aria-label={t(pageAllChosen ? "Clear this page" : "Select this page")}
                   />
                 </TableHead>
               ) : null}
@@ -230,7 +232,9 @@ export function DataTable<T>({
                           sort && "text-brand-text",
                         )}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {typeof header.column.columnDef.header === "string"
+                          ? t(header.column.columnDef.header)
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                         {sort === "asc" ? (
                           <ArrowUp className="size-3" aria-hidden="true" />
                         ) : sort === "desc" ? (
@@ -240,12 +244,14 @@ export function DataTable<T>({
                         )}
                       </button>
                     ) : (
-                      flexRender(header.column.columnDef.header, header.getContext())
+                      typeof header.column.columnDef.header === "string"
+                        ? t(header.column.columnDef.header)
+                        : flexRender(header.column.columnDef.header, header.getContext())
                     )}
                   </TableHead>
                 );
               })}
-              {rowActions ? <TableHead role={grid ? "columnheader" : undefined} className="w-24"><span className="sr-only">Actions</span></TableHead> : null}
+              {rowActions ? <TableHead role={grid ? "columnheader" : undefined} className="w-24"><span className="sr-only">{t("Actions")}</span></TableHead> : null}
             </TableRow>
           ))}
         </TableHeader>
@@ -344,29 +350,29 @@ export function DataTable<T>({
 
       <div className="text-ink-3 flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-[12.5px]">
         <span>
-          Showing <b className="text-ink font-mono font-medium">{from}–{to}</b> of{" "}
+          {t("Showing")} <b className="text-ink font-mono font-medium">{from}–{to}</b> {t("of")}<TranslatedText>{" "}</TranslatedText>
           <b className="text-ink font-mono font-medium">{total}</b>
         </span>
         <span className="flex items-center gap-1">
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Rows per page" className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono">
+            <DropdownMenuTrigger aria-label={t("Rows per page")} className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center gap-1 rounded-md border px-2 font-mono">
               <Rows3 className="size-3.5" aria-hidden="true" />
               {prefs.pageSize}
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {PAGE_SIZES.map((n) => (
                 <DropdownMenuItem key={n} onClick={() => { updatePrefs({ pageSize: n }); setPageIndex(0); }}>
-                  {n} rows
+                  {n} {t("rows")}
                 </DropdownMenuItem>
               ))}
               <DropdownMenuItem onClick={() => updatePrefs({ density: prefs.density === "compact" ? "comfortable" : "compact" })}>
-                {prefs.density === "compact" ? "Comfortable rows" : "Compact rows"}
+                {t(prefs.density === "compact" ? "Comfortable rows" : "Compact rows")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Choose columns" className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center rounded-md border px-2">
+            <DropdownMenuTrigger aria-label={t("Choose columns")} className="border-line hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none inline-flex h-7 items-center rounded-md border px-2">
               <Columns3 className="size-3.5" aria-hidden="true" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -379,7 +385,7 @@ export function DataTable<T>({
                     updatePrefs({ hidden });
                   }}
                 >
-                  {typeof c.columnDef.header === "string" ? c.columnDef.header : c.id}
+                  {typeof c.columnDef.header === "string" ? t(c.columnDef.header) : c.id}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuContent>
@@ -387,7 +393,7 @@ export function DataTable<T>({
 
           <button
             type="button"
-            aria-label="Previous page"
+            aria-label={t("Previous page")}
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
             className="hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none grid size-7 place-items-center rounded-md disabled:opacity-40"
@@ -397,7 +403,7 @@ export function DataTable<T>({
           <span className="font-mono tabular-nums">{safeIndex + 1} / {pageCount}</span>
           <button
             type="button"
-            aria-label="Next page"
+            aria-label={t("Next page")}
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
             className="hover:bg-surface-2 focus-visible:ring-ring/50 focus-visible:ring-3 focus-visible:outline-none grid size-7 place-items-center rounded-md disabled:opacity-40"

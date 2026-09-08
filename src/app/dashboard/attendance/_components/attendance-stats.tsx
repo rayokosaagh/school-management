@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -123,20 +125,20 @@ export function AttendanceStats({
 
       <div className="border-line mt-4 overflow-hidden rounded-[10px] border">
         <div className="border-line border-b px-4 py-3">
-          <p className="font-medium">Attendance by class</p>
-          <p className="text-ink-3 mt-0.5 text-xs">{periodLabel} · present and late count as attended</p>
+          <p className="font-medium"><TranslatedText>Attendance by class</TranslatedText></p>
+          <p className="text-ink-3 mt-0.5 text-xs">{periodLabel}<TranslatedText> · present and late count as attended</TranslatedText></p>
         </div>
         <Table className="min-w-[820px]">
           <TableHeader className="bg-surface-2">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-ink-3 h-9 pl-4 text-[11.5px] tracking-[0.04em] uppercase">Class</TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase">Students</TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase">Days</TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-ok">Present</StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-bad">Absent</StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-warn">Late</StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-brand">Leave</StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 pr-4 text-right text-[11.5px] tracking-[0.04em] uppercase">Attendance</TableHead>
+              <TableHead className="text-ink-3 h-9 pl-4 text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Class</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Students</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Days</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-ok"><TranslatedText>Present</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-bad"><TranslatedText>Absent</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-warn"><TranslatedText>Late</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-brand"><TranslatedText>Leave</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 pr-4 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Attendance</TranslatedText></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,7 +175,7 @@ export function AttendanceStats({
           </TableBody>
         </Table>
         {rows.length === 0 ? (
-          <p className="text-ink-3 px-4 py-8 text-center text-sm">No classes are available for this academic year.</p>
+          <p className="text-ink-3 px-4 py-8 text-center text-sm"><TranslatedText>No classes are available for this academic year.</TranslatedText></p>
         ) : null}
       </div>
     </div>
@@ -190,7 +192,7 @@ function StatusLabel({ children, tone }: { children: React.ReactNode; tone: stri
 }
 
 function AttendanceRate({ value }: { value: number | null }) {
-  if (value === null) return <span className="text-ink-3 block text-right text-xs">No data</span>;
+  if (value === null) return <span className="text-ink-3 block text-right text-xs"><TranslatedText>No data</TranslatedText></span>;
   return (
     <div className="ml-auto w-24" role="progressbar" aria-label="Attendance rate" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}>
       <span className="mb-1 block text-right font-mono text-xs font-medium tabular-nums">{value}%</span>

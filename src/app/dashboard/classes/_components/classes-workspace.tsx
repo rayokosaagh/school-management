@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   ArrowUpDown,
@@ -245,28 +247,28 @@ export function ClassesWorkspace({
           {showStructure ? (
             <Sheet>
               <SheetTrigger render={<Button size="sm" />}>
-                <Plus data-icon="inline-start" aria-hidden="true" />
+                <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                 Add
-              </SheetTrigger>
+              </TranslatedText></SheetTrigger>
               <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
                 <SheetHeader>
-                  <SheetTitle>Add to the structure</SheetTitle>
-                  <SheetDescription>
+                  <SheetTitle><TranslatedText>Add to the structure</TranslatedText></SheetTitle>
+                  <SheetDescription><TranslatedText>
                     A grade is school-wide; its sections belong to one year.
-                  </SheetDescription>
+                  </TranslatedText></SheetDescription>
                 </SheetHeader>
                 <div className="space-y-6 px-4 pb-6">
                   <div className="space-y-3">
-                    <p className="text-sm font-medium">New academic year</p>
+                    <p className="text-sm font-medium"><TranslatedText>New academic year</TranslatedText></p>
                     <AddYearForm />
                   </div>
                   <div className="border-line space-y-3 border-t pt-5">
-                    <p className="text-sm font-medium">New grade</p>
+                    <p className="text-sm font-medium"><TranslatedText>New grade</TranslatedText></p>
                     <AddGradeForm />
                   </div>
                   {academicYearId ? (
                     <div className="border-line space-y-3 border-t pt-5">
-                      <p className="text-sm font-medium">New section in {yearLabel}</p>
+                      <p className="text-sm font-medium"><TranslatedText>New section in </TranslatedText>{yearLabel}</p>
                       <AddSectionForm grades={grades} academicYearId={academicYearId} />
                     </div>
                   ) : null}
@@ -295,9 +297,9 @@ export function ClassesWorkspace({
               }
               action={
                 showStructure ? (
-                  <Button type="button" size="sm" onClick={() => switchView("years")}>
+                  <Button type="button" size="sm" onClick={() => switchView("years")}><TranslatedText>
                     Go to Years
-                  </Button>
+                  </TranslatedText></Button>
                 ) : undefined
               }
             />
@@ -343,8 +345,8 @@ export function ClassesWorkspace({
                 size="sm"
                 onClick={() => setEditingGrade(grade)}
               >
-                <Pencil data-icon="inline-start" aria-hidden="true" />
-                Edit {grade.name}
+                <Pencil data-icon="inline-start" aria-hidden="true" /><TranslatedText>
+                Edit </TranslatedText>{grade.name}
               </Button>
             ) : null}
             <Button
@@ -353,12 +355,12 @@ export function ClassesWorkspace({
               size="sm"
               onClick={() => setReorderingGrades(true)}
             >
-              <ArrowUpDown data-icon="inline-start" aria-hidden="true" />
+              <ArrowUpDown data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Reorder grades
-            </Button>
+            </TranslatedText></Button>
             <span className="flex-1" />
             <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-              {visible.length} section{visible.length === 1 ? "" : "s"}
+              {visible.length}<TranslatedText> section</TranslatedText><TranslatedText>{visible.length === 1 ? "" : "s"}</TranslatedText>
             </span>
           </PageFrame.Toolbar>
 

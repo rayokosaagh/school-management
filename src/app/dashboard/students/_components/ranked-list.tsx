@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { StudentAvatar } from "@/components/ui/student-avatar";
 import type { HonoursStudent } from "@/lib/honours/honours";
@@ -25,7 +26,7 @@ function Row({ s }: { s: HonoursStudent }) {
         <StudentAvatar photoId={s.photoId} name={s.fullName} className="size-8 rounded-lg text-xs" />
         <span className="min-w-0">
           <span className="block truncate font-medium">
-            {s.fullName} <span className="text-ink-3 font-normal">· Roll {s.rollNo}</span>
+            {s.fullName} <span className="text-ink-3 font-normal"><TranslatedText> · Roll </TranslatedText>{s.rollNo}</span>
           </span>
           <span className="flex flex-wrap gap-x-3">
             <Pillar label="Exam" value={s.pillars.exams} />
@@ -69,8 +70,8 @@ export function RankedList({ students, query = "" }: { students: HonoursStudent[
       ) : null}
       {waiting.length > 0 ? (
         <div>
-          <p className="text-ink-3 mb-1 px-2 text-[11px] font-medium tracking-[0.1em] uppercase">
-            Awaiting a published result · {waiting.length}
+          <p className="text-ink-3 mb-1 px-2 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+            Awaiting a published result · </TranslatedText>{waiting.length}
           </p>
           <ul className="space-y-0.5 opacity-75">
             {waiting.map((s) => (
@@ -80,8 +81,8 @@ export function RankedList({ students, query = "" }: { students: HonoursStudent[
         </div>
       ) : null}
       {searching && ranked.length === 0 && waiting.length === 0 ? (
-        <p className="text-ink-3 px-2 text-sm">
-          No one below the podium matches “{query.trim()}”.
+        <p className="text-ink-3 px-2 text-sm"><TranslatedText>
+          No one below the podium matches “</TranslatedText>{query.trim()}”.
         </p>
       ) : null}
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { PlusCircle } from "lucide-react";
@@ -24,11 +26,11 @@ export function AddSubjectForm() {
     <form action={action} className="space-y-2">
       <div className="grid grid-cols-[1fr_auto] items-end gap-2">
         <div className="space-y-2">
-          <Label htmlFor="subject-name">Subject</Label>
+          <Label htmlFor="subject-name"><TranslatedText>Subject</TranslatedText></Label>
           <Input id="subject-name" name="name" placeholder="Compulsory Maths" required />
         </div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Adding…" : "Add"}
+          <TranslatedText>{pending ? "Adding…" : "Add"}</TranslatedText>
         </Button>
       </div>
       <Status state={state} />
@@ -54,7 +56,7 @@ export function AddOfferingForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="offering-subject">Subject</Label>
+          <Label htmlFor="offering-subject"><TranslatedText>Subject</TranslatedText></Label>
           <FieldSelect
             id="offering-subject"
             name="subjectId"
@@ -68,7 +70,7 @@ export function AddOfferingForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="offering-grade">Grade</Label>
+          <Label htmlFor="offering-grade"><TranslatedText>Grade</TranslatedText></Label>
           <FieldSelect
             id="offering-grade"
             name="gradeId"
@@ -79,7 +81,7 @@ export function AddOfferingForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="fullMarksTheory">Theory full marks</Label>
+          <Label htmlFor="fullMarksTheory"><TranslatedText>Theory full marks</TranslatedText></Label>
           <Input
             id="fullMarksTheory"
             name="fullMarksTheory"
@@ -89,7 +91,7 @@ export function AddOfferingForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="passMarksTheory">Theory pass marks</Label>
+          <Label htmlFor="passMarksTheory"><TranslatedText>Theory pass marks</TranslatedText></Label>
           <Input
             id="passMarksTheory"
             name="passMarksTheory"
@@ -107,14 +109,14 @@ export function AddOfferingForm({
           checked={hasPractical}
           onChange={(e) => setHasPractical(e.target.checked)}
           className="border-input size-4 rounded border"
-        />
+        /><TranslatedText>
         This subject has a practical
-      </label>
+      </TranslatedText></label>
 
       {hasPractical ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="fullMarksPractical">Practical full marks</Label>
+            <Label htmlFor="fullMarksPractical"><TranslatedText>Practical full marks</TranslatedText></Label>
             <Input
               id="fullMarksPractical"
               name="fullMarksPractical"
@@ -123,7 +125,7 @@ export function AddOfferingForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="passMarksPractical">Practical pass marks</Label>
+            <Label htmlFor="passMarksPractical"><TranslatedText>Practical pass marks</TranslatedText></Label>
             <Input
               id="passMarksPractical"
               name="passMarksPractical"
@@ -137,7 +139,7 @@ export function AddOfferingForm({
       <div className="flex items-center gap-3">
         <Button type="submit" variant="action" size="xl" disabled={pending}>
           <PlusCircle />
-          {pending ? "Adding…" : "Add offering"}
+          <TranslatedText>{pending ? "Adding…" : "Add offering"}</TranslatedText>
         </Button>
         <Status state={state} />
       </div>

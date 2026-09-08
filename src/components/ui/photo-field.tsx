@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useRef, useState } from "react";
 import { Camera, Trash2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,13 +66,13 @@ export function PhotoField({
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => input.current?.click()}>
             <Camera />
-            {photoId || preview ? "Change photo" : "Add photo"}
+            <TranslatedText>{photoId || preview ? "Change photo" : "Add photo"}</TranslatedText>
           </Button>
           {removable && photoId && !preview ? (
             <Button type="submit" name={removeName} value="1" variant="ghost" size="sm">
-              <Trash2 />
+              <Trash2 /><TranslatedText>
               Remove
-            </Button>
+            </TranslatedText></Button>
           ) : null}
         </div>
         <p className="text-muted-foreground text-xs">

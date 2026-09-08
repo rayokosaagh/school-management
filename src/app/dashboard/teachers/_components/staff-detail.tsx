@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,11 +67,11 @@ export function StaffDetail({ row, onDone }: { row: StaffRow; onDone: () => void
             fullNameNp={row.fullNameNp ?? ""}
           />
           <div className="space-y-2">
-            <Label htmlFor={`sp-${row.id}`}>Phone</Label>
+            <Label htmlFor={`sp-${row.id}`}><TranslatedText>Phone</TranslatedText></Label>
             <Input id={`sp-${row.id}`} name="phone" defaultValue={row.phone} inputMode="tel" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`sd-${row.id}`}>Designation</Label>
+            <Label htmlFor={`sd-${row.id}`}><TranslatedText>Designation</TranslatedText></Label>
             <Input id={`sd-${row.id}`} name="designation" defaultValue={row.designation} required />
           </div>
           <BsDateField
@@ -82,7 +84,7 @@ export function StaffDetail({ row, onDone }: { row: StaffRow; onDone: () => void
         </div>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
+            <TranslatedText>{saving ? "Saving…" : "Save changes"}</TranslatedText>
           </Button>
           <Status state={editState} />
         </div>
@@ -93,23 +95,23 @@ export function StaffDetail({ row, onDone }: { row: StaffRow; onDone: () => void
           <input type="hidden" name="staffId" value={row.id} />
           <input type="hidden" name="isActive" value={String(!row.isActive)} />
           <Button type="submit" variant="outline">
-            {row.isActive ? "Mark as left" : "Reinstate"}
+            <TranslatedText>{row.isActive ? "Mark as left" : "Reinstate"}</TranslatedText>
           </Button>
         </form>
         <form action={delAction}>
           <input type="hidden" name="staffId" value={row.id} />
           <ConfirmSubmit label="Delete" confirmLabel="Delete permanently?" pending={deleting} />
         </form>
-        <Button type="button" variant="ghost" onClick={onDone}>
+        <Button type="button" variant="ghost" onClick={onDone}><TranslatedText>
           Close
-        </Button>
+        </TranslatedText></Button>
       </div>
       <Status state={toggleState} />
       <Status state={delState} />
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         Deleting is blocked while the person is a class teacher or holds a subject.
         Marking them as left keeps their history intact.
-      </p>
+      </TranslatedText></p>
     </div>
   );
 }

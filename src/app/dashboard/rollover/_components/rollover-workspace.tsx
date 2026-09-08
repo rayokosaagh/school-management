@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { CalendarPlus } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -141,7 +143,7 @@ export function RolloverWorkspace({
       icon={<CalendarPlus />}
       tint="rose"
       eyebrow="Settings"
-      breadcrumb={<><Link href="/dashboard/settings?view=academic" className="hover:underline">Settings</Link> / Academic year transition</>}
+      breadcrumb={<><Link href="/dashboard/settings?view=academic" className="hover:underline"><TranslatedText>Settings</TranslatedText></Link><TranslatedText> / Academic year transition</TranslatedText></>}
       title="Prepare next academic year"
       subtitle="Set up the year, review each student's placement, then confirm the transition."
       meta={targetYear ? `${sourceYear.nameBS} → ${targetYear.nameBS}` : sourceYear.nameBS}
@@ -151,7 +153,7 @@ export function RolloverWorkspace({
           {([ ["year", "Prepare year"], ["students", "Review students"], ["review", "Confirm & activate"] ] as const).map(([value, label], index) => (
             <li key={value} aria-current={step === value ? "step" : undefined}
               className={`rounded-lg border px-3 py-3 text-sm ${step === value ? "border-brand-tint-2 bg-brand-tint text-brand-text" : "border-line text-ink-3"}`}>
-              <span className="mb-1 block text-xs">Step {index + 1}</span>
+              <span className="mb-1 block text-xs"><TranslatedText>Step </TranslatedText>{index + 1}</span>
               <span className="font-medium">{label}</span>
             </li>
           ))}
@@ -161,8 +163,8 @@ export function RolloverWorkspace({
       <PageFrame.Body className="overflow-y-auto p-4">
         {step !== "year" && !done ? (
           <Button variant="ghost" className="mb-4" disabled={pending}
-            onClick={() => setStep(step === "review" ? "students" : "year")}>
-            Back to {step === "review" ? "students" : "year setup"}
+            onClick={() => setStep(step === "review" ? "students" : "year")}><TranslatedText>
+            Back to </TranslatedText><TranslatedText>{step === "review" ? "students" : "year setup"}</TranslatedText>
           </Button>
         ) : null}
         {result.error ? <p role="alert" className="mb-4 text-sm text-destructive">{result.error}</p> : null}

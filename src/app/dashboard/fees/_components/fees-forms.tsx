@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { CalendarPlus, Plus, Send, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { BsDateField } from "@/components/ui/bs-date-field";
@@ -41,7 +43,7 @@ export function AddHeadForm() {
   return (
     <form key={resetKey(state)} action={action} className="space-y-4">
       <div className="min-w-0 space-y-2">
-        <Label htmlFor={`${id}-name`}>New fee type</Label>
+        <Label htmlFor={`${id}-name`}><TranslatedText>New fee type</TranslatedText></Label>
         <Input
           id={`${id}-name`}
           name="name"
@@ -53,12 +55,12 @@ export function AddHeadForm() {
       {/* How often it is charged belongs to the type, so it is chosen once
           here rather than restated for every class. */}
       <div className="space-y-2">
-        <Label htmlFor={`${id}-scope`}>Who pays this fee?</Label>
+        <Label htmlFor={`${id}-scope`}><TranslatedText>Who pays this fee?</TranslatedText></Label>
         <FieldSelect id={`${id}-scope`} name="billingScope" aria-label="Who pays this fee" defaultValue="CLASS" options={[{ value: "CLASS", label: "Class-wide · all students in a class" }, { value: "STUDENT", label: "Per-student service · selected students only" }]} />
-        <p className="text-ink-3 text-xs leading-5">Per-student types are priced and assigned in Services, not Class pricing.</p>
+        <p className="text-ink-3 text-xs leading-5"><TranslatedText>Per-student types are priced and assigned in Services, not Class pricing.</TranslatedText></p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`${id}-frequency`}>How often is it charged?</Label>
+        <Label htmlFor={`${id}-frequency`}><TranslatedText>How often is it charged?</TranslatedText></Label>
         <FieldSelect
           id={`${id}-frequency`}
           name="frequency"
@@ -73,7 +75,7 @@ export function AddHeadForm() {
       </div>
       <Button type="submit" disabled={pending} className="w-full">
         <Plus data-icon="inline-start" aria-hidden="true" />
-        {pending ? "Adding…" : "Add fee type"}
+        <TranslatedText>{pending ? "Adding…" : "Add fee type"}</TranslatedText>
       </Button>
     </form>
   );
@@ -101,7 +103,7 @@ export function AddStructureForm({
   // offering a form whose selects are empty.
   const blocked = active.length === 0 ? "fee type" : grades.length === 0 ? "grade" : null;
   if (blocked) {
-    return <p className="text-ink-3 text-sm">Add a {blocked} before building a fee plan.</p>;
+    return <p className="text-ink-3 text-sm"><TranslatedText>Add a </TranslatedText>{blocked}<TranslatedText> before building a fee plan.</TranslatedText></p>;
   }
 
   // The draft lines live inside the remounted subtree, so a successful save
@@ -147,7 +149,7 @@ function StructureFields({
 
       <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
         <div className="space-y-2">
-          <Label htmlFor={`${id}-name`}>Plan name</Label>
+          <Label htmlFor={`${id}-name`}><TranslatedText>Plan name</TranslatedText></Label>
           <Input
             id={`${id}-name`}
             name="name"
@@ -157,7 +159,7 @@ function StructureFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${id}-grade`}>Grade</Label>
+          <Label htmlFor={`${id}-grade`}><TranslatedText>Grade</TranslatedText></Label>
           <FieldSelect
             id={`${id}-grade`}
             name="gradeId"
@@ -170,7 +172,7 @@ function StructureFields({
       </div>
 
       <div className="space-y-2">
-        <p className="text-ink-2 text-sm font-medium">Fee lines</p>
+        <p className="text-ink-2 text-sm font-medium"><TranslatedText>Fee lines</TranslatedText></p>
         {lines.map((line, index) => (
           <div key={line.key} className="grid grid-cols-[1fr_8rem_auto] items-center gap-2">
             {/* React posts the value, so the picker cannot drift out of step
@@ -225,13 +227,13 @@ function StructureFields({
             )
           }
         >
-          <Plus data-icon="inline-start" aria-hidden="true" />
+          <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Add a line
-        </Button>
+        </TranslatedText></Button>
       </div>
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Creating…" : "Create plan"}
+        <TranslatedText>{pending ? "Creating…" : "Create plan"}</TranslatedText>
       </Button>
     </form>
   );
@@ -256,7 +258,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
         className="bg-tint-green text-tint-green-fg flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium tabular-nums"
       >
         {short}
-        <span className="text-[10px] font-normal">{issued} billed</span>
+        <span className="text-[10px] font-normal">{issued}<TranslatedText> billed</TranslatedText></span>
       </span>
     );
   }
@@ -267,7 +269,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
         className="text-ink-3 border-line flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-2 py-2 text-xs"
       >
         {short}
-        <span className="text-[10px]">Upcoming</span>
+        <span className="text-[10px]"><TranslatedText>Upcoming</TranslatedText></span>
       </span>
     );
   }
@@ -284,7 +286,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
       className="text-tint-amber-fg border-tint-amber-fg/40 h-auto min-h-14 min-w-0 flex-col gap-1 rounded-lg px-2 py-2 text-xs"
     >
       {short}
-      <span className="text-[10px] font-normal">{pending ? "Billing…" : "Bill month"}</span>
+      <span className="text-[10px] font-normal"><TranslatedText>{pending ? "Billing…" : "Bill month"}</TranslatedText></span>
     </Button>
   );
 }
@@ -315,19 +317,19 @@ export function IssueForm({
           submitted, which is what a blank field did anyway. */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">{monthly ? "Monthly billing" : "Yearly billing"}</p>
-          <p className="text-ink-3 mt-1 text-xs leading-5">{monthly ? "Select an available month to bill the class." : issued > 0 ? `${issued} pupils billed. Only remaining pupils will receive a bill.` : "Create one bill for each active pupil in this class."}</p>
+          <p className="text-sm font-medium"><TranslatedText>{monthly ? "Monthly billing" : "Yearly billing"}</TranslatedText></p>
+          <p className="text-ink-3 mt-1 text-xs leading-5"><TranslatedText>{monthly ? "Select an available month to bill the class." : issued > 0 ? `${issued} pupils billed. Only remaining pupils will receive a bill.` : "Create one bill for each active pupil in this class."}</TranslatedText></p>
         </div>
       {dated ? (
         <div className="w-full space-y-1 sm:w-52">
           <BsDateField id={`${id}-due`} name="dueOn" label="Due by" />
-          <Button type="button" variant="ghost" size="xs" onClick={() => setDated(false)}>Remove due date</Button>
+          <Button type="button" variant="ghost" size="xs" onClick={() => setDated(false)}><TranslatedText>Remove due date</TranslatedText></Button>
         </div>
       ) : (
         <Button type="button" variant="ghost" size="xs" onClick={() => setDated(true)}>
-          <CalendarPlus data-icon="inline-start" aria-hidden="true" />
+          <CalendarPlus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
           Add a due date
-        </Button>
+        </TranslatedText></Button>
       )}
       </div>
 
@@ -347,7 +349,7 @@ export function IssueForm({
           disabled={pending}
         >
           <Send data-icon="inline-start" aria-hidden="true" />
-          {pending ? "Billing…" : issued > 0 ? "Bill remaining" : "Bill the class"}
+          <TranslatedText>{pending ? "Billing…" : issued > 0 ? "Bill remaining" : "Bill the class"}</TranslatedText>
         </Button>
       )}
     </form>
@@ -419,9 +421,9 @@ export function CollectPaymentForm({
   if (choices.length === 0) {
     return (
       <p className="text-ink-3 text-sm">
-        {forPupil === null
+        <TranslatedText>{forPupil === null
           ? "Every bill for this year is settled. Bill a class to collect more."
-          : "This pupil owes nothing. Every bill of theirs is settled."}
+          : "This pupil owes nothing. Every bill of theirs is settled."}</TranslatedText>
       </p>
     );
   }
@@ -434,7 +436,7 @@ export function CollectPaymentForm({
       <input type="hidden" name="invoiceId" value={invoiceId} />
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-invoice`}>Invoice</Label>
+        <Label htmlFor={`${id}-invoice`}><TranslatedText>Invoice</TranslatedText></Label>
         <FieldSelect
           id={`${id}-invoice`}
           value={invoiceId}
@@ -461,15 +463,15 @@ export function CollectPaymentForm({
         />
         {chosen ? (
           <p className="text-ink-3 text-xs">
-            <span className="font-mono">{chosen.number}</span> · {chosen.section} ·{" "}
-            {money(chosen.paid)} of {money(chosen.total)} paid
-          </p>
+            <span className="font-mono">{chosen.number}</span> · {chosen.section} ·<TranslatedText>{" "}</TranslatedText>
+            {money(chosen.paid)}<TranslatedText> of </TranslatedText>{money(chosen.total)}<TranslatedText> paid
+          </TranslatedText></p>
         ) : null}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={`${id}-amount`}>Amount</Label>
+          <Label htmlFor={`${id}-amount`}><TranslatedText>Amount</TranslatedText></Label>
           <Input
             id={`${id}-amount`}
             name="amount"
@@ -486,10 +488,10 @@ export function CollectPaymentForm({
             defaultValue={chosen ? String(chosen.due) : ""}
             required
           />
-          {chosen ? <p className="text-ink-3 text-xs">{money(chosen.due)} outstanding</p> : null}
+          {chosen ? <p className="text-ink-3 text-xs">{money(chosen.due)}<TranslatedText> outstanding</TranslatedText></p> : null}
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`${id}-method`}>Method</Label>
+          <Label htmlFor={`${id}-method`}><TranslatedText>Method</TranslatedText></Label>
           <FieldSelect
             id={`${id}-method`}
             name="method"
@@ -504,7 +506,7 @@ export function CollectPaymentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-reference`}>Reference (optional)</Label>
+        <Label htmlFor={`${id}-reference`}><TranslatedText>Reference (optional)</TranslatedText></Label>
         <Input
           id={`${id}-reference`}
           name="reference"
@@ -514,7 +516,7 @@ export function CollectPaymentForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${id}-payer`}>Paid by (optional)</Label>
+        <Label htmlFor={`${id}-payer`}><TranslatedText>Paid by (optional)</TranslatedText></Label>
         <FieldSelect
           id={`${id}-payer`}
           value={payer}
@@ -549,7 +551,7 @@ export function CollectPaymentForm({
       </div>
 
       <Button type="submit" disabled={pending || invoiceId === ""} className="w-full">
-        {pending ? "Recording…" : "Record payment"}
+        <TranslatedText>{pending ? "Recording…" : "Record payment"}</TranslatedText>
       </Button>
       </fieldset>
     </form>

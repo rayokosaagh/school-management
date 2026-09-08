@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/i18n/language-provider";
 
 // A view switch, not a row of buttons. Outline buttons sitting beside a primary
 // action read as text; a filled track with a raised thumb says "pick one".
@@ -25,10 +26,11 @@ export function Segmented<T extends string>({
   ariaLabel: string;
   className?: string;
 }) {
+  const { t } = useLanguage();
   return (
     <div
       role="tablist"
-      aria-label={ariaLabel}
+      aria-label={t(ariaLabel)}
       aria-orientation="horizontal"
       className={cn(
         "bg-surface-2 border-line inline-flex h-8 items-center gap-0.5 rounded-lg border p-0.5",
@@ -63,7 +65,7 @@ export function Segmented<T extends string>({
                 : "text-ink-3 hover:text-ink",
             )}
           >
-            {option.label}
+            {t(option.label)}
             {option.count !== undefined ? (
               <span
                 className={cn(

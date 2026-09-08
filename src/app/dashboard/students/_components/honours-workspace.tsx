@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -93,10 +95,10 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
         </label>
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {ranked} ranked
-        </span>
-        <span className="text-ink-3 shrink-0 font-mono text-[12px] whitespace-nowrap tabular-nums">
-          Exam {w.exams} · Att {w.attendance} · Cond {w.conduct} · Act {w.activities}
+          {ranked}<TranslatedText> ranked
+        </TranslatedText></span>
+        <span className="text-ink-3 shrink-0 font-mono text-[12px] whitespace-nowrap tabular-nums"><TranslatedText>
+          Exam </TranslatedText>{w.exams}<TranslatedText> · Att </TranslatedText>{w.attendance}<TranslatedText> · Cond </TranslatedText>{w.conduct}<TranslatedText> · Act </TranslatedText>{w.activities}
         </span>
       </PageFrame.Toolbar>
 
@@ -104,10 +106,10 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
         <p
           role="status"
           className="text-warn bg-warn-tint border-warn/30 mb-3 rounded-lg border px-3 py-2 text-sm"
-        >
+        ><TranslatedText>
           No exam has been published this year, so nobody can be ranked yet. Publish a term on
           the Exams page.
-        </p>
+        </TranslatedText></p>
       ) : null}
 
       <PageFrame.Body

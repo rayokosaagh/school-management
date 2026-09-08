@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Info } from "lucide-react";
@@ -44,25 +45,25 @@ export default async function PrintMarksheetsPage({
           href={`/dashboard/exams?exam=${examTermId}&section=${sectionId}`}
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
         >
-          <ArrowLeft className="size-4" />
+          <ArrowLeft className="size-4" /><TranslatedText>
           Back to exams
-        </Link>
+        </TranslatedText></Link>
         <PrintButton count={students.length} />
       </div>
 
       {!school.configured ? (
         <Callout icon={Info} tint="amber">
-          <span className="no-print">
+          <span className="no-print"><TranslatedText>
             The school name and address are not set, so the letterhead below is a
             placeholder. Fill them in on the Settings page before printing for real.
-          </span>
+          </TranslatedText></span>
         </Callout>
       ) : null}
 
       {students.length === 0 ? (
-        <Callout icon={Info} tint="amber">
+        <Callout icon={Info} tint="amber"><TranslatedText>
           Nobody to print for this section.
-        </Callout>
+        </TranslatedText></Callout>
       ) : null}
 
       {students.map((student) => (
@@ -80,19 +81,19 @@ export default async function PrintMarksheetsPage({
 
           <dl className="sheet-facts">
             <div>
-              <dt>Name</dt>
+              <dt><TranslatedText>Name</TranslatedText></dt>
               <dd>{student.fullName}</dd>
             </div>
             <div>
-              <dt>Class</dt>
+              <dt><TranslatedText>Class</TranslatedText></dt>
               <dd>{className}</dd>
             </div>
             <div>
-              <dt>Roll no.</dt>
+              <dt><TranslatedText>Roll no.</TranslatedText></dt>
               <dd>{student.rollNo}</dd>
             </div>
             <div>
-              <dt>Date</dt>
+              <dt><TranslatedText>Date</TranslatedText></dt>
               <dd>{formatBs(new Date(), "YYYY-MM-DD")}</dd>
             </div>
           </dl>
@@ -100,13 +101,13 @@ export default async function PrintMarksheetsPage({
           <table className="sheet-table">
             <thead>
               <tr>
-                <th className="left">Subject</th>
-                <th>Theory</th>
-                {hasPractical ? <th>Practical</th> : null}
-                <th>Total</th>
-                <th>Full</th>
-                <th>Grade</th>
-                <th className="left">Remarks</th>
+                <th className="left"><TranslatedText>Subject</TranslatedText></th>
+                <th><TranslatedText>Theory</TranslatedText></th>
+                {hasPractical ? <th><TranslatedText>Practical</TranslatedText></th> : null}
+                <th><TranslatedText>Total</TranslatedText></th>
+                <th><TranslatedText>Full</TranslatedText></th>
+                <th><TranslatedText>Grade</TranslatedText></th>
+                <th className="left"><TranslatedText>Remarks</TranslatedText></th>
               </tr>
             </thead>
             <tbody>
@@ -121,13 +122,13 @@ export default async function PrintMarksheetsPage({
                   <td>{s.result.fullMarks}</td>
                   <td>{s.result.grade?.letter ?? "—"}</td>
                   <td className="left small">
-                    {s.result.isAbsent
+                    <TranslatedText>{s.result.isAbsent
                       ? "Absent"
                       : s.result.failedParts.length > 0
                         ? `Failed ${s.result.failedParts.join(" and ")}`
                         : s.result.total === null
                           ? "Not marked"
-                          : ""}
+                          : ""}</TranslatedText>
                   </td>
                 </tr>
               ))}
@@ -136,51 +137,51 @@ export default async function PrintMarksheetsPage({
 
           <dl className="sheet-summary">
             <div>
-              <dt>Total</dt>
+              <dt><TranslatedText>Total</TranslatedText></dt>
               <dd>{student.grandTotal ?? "—"}</dd>
             </div>
             <div>
-              <dt>Percentage</dt>
+              <dt><TranslatedText>Percentage</TranslatedText></dt>
               <dd>
-                {student.overall.percent === null ? "—" : `${student.overall.percent}%`}
+                <TranslatedText>{student.overall.percent === null ? "—" : `${student.overall.percent}%`}</TranslatedText>
               </dd>
             </div>
             <div>
-              <dt>GPA</dt>
+              <dt><TranslatedText>GPA</TranslatedText></dt>
               <dd>
                 {student.overall.gpa === null ? "—" : student.overall.gpa.toFixed(2)}
               </dd>
             </div>
             <div>
-              <dt>Position</dt>
+              <dt><TranslatedText>Position</TranslatedText></dt>
               <dd>
-                {student.position === null
+                <TranslatedText>{student.position === null
                   ? "—"
-                  : `${student.position} of ${ledger.students.length}`}
+                  : `${student.position} of ${ledger.students.length}`}</TranslatedText>
               </dd>
             </div>
             <div>
-              <dt>Result</dt>
+              <dt><TranslatedText>Result</TranslatedText></dt>
               <dd>
-                {!student.overall.complete
+                <TranslatedText>{!student.overall.complete
                   ? "Pending"
                   : student.overall.passedAll
                     ? "Passed"
-                    : "Failed"}
+                    : "Failed"}</TranslatedText>
               </dd>
             </div>
           </dl>
 
           {!ledger.term.isPublished ? (
-            <p className="draft-note">
+            <p className="draft-note"><TranslatedText>
               Draft — this exam has not been published.
-            </p>
+            </TranslatedText></p>
           ) : null}
 
           <div className="sheet-signs">
-            <span>Class Teacher</span>
-            <span>Checked By</span>
-            <span>Principal</span>
+            <span><TranslatedText>Class Teacher</TranslatedText></span>
+            <span><TranslatedText>Checked By</TranslatedText></span>
+            <span><TranslatedText>Principal</TranslatedText></span>
           </div>
         </article>
       ))}

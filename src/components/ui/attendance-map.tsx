@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import type { AttendanceStatus } from "@/generated/prisma/enums";
 import { BS_MONTHS, adToBs } from "@/lib/date/bs";
 import { cn } from "@/lib/utils";
@@ -134,31 +135,31 @@ export function AttendanceMap({
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
         <span>
-          {taken} day{taken === 1 ? "" : "s"} recorded
-          {caption ? ` · ${caption}` : ""}
+          {taken}<TranslatedText> day</TranslatedText><TranslatedText>{taken === 1 ? "" : "s"}</TranslatedText><TranslatedText> recorded
+          </TranslatedText><TranslatedText>{caption ? ` · ${caption}` : ""}</TranslatedText>
         </span>
         {variant === "status" ? (
           <>
-            <LegendItem className="bg-ok">Present</LegendItem>
-            <LegendItem className="bg-bad">Absent</LegendItem>
-            <LegendItem className="bg-warn">Late</LegendItem>
-            <LegendItem className="bg-brand">Leave</LegendItem>
+            <LegendItem className="bg-ok"><TranslatedText>Present</TranslatedText></LegendItem>
+            <LegendItem className="bg-bad"><TranslatedText>Absent</TranslatedText></LegendItem>
+            <LegendItem className="bg-warn"><TranslatedText>Late</TranslatedText></LegendItem>
+            <LegendItem className="bg-brand"><TranslatedText>Leave</TranslatedText></LegendItem>
           </>
         ) : (
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1"><TranslatedText>
             Low
-            <span className="bg-red-500/60 dark:bg-red-500/50 size-3 rounded-[3px]" />
+            </TranslatedText><span className="bg-red-500/60 dark:bg-red-500/50 size-3 rounded-[3px]" />
             <span className="bg-amber-500/60 dark:bg-amber-500/50 size-3 rounded-[3px]" />
             <span className="bg-emerald-500/50 dark:bg-emerald-500/45 size-3 rounded-[3px]" />
             <span className="bg-emerald-500/75 dark:bg-emerald-500/70 size-3 rounded-[3px]" />
-            <span className="bg-emerald-600 dark:bg-emerald-500 size-3 rounded-[3px]" />
+            <span className="bg-emerald-600 dark:bg-emerald-500 size-3 rounded-[3px]" /><TranslatedText>
             High
-          </span>
+          </TranslatedText></span>
         )}
         <span className="flex items-center gap-1">
-          <span className="bg-rail size-3 rounded-[3px]" />
+          <span className="bg-rail size-3 rounded-[3px]" /><TranslatedText>
           Not taken
-        </span>
+        </TranslatedText></span>
       </div>
     </div>
   );

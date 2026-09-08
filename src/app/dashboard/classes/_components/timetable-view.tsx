@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { AlertTriangle, CalendarDays, Coffee, Info, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -135,13 +137,13 @@ export function WeekGrid({
                 {DAY_NAMES[day]}
                 {/* Colour is never the only signal, so today says so. */}
                 {today ? (
-                  <span className="text-brand-text ml-1.5 text-[11px] font-normal">today</span>
+                  <span className="text-brand-text ml-1.5 text-[11px] font-normal"><TranslatedText>today</TranslatedText></span>
                 ) : null}
               </div>
 
               <div className="flex flex-1 flex-col gap-1 p-1">
                 {column.length === 0 ? (
-                  <p className="text-ink-3 px-2 py-3 text-[12px]">No periods today.</p>
+                  <p className="text-ink-3 px-2 py-3 text-[12px]"><TranslatedText>No periods today.</TranslatedText></p>
                 ) : null}
 
                 {column.map(({ period, cell }, rowIndex) => {
@@ -219,9 +221,9 @@ export function WeekGrid({
                       <div className="text-ink-3 mb-1 flex items-center gap-1.5 text-[10.5px]">
                         <span className="text-ink font-medium">{period.name}</span>
                         {isNow ? (
-                          <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-[9px] font-semibold tracking-wide uppercase">
+                          <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-[9px] font-semibold tracking-wide uppercase"><TranslatedText>
                             Now
-                          </span>
+                          </TranslatedText></span>
                         ) : null}
                         <span className="ml-auto font-mono tabular-nums">
                           {formatMinute(period.startMinute)}–{formatMinute(period.endMinute)}
@@ -302,7 +304,7 @@ export function WeekGrid({
                         {cell ? (
                           <p className="text-ink-3 mt-0.5 truncate pl-3 text-[11.5px]">
                             {cell.staffName}
-                            {cell.room ? ` · ${cell.room}` : ""}
+                            <TranslatedText>{cell.room ? ` · ${cell.room}` : ""}</TranslatedText>
                           </p>
                         ) : (
                           /* An empty slot reads as a gap in the week, not as a
@@ -404,9 +406,9 @@ export function TeacherWeek({
             <th
               scope="col"
               className="bg-surface-2 border-line text-ink-3 sticky top-0 left-0 z-20 w-[100px] border-r border-b px-3 py-2 text-left text-[11px] font-medium tracking-[0.1em] uppercase"
-            >
+            ><TranslatedText>
               Period
-            </th>
+            </TranslatedText></th>
             {workingDays.map((day) => (
               <th
                 key={day}
@@ -468,7 +470,7 @@ export function TeacherWeek({
                           <span className="block font-medium">{lesson.subject}</span>
                           <span className="text-ink-3 block text-[11.5px]">
                             {lesson.classSection}
-                            {lesson.room ? ` · ${lesson.room}` : ""}
+                            <TranslatedText>{lesson.room ? ` · ${lesson.room}` : ""}</TranslatedText>
                           </span>
                         </>
                       ) : (
@@ -500,13 +502,13 @@ export function ClashBanner({ clashes }: { clashes: Clash[] }) {
       <AlertTriangle className="text-warn size-3.5 shrink-0" aria-hidden="true" />
       <span className="truncate">
         <span className="font-medium">
-          {clashes.length} clash{clashes.length === 1 ? "" : "es"}
+          {clashes.length}<TranslatedText> clash</TranslatedText><TranslatedText>{clashes.length === 1 ? "" : "es"}</TranslatedText>
         </span>
-        {" · "}
-        {clashes[0].staffName} is in{" "}
-        {clashes[0].sections.map((s) => s.label).join(" and ")} during{" "}
+        <TranslatedText>{" · "}</TranslatedText>
+        {clashes[0].staffName}<TranslatedText> is in</TranslatedText><TranslatedText>{" "}</TranslatedText>
+        {clashes[0].sections.map((s) => s.label).join(" and ")}<TranslatedText> during</TranslatedText><TranslatedText>{" "}</TranslatedText>
         {clashes[0].periodName}
-        {clashes.length > 1 ? ", and others" : ""}
+        <TranslatedText>{clashes.length > 1 ? ", and others" : ""}</TranslatedText>
       </span>
     </div>
   );

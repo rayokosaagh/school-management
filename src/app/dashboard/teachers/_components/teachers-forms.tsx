@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useToastedActionState } from "@/components/ui/toast";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,11 +27,11 @@ export function AddStaffForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <NameFields idPrefix="staff-" />
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone"><TranslatedText>Phone</TranslatedText></Label>
           <Input id="phone" name="phone" placeholder="Mobile number" inputMode="tel" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="designation">Designation</Label>
+          <Label htmlFor="designation"><TranslatedText>Designation</TranslatedText></Label>
           <Input id="designation" name="designation" placeholder="Job title" required />
         </div>
         <BsDateField id="joinedOn" name="joinedOn" label="Joined on" required />
@@ -38,7 +40,7 @@ export function AddStaffForm() {
       <div className="flex items-center gap-3">
         <Button type="submit" variant="action" size="xl" disabled={pending}>
           <PlusCircle />
-          {pending ? "Adding…" : "Add staff"}
+          <TranslatedText>{pending ? "Adding…" : "Add staff"}</TranslatedText>
         </Button>
         <Status state={state} />
       </div>

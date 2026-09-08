@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,16 +24,16 @@ export function AddYearForm() {
 
   return (
     <form action={action} className="space-y-2">
-      <Label htmlFor="nameBS">Bikram Sambat year</Label>
+      <Label htmlFor="nameBS"><TranslatedText>Bikram Sambat year</TranslatedText></Label>
       <div className="flex gap-2">
         <Input id="nameBS" name="nameBS" placeholder="2082" inputMode="numeric" required />
         <Button type="submit" disabled={pending}>
-          {pending ? "Adding…" : "Add"}
+          <TranslatedText>{pending ? "Adding…" : "Add"}</TranslatedText>
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs text-muted-foreground"><TranslatedText>
         Baisakh 1 to the last day of Chaitra is worked out for you.
-      </p>
+      </TranslatedText></p>
       <Status state={state} />
     </form>
   );
@@ -44,15 +46,15 @@ export function AddGradeForm() {
     <form action={action} className="space-y-2">
       <div className="grid grid-cols-[1fr_5rem_auto] gap-2 items-end">
         <div className="space-y-2">
-          <Label htmlFor="grade-name">Grade</Label>
+          <Label htmlFor="grade-name"><TranslatedText>Grade</TranslatedText></Label>
           <Input id="grade-name" name="name" placeholder="Class 5" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="grade-order">Order</Label>
+          <Label htmlFor="grade-order"><TranslatedText>Order</TranslatedText></Label>
           <Input id="grade-order" name="order" placeholder="5" inputMode="numeric" required />
         </div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Adding…" : "Add"}
+          <TranslatedText>{pending ? "Adding…" : "Add"}</TranslatedText>
         </Button>
       </div>
       <Status state={state} />
@@ -74,7 +76,7 @@ export function AddSectionForm({
       <input type="hidden" name="academicYearId" value={academicYearId} />
       <div className="grid grid-cols-[1fr_5rem_auto] gap-2 items-end">
         <div className="space-y-2">
-          <Label htmlFor="section-grade">Grade</Label>
+          <Label htmlFor="section-grade"><TranslatedText>Grade</TranslatedText></Label>
           <FieldSelect
             id="section-grade"
             name="gradeId"
@@ -85,11 +87,11 @@ export function AddSectionForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="section-name">Section</Label>
+          <Label htmlFor="section-name"><TranslatedText>Section</TranslatedText></Label>
           <Input id="section-name" name="name" placeholder="A" maxLength={4} required />
         </div>
         <Button type="submit" disabled={pending}>
-          {pending ? "Adding…" : "Add"}
+          <TranslatedText>{pending ? "Adding…" : "Add"}</TranslatedText>
         </Button>
       </div>
       <Status state={state} />

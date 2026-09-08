@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -67,34 +69,34 @@ export function MarksGrid({
       <input type="hidden" name="subjectOfferingId" value={subjectOfferingId} />
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-        <span>
-          Theory out of {scheme.fullMarksTheory}, pass {scheme.passMarksTheory}
+        <span><TranslatedText>
+          Theory out of </TranslatedText>{scheme.fullMarksTheory}<TranslatedText>, pass </TranslatedText>{scheme.passMarksTheory}
         </span>
         {scheme.hasPractical ? (
-          <span>
-            Practical out of {scheme.fullMarksPractical}, pass {scheme.passMarksPractical}
+          <span><TranslatedText>
+            Practical out of </TranslatedText>{scheme.fullMarksPractical}<TranslatedText>, pass </TranslatedText>{scheme.passMarksPractical}
           </span>
         ) : (
-          <span>No practical</span>
+          <span><TranslatedText>No practical</TranslatedText></span>
         )}
         <span>
-          {entered} of {rows.length} entered
-        </span>
+          {entered}<TranslatedText> of </TranslatedText>{rows.length}<TranslatedText> entered
+        </TranslatedText></span>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left text-xs">
-              <th className="w-12 py-2 pr-3 font-medium">Roll</th>
-              <th className="py-2 pr-3 font-medium">Name</th>
-              <th className="w-24 py-2 pr-3 font-medium">Theory</th>
+              <th className="w-12 py-2 pr-3 font-medium"><TranslatedText>Roll</TranslatedText></th>
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Name</TranslatedText></th>
+              <th className="w-24 py-2 pr-3 font-medium"><TranslatedText>Theory</TranslatedText></th>
               {scheme.hasPractical ? (
-                <th className="w-24 py-2 pr-3 font-medium">Practical</th>
+                <th className="w-24 py-2 pr-3 font-medium"><TranslatedText>Practical</TranslatedText></th>
               ) : null}
-              <th className="w-20 py-2 pr-3 font-medium">Total</th>
-              <th className="w-16 py-2 pr-3 font-medium">Grade</th>
-              <th className="w-20 py-2 font-medium">Absent</th>
+              <th className="w-20 py-2 pr-3 font-medium"><TranslatedText>Total</TranslatedText></th>
+              <th className="w-16 py-2 pr-3 font-medium"><TranslatedText>Grade</TranslatedText></th>
+              <th className="w-20 py-2 font-medium"><TranslatedText>Absent</TranslatedText></th>
             </tr>
           </thead>
           <tbody>
@@ -187,12 +189,12 @@ export function MarksGrid({
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending || locked}>
-          {pending ? "Saving…" : "Save marks"}
+          <TranslatedText>{pending ? "Saving…" : "Save marks"}</TranslatedText>
         </Button>
         {locked ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm"><TranslatedText>
             This exam is published. Unpublish it to edit marks.
-          </p>
+          </TranslatedText></p>
         ) : null}
         {state.error ? <p className="text-destructive text-sm">{state.error}</p> : null}
       </div>

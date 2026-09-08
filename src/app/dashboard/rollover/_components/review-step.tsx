@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,11 +50,11 @@ export function ReviewStep({
 
   if (done) {
     return (
-      <Callout icon={CheckCircle2} tint="green">
-        Academic year {plan.targetYear.nameBS} is ready: {plan.sections.create} section(s),{" "}
-        {plan.students.promote.length} promoted, {plan.students.retain.length} retained,{" "}
-        {plan.students.graduate.length} graduated.
-      </Callout>
+      <Callout icon={CheckCircle2} tint="green"><TranslatedText>
+        Academic year </TranslatedText>{plan.targetYear.nameBS}<TranslatedText> is ready: </TranslatedText>{plan.sections.create}<TranslatedText> section(s),</TranslatedText><TranslatedText>{" "}</TranslatedText>
+        {plan.students.promote.length}<TranslatedText> promoted, </TranslatedText>{plan.students.retain.length}<TranslatedText> retained,</TranslatedText><TranslatedText>{" "}</TranslatedText>
+        {plan.students.graduate.length}<TranslatedText> graduated.
+      </TranslatedText></Callout>
     );
   }
 
@@ -77,9 +79,9 @@ export function ReviewStep({
         {plan.unplaceable.map((group) => (
           <div key={group.sourceSectionId} className="border-line bg-surface rounded-[10px] border p-4">
             <p className="text-sm">
-              {group.label} has {group.count} student(s) and no matching section in the grade above.
+              {group.label}<TranslatedText> has </TranslatedText>{group.count}<TranslatedText> student(s) and no matching section in the grade above.
               Choose where they go.
-            </p>
+            </TranslatedText></p>
             <div className="pt-2">
               <FieldSelect
                 aria-label={`Where ${group.label} goes`}
@@ -111,18 +113,18 @@ export function ReviewStep({
         <Checkbox
           checked={options.makeTargetCurrent}
           onCheckedChange={(checked) => onOptions({ makeTargetCurrent: checked === true })}
-        />
-        Activate {plan.targetYear.nameBS} for the whole school immediately
-      </label>
+        /><TranslatedText>
+        Activate </TranslatedText>{plan.targetYear.nameBS}<TranslatedText> for the whole school immediately
+      </TranslatedText></label>
       <p className="text-ink-2 text-sm">
-        {options.makeTargetCurrent
+        <TranslatedText>{options.makeTargetCurrent
           ? "Everyone's year-scoped pages will switch to the new year. Check fee prices and service registrations before issuing new bills."
-          : "The school will stay in the current year. You can activate the prepared year later using the academic-year selector."}
-        {" "}Graduated and departed students are marked immediately when you confirm, regardless of activation.
-      </p>
+          : "The school will stay in the current year. You can activate the prepared year later using the academic-year selector."}</TranslatedText>
+        <TranslatedText>{" "}</TranslatedText><TranslatedText>Graduated and departed students are marked immediately when you confirm, regardless of activation.
+      </TranslatedText></p>
 
       <Button disabled={blocked || pending} onClick={() => setConfirming(true)}>
-        {pending ? "Rolling over…" : `Roll ${plan.sourceYear.nameBS} into ${plan.targetYear.nameBS}`}
+        <TranslatedText>{pending ? "Rolling over…" : `Roll ${plan.sourceYear.nameBS} into ${plan.targetYear.nameBS}`}</TranslatedText>
       </Button>
 
       <Modal
@@ -131,13 +133,13 @@ export function ReviewStep({
         onClose={() => setConfirming(false)}
       >
         <div className="space-y-4">
-          <p className="text-sm">
-            This copies {plan.sections.create} section(s), {plan.offerings.create} offering(s),{" "}
-            {plan.assignments.create} assignment(s) and {plan.timetable.create} period(s) into{" "}
-            {plan.targetYear.nameBS}, then places {plan.students.promote.length + plan.students.retain.length}{" "}
-            student(s) as promoted or retained, {plan.students.graduate.length} as graduated and{" "}
-            {plan.students.leave.length} as left. It cannot be undone from here.
-          </p>
+          <p className="text-sm"><TranslatedText>
+            This copies </TranslatedText>{plan.sections.create}<TranslatedText> section(s), </TranslatedText>{plan.offerings.create}<TranslatedText> offering(s),</TranslatedText><TranslatedText>{" "}</TranslatedText>
+            {plan.assignments.create}<TranslatedText> assignment(s) and </TranslatedText>{plan.timetable.create}<TranslatedText> period(s) into</TranslatedText><TranslatedText>{" "}</TranslatedText>
+            {plan.targetYear.nameBS}<TranslatedText>, then places </TranslatedText>{plan.students.promote.length + plan.students.retain.length}<TranslatedText>{" "}</TranslatedText><TranslatedText>
+            student(s) as promoted or retained, </TranslatedText>{plan.students.graduate.length}<TranslatedText> as graduated and</TranslatedText><TranslatedText>{" "}</TranslatedText>
+            {plan.students.leave.length}<TranslatedText> as left. It cannot be undone from here.
+          </TranslatedText></p>
           <Button
             disabled={blocked || pending}
             onClick={() => {
@@ -145,7 +147,7 @@ export function ReviewStep({
               onRun();
             }}
           >
-            {pending ? "Rolling over…" : "Yes, roll it over"}
+            <TranslatedText>{pending ? "Rolling over…" : "Yes, roll it over"}</TranslatedText>
           </Button>
         </div>
       </Modal>

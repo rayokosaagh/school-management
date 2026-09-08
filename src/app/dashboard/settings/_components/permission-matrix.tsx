@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Check, Lock, Minus, RotateCcw } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -81,7 +83,7 @@ export function PermissionMatrix({
         <table className="w-full text-sm">
           <thead>
             <tr className="text-muted-foreground border-b text-left text-xs">
-              <th className="py-2 pr-3 font-medium">Permission</th>
+              <th className="py-2 pr-3 font-medium"><TranslatedText>Permission</TranslatedText></th>
               <th className="w-24 py-2 text-center font-medium">
                 {ROLE_LABEL.ADMIN}
               </th>
@@ -130,15 +132,15 @@ export function PermissionMatrix({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs"><TranslatedText>
           Administrators are fixed at full access — otherwise this page could be
           used to lock everyone out of it. Changes apply immediately.
-        </p>
+        </TranslatedText></p>
         {anyChanged ? (
           <form action={resetAction}>
             <Button type="submit" variant="outline" size="sm" disabled={resetting}>
               <RotateCcw />
-              {resetting ? "Restoring…" : "Restore defaults"}
+              <TranslatedText>{resetting ? "Restoring…" : "Restore defaults"}</TranslatedText>
             </Button>
           </form>
         ) : null}

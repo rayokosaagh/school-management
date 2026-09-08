@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { CalendarCheck, CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
@@ -179,9 +181,9 @@ export function RollCallWorkspace({
               aria-pressed={showRegister}
               onClick={() => setShowRegister((v) => !v)}
             >
-              <CalendarDays data-icon="inline-start" aria-hidden="true" />
+              <CalendarDays data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Month register
-            </Button>
+            </TranslatedText></Button>
           ) : null}
         </>
       }
@@ -280,15 +282,15 @@ export function RollCallWorkspace({
           </Button>
         </div>
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {sheet?.taken
+          <TranslatedText>{sheet?.taken
             ? `Taken${sheet.takenBy ? ` by ${sheet.takenBy}` : ""} · saving replaces it`
-            : "Not taken yet · everyone starts present"}
+            : "Not taken yet · everyone starts present"}</TranslatedText>
         </span>
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {stillToMark === 0
+          <TranslatedText>{stillToMark === 0
             ? "All sections marked"
-            : `${stillToMark} section${stillToMark === 1 ? "" : "s"} still to mark`}
+            : `${stillToMark} section${stillToMark === 1 ? "" : "s"} still to mark`}</TranslatedText>
         </span>
       </PageFrame.Toolbar>
 
@@ -300,8 +302,8 @@ export function RollCallWorkspace({
                 <div>
                   <p className="font-medium">{monthLabel}</p>
                   <p className="text-ink-3 text-[11.5px]">
-                    {daysTaken} day{daysTaken === 1 ? "" : "s"} recorded
-                  </p>
+                    {daysTaken}<TranslatedText> day</TranslatedText><TranslatedText>{daysTaken === 1 ? "" : "s"}</TranslatedText><TranslatedText> recorded
+                  </TranslatedText></p>
                 </div>
                 <Button
                   type="button"
@@ -314,9 +316,9 @@ export function RollCallWorkspace({
                 </Button>
               </div>
               {register.length === 0 ? (
-                <p className="text-ink-3 px-4 py-4 text-sm">
+                <p className="text-ink-3 px-4 py-4 text-sm"><TranslatedText>
                   Nothing recorded for this section this month.
-                </p>
+                </TranslatedText></p>
               ) : (
                 <ul className="divide-line divide-y">
                   {register.map((row) => (
@@ -326,7 +328,7 @@ export function RollCallWorkspace({
                     >
                       <span className="min-w-0 truncate text-sm">{row.fullName}</span>
                       <span className="text-ink-3 shrink-0 font-mono text-[12px]">
-                        {row.present}/{row.present + row.absent + row.late + row.leave} ·{" "}
+                        {row.present}/{row.present + row.absent + row.late + row.leave} ·<TranslatedText>{" "}</TranslatedText>
                         {row.percent}%
                       </span>
                     </li>
@@ -343,7 +345,7 @@ export function RollCallWorkspace({
         <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, String(sectionId))}>
           <div className="bg-surface border-line min-h-0 flex-1 overflow-y-auto rounded-[10px] border p-4">
             <p className="mb-3 font-medium">
-              {current ? `${current.grade.name} ${current.name}` : "Section"}
+              <TranslatedText>{current ? `${current.grade.name} ${current.name}` : "Section"}</TranslatedText>
             </p>
             {/* A rejected `date` still has a sheet underneath it (the
                 fallback day loaded fine), so the warning sits above the
@@ -351,9 +353,9 @@ export function RollCallWorkspace({
                 failure (no `sheet`) leaves the message on its own. */}
             {sheetError && <p className="text-warn mb-3 text-sm">{sheetError}</p>}
             {sheet && sheet.rows.length === 0 ? (
-              <p className="text-ink-3 text-sm">
+              <p className="text-ink-3 text-sm"><TranslatedText>
                 No active students are enrolled in this section.
-              </p>
+              </TranslatedText></p>
             ) : sheet ? (
               <AttendanceSheet
                 // Statuses and leave notes are seeded from `rows`; a different

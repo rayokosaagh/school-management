@@ -12,7 +12,7 @@ export default async function LoginPage() {
   const school = await getLetterhead();
   return (
     <LoginForm
-      schoolName={school.configured ? school.name : null}
+      schoolName={school.configured ? school.displayName : null}
       schoolLogoId={school.logoId}
     />
   );

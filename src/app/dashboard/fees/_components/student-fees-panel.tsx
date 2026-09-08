@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarDays, Plus, Save, Send, Shapes, Users, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
@@ -38,7 +40,7 @@ export function ServicePriceSetup({ academicYearId, yearLabel, head, onBusy }: {
       eyebrow={`SERVICES · ${yearLabel}`}
       icon={Shapes}
       title={`${head.name} service`}
-      badge={<Badge variant="outline">Needs a price</Badge>}
+      badge={<Badge variant="outline"><TranslatedText>Needs a price</TranslatedText></Badge>}
       description="Set this service’s price for the academic year, then register the students who take it."
       stats={[
         { icon: Users, value: "No students yet", note: "Register them once it is priced" },
@@ -51,10 +53,10 @@ export function ServicePriceSetup({ academicYearId, yearLabel, head, onBusy }: {
       <input type="hidden" name="name" value={head.name} />
       <input type="hidden" name="frequency" value={head.frequency} />
       <input type="hidden" name="convertClassFee" value="false" />
-      <div className="max-w-xs space-y-2"><Label htmlFor={id}>Price per student (Rs.)</Label><Input id={id} name="amount" type="number" value={amount} onChange={event => setAmount(event.target.value)} min={1} max={2147483647} step={1} required disabled={pending} /></div>
-      <p className="text-ink-3 text-xs">{head.frequency === "MONTHLY" ? "Monthly" : "Once per academic year"} · Frequency is set in Manage fee types. Saving a price does not issue bills.</p>
+      <div className="max-w-xs space-y-2"><Label htmlFor={id}><TranslatedText>Price per student (Rs.)</TranslatedText></Label><Input id={id} name="amount" type="number" value={amount} onChange={event => setAmount(event.target.value)} min={1} max={2147483647} step={1} required disabled={pending} /></div>
+      <p className="text-ink-3 text-xs"><TranslatedText>{head.frequency === "MONTHLY" ? "Monthly" : "Once per academic year"}</TranslatedText><TranslatedText> · Frequency is set in Manage fee types. Saving a price does not issue bills.</TranslatedText></p>
       {state.error ? <p role="alert" className="text-bad text-sm">{state.error}</p> : null}
-      <Button type="submit" disabled={pending}><Save data-icon="inline-start" />{pending ? "Saving…" : "Save service price"}</Button>
+      <Button type="submit" disabled={pending}><Save data-icon="inline-start" /><TranslatedText>{pending ? "Saving…" : "Save service price"}</TranslatedText></Button>
     </form>
   </section>;
 }
@@ -212,7 +214,7 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
       eyebrow={`SERVICES · ${yearLabel}`}
       icon={Shapes}
       title={`${plan.name} service`}
-      badge={<Badge variant="outline">{plan.isActive ? "Active" : "Paused"}</Badge>}
+      badge={<Badge variant="outline"><TranslatedText>{plan.isActive ? "Active" : "Paused"}</TranslatedText></Badge>}
       description="Register the students who take this service, with one price for everybody on it. Only registered students are billed."
       stats={[
         {
@@ -229,8 +231,8 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
       ]}
       actions={
         <Button type="button" variant="outline" onClick={() => setPicking(true)} disabled={busy || students.length === 0}>
-          <Plus data-icon="inline-start" aria-hidden="true" />Register a student
-        </Button>
+          <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>Register a student
+        </TranslatedText></Button>
       }
     />
 
@@ -241,8 +243,8 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
             selection posts from here as hidden fields instead. */}
         {selected.map(studentId => <input key={studentId} type="hidden" name="enrollmentId" value={studentId} />)}
         <div className="flex flex-wrap items-end gap-5">
-          <div className="w-full space-y-2 sm:w-56"><Label htmlFor={`${id}-price`}>Price per student (Rs.)</Label><Input id={`${id}-price`} name="amount" type="number" value={amount} onChange={event => setAmount(event.target.value)} min={1} max={2147483647} step={1} required disabled={busy} /></div>
-          <label className="flex items-center gap-2 py-2 text-sm"><input type="checkbox" checked={active} onChange={event => setActive(event.target.checked)} disabled={busy} className="accent-brand size-4" />Fee plan is active</label>
+          <div className="w-full space-y-2 sm:w-56"><Label htmlFor={`${id}-price`}><TranslatedText>Price per student (Rs.)</TranslatedText></Label><Input id={`${id}-price`} name="amount" type="number" value={amount} onChange={event => setAmount(event.target.value)} min={1} max={2147483647} step={1} required disabled={busy} /></div>
+          <label className="flex items-center gap-2 py-2 text-sm"><input type="checkbox" checked={active} onChange={event => setActive(event.target.checked)} disabled={busy} className="accent-brand size-4" /><TranslatedText>Fee plan is active</TranslatedText></label>
         </div>
 
         <ServiceRoster<StudentChoice>
@@ -266,13 +268,13 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
                   they go through the card's Save with the price. Unregister
                   deletes rows, so it posts on its own and confirms first. */}
               <Button type="button" variant="outline" size="sm" disabled={busy}
-                onClick={() => { setSelected(previous => previous.filter(id => !tickedIds.has(id))); setTicked([]); }}>
+                onClick={() => { setSelected(previous => previous.filter(id => !tickedIds.has(id))); setTicked([]); }}><TranslatedText>
                 Pause
-              </Button>
+              </TranslatedText></Button>
               <Button type="button" variant="outline" size="sm" disabled={busy}
-                onClick={() => { setSelected(previous => [...new Set([...previous, ...tickedIds])]); setTicked([]); }}>
+                onClick={() => { setSelected(previous => [...new Set([...previous, ...tickedIds])]); setTicked([]); }}><TranslatedText>
                 Resume
-              </Button>
+              </TranslatedText></Button>
               <BulkUnregister
                 academicYearId={academicYearId}
                 planId={plan.id}
@@ -298,7 +300,7 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
                   ? previous.filter(studentId => studentId !== student.id)
                   : [...previous, student.id])}
               >
-                {active ? "Pause" : "Resume"}<span className="sr-only"> {student.name}</span>
+                <TranslatedText>{active ? "Pause" : "Resume"}</TranslatedText><span className="sr-only"> {student.name}</span>
               </Button>
             );
           }}
@@ -312,39 +314,39 @@ export function PlanEditor({ academicYearId, yearLabel, plan, students, months, 
           }}
         />
 
-        <p className="text-ink-3 text-xs leading-5">Pausing stops future bills and keeps the student on the roster; existing bills are retained. Resume puts them back in the next run.{plan.selectedIds.length > savedIds.length ? " Students who have left the school are excluded from new bills whatever their status here." : ""}</p>
+        <p className="text-ink-3 text-xs leading-5"><TranslatedText>Pausing stops future bills and keeps the student on the roster; existing bills are retained. Resume puts them back in the next run.</TranslatedText><TranslatedText>{plan.selectedIds.length > savedIds.length ? " Students who have left the school are excluded from new bills whatever their status here." : ""}</TranslatedText></p>
         {state.error ? <p role="alert" className="text-bad text-sm">{state.error}</p> : null}
         <div className="flex flex-wrap items-center justify-between gap-3">{/* "Registered", not "selected": the bulk bar above uses "selected" for the
     rows you have ticked, and two counts on one screen using one word for two
     different things is how somebody pauses the wrong pupils. */}
-<p role="status" className="text-ink-3 text-xs">{selected.length} active on this service · {dirty ? "Unsaved changes" : "Saved"}</p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" disabled={busy || !dirty} onClick={() => { setSelected(savedIds); setAmount(String(plan.amount)); setActive(plan.isActive); }}>Discard</Button><Button type="submit" disabled={busy || !dirty}><Save data-icon="inline-start" />{pending ? "Saving…" : "Save price and students"}</Button></div></div>
+<p role="status" className="text-ink-3 text-xs">{selected.length}<TranslatedText> active on this service · </TranslatedText><TranslatedText>{dirty ? "Unsaved changes" : "Saved"}</TranslatedText></p><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" disabled={busy || !dirty} onClick={() => { setSelected(savedIds); setAmount(String(plan.amount)); setActive(plan.isActive); }}><TranslatedText>Discard</TranslatedText></Button><Button type="submit" disabled={busy || !dirty}><Save data-icon="inline-start" /><TranslatedText>{pending ? "Saving…" : "Save price and students"}</TranslatedText></Button></div></div>
       </form>
 
       <form action={billAction} className="bg-surface-2 border-line min-w-0 space-y-5 rounded-xl border p-5">
         <input type="hidden" name="academicYearId" value={academicYearId} /><input type="hidden" name="planId" value={plan.id} /><input type="hidden" name="month" value={period} />
-        <h4 className="flex items-center gap-2 text-sm font-semibold"><Send className="text-brand size-4" aria-hidden="true" />Issue bills to saved students</h4>
-        {plan.frequency === "MONTHLY" ? <div className="space-y-2"><Label htmlFor={`${id}-month`}>Billing month (BS)</Label><FieldSelect id={`${id}-month`} aria-label={`Billing month for ${plan.name}`} value={month} onValueChange={value => setMonth(value ?? "1")} disabled={busy} options={months.map(item => ({ value: String(item.month), label: `${BS_MONTHS[item.month - 1]}${item.started ? "" : " · Not started"}`, disabled: !item.started }))} /></div> : null}
+        <h4 className="flex items-center gap-2 text-sm font-semibold"><Send className="text-brand size-4" aria-hidden="true" /><TranslatedText>Issue bills to saved students</TranslatedText></h4>
+        {plan.frequency === "MONTHLY" ? <div className="space-y-2"><Label htmlFor={`${id}-month`}><TranslatedText>Billing month (BS)</TranslatedText></Label><FieldSelect id={`${id}-month`} aria-label={`Billing month for ${plan.name}`} value={month} onValueChange={value => setMonth(value ?? "1")} disabled={busy} options={months.map(item => ({ value: String(item.month), label: `${BS_MONTHS[item.month - 1]}${item.started ? "" : " · Not started"}`, disabled: !item.started }))} /></div> : null}
         {/* What pressing the button will do, in pupils and rupees, for the
             period actually selected. It replaced two sentences of standing
             policy — true of every run, so never worth reading before one. */}
-        <p className={`text-xs leading-5 ${blocker ? "text-ink-3" : "text-ink-2"}`}>{blocker ?? <>Bills <span className="font-semibold">{eligible}</span> {eligible === 1 ? "student" : "students"} <span aria-hidden="true">·</span> <span className="font-semibold tabular-nums">{money(eligible * plan.amount)}</span> for {periodName}.</>}</p>
+        <p className={`text-xs leading-5 ${blocker ? "text-ink-3" : "text-ink-2"}`}>{blocker ?? <><TranslatedText>Bills </TranslatedText><span className="font-semibold">{eligible}</span> <TranslatedText>{eligible === 1 ? "student" : "students"}</TranslatedText> <span aria-hidden="true">·</span> <span className="font-semibold tabular-nums">{money(eligible * plan.amount)}</span><TranslatedText> for </TranslatedText>{periodName}.</>}</p>
         <Button
           type="submit"
           className="w-full"
           disabled={busy || dirty || !plan.isActive || !eligible || !started}
           // The standing caveats, off the card but still reachable.
           title={`Students already billed for this period are skipped, including charges from older class-wide bills. Each bill copies the saved price, and enrolment dates are checked when issuing.`}
-        ><Send data-icon="inline-start" />{issuing ? "Issuing…" : "Issue student fee bills"}</Button>
+        ><Send data-icon="inline-start" /><TranslatedText>{issuing ? "Issuing…" : "Issue student fee bills"}</TranslatedText></Button>
         {billState.error ? <p role="alert" className="text-bad text-sm">{billState.error}</p> : null}
       </form>
     </div>
 
     <Sheet open={picking} onOpenChange={(nextOpen, details) => { if (busy) { details.cancel(); return; } setPicking(nextOpen); }}>
       <SheetContent showCloseButton={!busy} className="overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-2xl">
-        <SheetHeader className="px-6 pt-6"><SheetTitle>Register students for {plan.name}</SheetTitle><SheetDescription>Tick everybody who takes this service. Nothing is charged until you save and then issue bills.</SheetDescription></SheetHeader>
+        <SheetHeader className="px-6 pt-6"><SheetTitle><TranslatedText>Register students for </TranslatedText>{plan.name}</SheetTitle><SheetDescription><TranslatedText>Tick everybody who takes this service. Nothing is charged until you save and then issue bills.</TranslatedText></SheetDescription></SheetHeader>
         <div className="space-y-5 px-6 pb-6">
           <StudentPicker students={students} selectedIds={selected} onSelectionChange={setSelected} multiple disabled={busy} />
-          <Button type="button" className="w-full" onClick={() => setPicking(false)} disabled={busy}>Done</Button>
+          <Button type="button" className="w-full" onClick={() => setPicking(false)} disabled={busy}><TranslatedText>Done</TranslatedText></Button>
         </div>
       </SheetContent>
     </Sheet>

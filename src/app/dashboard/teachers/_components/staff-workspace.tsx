@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, Search, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -36,7 +38,7 @@ function RowActions({ row }: { row: StaffRow }) {
         <input type="hidden" name="staffId" value={row.id} />
         <input type="hidden" name="isActive" value={row.isActive ? "false" : "true"} />
         <Button type="submit" size="xs" variant="ghost" disabled={toggling} aria-label={row.isActive ? `Mark ${row.fullName} inactive` : `Mark ${row.fullName} active`}>
-          {row.isActive ? "Deactivate" : "Activate"}
+          <TranslatedText>{row.isActive ? "Deactivate" : "Activate"}</TranslatedText>
         </Button>
       </form>
       <form action={remove} className="inline">
@@ -145,7 +147,7 @@ export function StaffWorkspace({
       { id: "load", accessorFn: (r) => [r.sectionsLed, r.assignments], header: "Load",
         sortingFn: (a, b) => a.original.sectionsLed - b.original.sectionsLed || a.original.assignments - b.original.assignments,
         cell: ({ row }) => (
-        <span className="text-ink-2">{row.original.sectionsLed} {row.original.sectionsLed === 1 ? "section" : "sections"} · {row.original.assignments} {row.original.assignments === 1 ? "class" : "classes"}</span>
+        <span className="text-ink-2">{row.original.sectionsLed} <TranslatedText>{row.original.sectionsLed === 1 ? "section" : "sections"}</TranslatedText> · {row.original.assignments} <TranslatedText>{row.original.assignments === 1 ? "class" : "classes"}</TranslatedText></span>
       ) },
       { id: "joined", accessorKey: "joinedOnBs", header: "Joined (BS)", meta: { mono: true } satisfies ColumnMeta },
       { id: "status", accessorFn: (r) => (r.isActive ? 1 : 0), header: "Status", cell: ({ row }) => <StaffStatus isActive={row.original.isActive} /> },
@@ -162,9 +164,9 @@ export function StaffWorkspace({
       meta={`${rows.length} on record · ${rows.filter((r) => r.isActive).length} active`}
       actions={
         <Sheet open={addOpen} onOpenChange={setAddOpen}>
-          <SheetTrigger render={<Button />}><Plus data-icon="inline-start" aria-hidden="true" />Add staff</SheetTrigger>
+          <SheetTrigger render={<Button />}><Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>Add staff</TranslatedText></SheetTrigger>
           <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
-            <SheetHeader><SheetTitle>Add a staff member</SheetTitle><SheetDescription>The Nepali name is optional here, but printed documents use it.</SheetDescription></SheetHeader>
+            <SheetHeader><SheetTitle><TranslatedText>Add a staff member</TranslatedText></SheetTitle><SheetDescription><TranslatedText>The Nepali name is optional here, but printed documents use it.</TranslatedText></SheetDescription></SheetHeader>
             <div className="px-4 pb-6"><AddStaffForm /></div>
           </SheetContent>
         </Sheet>
@@ -181,7 +183,7 @@ export function StaffWorkspace({
         </label>
         <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "all")} options={[{ value: "active", label: "Status: Active" }, { value: "inactive", label: "Status: Inactive" }, { value: "all", label: "Status: Any" }]} className="h-8 w-44 shrink-0" />
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} {visible.length === 1 ? "person" : "people"}{selectedRow ? " · 1 selected" : ""}</span>
+        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} <TranslatedText>{visible.length === 1 ? "person" : "people"}</TranslatedText><TranslatedText>{selectedRow ? " · 1 selected" : ""}</TranslatedText></span>
       </PageFrame.Toolbar>
 
       <PageFrame.Split
@@ -205,7 +207,7 @@ export function StaffWorkspace({
               tint: "amber",
               title: rows.length === 0 ? "No staff on record" : "No one matches",
               description: rows.length === 0 ? "Add the first staff member." : "Try another designation, status or search.",
-              action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" />Add staff</Button> : undefined,
+              action: rows.length === 0 ? <Button onClick={() => setAddOpen(true)}><Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>Add staff</TranslatedText></Button> : undefined,
             }}
           />
         </PageFrame.Body>

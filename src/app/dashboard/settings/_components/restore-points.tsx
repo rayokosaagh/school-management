@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmSubmit } from "@/components/ui/confirm-submit";
@@ -68,17 +70,17 @@ function RestoreReportView({ report }: { report: RestoreReport }) {
   if (skips.length === 0) {
     return (
       <Callout icon={CheckCircle2} tint="green">
-        {report.yearNameBS} restored in full — nothing was skipped.
-      </Callout>
+        {report.yearNameBS}<TranslatedText> restored in full — nothing was skipped.
+      </TranslatedText></Callout>
     );
   }
 
   return (
     <Callout icon={AlertTriangle} tint="rose">
       <p className="font-medium">
-        {report.yearNameBS} restored, but some rows could not come back — they are gone
+        {report.yearNameBS}<TranslatedText> restored, but some rows could not come back — they are gone
         for good:
-      </p>
+      </TranslatedText></p>
       <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
         {skips.map(({ key, outcome }) => (
           <li key={key}>
@@ -105,8 +107,8 @@ function RestorePointRowItem({ point }: { point: RestorePointRow }) {
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium">{point.yearNameBS}</p>
-          <p className="text-muted-foreground text-xs">
-            Taken {point.takenLabel} by {point.createdByUsername ?? "unknown"} ·{" "}
+          <p className="text-muted-foreground text-xs"><TranslatedText>
+            Taken </TranslatedText>{point.takenLabel}<TranslatedText> by </TranslatedText>{point.createdByUsername ?? "unknown"} ·<TranslatedText>{" "}</TranslatedText>
             {formatBytes(point.payloadBytes)}
           </p>
           <p className="text-muted-foreground mt-1 text-xs">{countsLine(point.counts)}</p>
@@ -115,7 +117,7 @@ function RestorePointRowItem({ point }: { point: RestorePointRow }) {
           <form action={restoreAction}>
             <input type="hidden" name="restorePointId" value={point.id} />
             <Button type="submit" variant="outline" size="sm" disabled={restoring || deleting}>
-              {restoring ? "Restoring…" : "Restore"}
+              <TranslatedText>{restoring ? "Restoring…" : "Restore"}</TranslatedText>
             </Button>
           </form>
           <form action={deleteAction}>
@@ -141,7 +143,7 @@ function RestorePointRowItem({ point }: { point: RestorePointRow }) {
 export function RestorePoints({ restorePoints }: { restorePoints: RestorePointRow[] }) {
   if (restorePoints.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">No restore points have been taken yet.</p>
+      <p className="text-muted-foreground text-sm"><TranslatedText>No restore points have been taken yet.</TranslatedText></p>
     );
   }
 

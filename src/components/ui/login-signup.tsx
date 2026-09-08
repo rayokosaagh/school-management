@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 // Vendored verbatim from the provided login-signup.tsx.
 //
 // NOTE: this is the *signup* variant of the supplied pair. It collects role,
@@ -62,17 +64,17 @@ export default function SignupForm() {
           <CardHeader className="flex flex-col items-center space-y-1.5 pb-4 pt-6">
             <Logo className="w-12 h-12" />
             <div className="space-y-0.5 flex flex-col items-center">
-              <h2 className="text-2xl font-semibold text-foreground">
+              <h2 className="text-2xl font-semibold text-foreground"><TranslatedText>
                 Create an account
-              </h2>
-              <p className="text-muted-foreground">
+              </TranslatedText></h2>
+              <p className="text-muted-foreground"><TranslatedText>
                 Welcome! Create an account to get started.
-              </p>
+              </TranslatedText></p>
             </div>
           </CardHeader>
           <CardContent className="space-y-6 px-8">
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role"><TranslatedText>Role</TranslatedText></Label>
               <Select defaultValue="designer">
                 <SelectTrigger
                   id="role"
@@ -83,15 +85,15 @@ export default function SignupForm() {
                 <SelectContent className="[&_*[role=option]]:ps-2 [&_*[role=option]]:pe-8 [&_*[role=option]>span]:start-auto [&_*[role=option]>span]:end-2 [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0">
                   <SelectItem value="designer">
                     <User size={16} aria-hidden="true" />
-                    <span className="truncate">Product Designer</span>
+                    <span className="truncate"><TranslatedText>Product Designer</TranslatedText></span>
                   </SelectItem>
                   <SelectItem value="developer">
                     <Code size={16} aria-hidden="true" />
-                    <span className="truncate">Developer</span>
+                    <span className="truncate"><TranslatedText>Developer</TranslatedText></span>
                   </SelectItem>
                   <SelectItem value="manager">
                     <BarChart size={16} aria-hidden="true" />
-                    <span className="truncate">Product Manager</span>
+                    <span className="truncate"><TranslatedText>Product Manager</TranslatedText></span>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -99,27 +101,27 @@ export default function SignupForm() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First name</Label>
+                <Label htmlFor="firstName"><TranslatedText>First name</TranslatedText></Label>
                 <Input id="firstName" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last name</Label>
+                <Label htmlFor="lastName"><TranslatedText>Last name</TranslatedText></Label>
                 <Input id="lastName" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username"><TranslatedText>Username</TranslatedText></Label>
               <Input id="username" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email"><TranslatedText>Email address</TranslatedText></Label>
               <Input id="email" type="email" />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password"><TranslatedText>Password</TranslatedText></Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -144,28 +146,28 @@ export default function SignupForm() {
 
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" />
-              <label htmlFor="terms" className="text-sm text-muted-foreground">
-                I agree to the{" "}
-                <Link href="#" className="text-primary hover:underline">
+              <label htmlFor="terms" className="text-sm text-muted-foreground"><TranslatedText>
+                I agree to the</TranslatedText><TranslatedText>{" "}</TranslatedText>
+                <Link href="#" className="text-primary hover:underline"><TranslatedText>
                   Terms
-                </Link>{" "}
-                and{" "}
-                <Link href="#" className="text-primary hover:underline">
+                </TranslatedText></Link><TranslatedText>{" "}</TranslatedText><TranslatedText>
+                and</TranslatedText><TranslatedText>{" "}</TranslatedText>
+                <Link href="#" className="text-primary hover:underline"><TranslatedText>
                   Conditions
-                </Link>
+                </TranslatedText></Link>
               </label>
             </div>
 
-            <Button className="w-full bg-primary text-primary-foreground">
+            <Button className="w-full bg-primary text-primary-foreground"><TranslatedText>
               Create free account
-            </Button>
+            </TranslatedText></Button>
           </CardContent>
           <CardFooter className="flex justify-center border-t !py-4">
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link href="/login" className="text-primary hover:underline">
+            <p className="text-center text-sm text-muted-foreground"><TranslatedText>
+              Already have an account?</TranslatedText><TranslatedText>{" "}</TranslatedText>
+              <Link href="/login" className="text-primary hover:underline"><TranslatedText>
                 Sign in
-              </Link>
+              </TranslatedText></Link>
             </p>
           </CardFooter>
         </Card>

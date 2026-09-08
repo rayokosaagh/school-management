@@ -1,4 +1,4 @@
-import { formatBs } from "@/lib/date/bs";
+import { formatBs, formatBsNepali } from "@/lib/date/bs";
 import { yearDateStatus } from "@/lib/date/year-status";
 import {
   getCurrentAcademicYear,
@@ -15,6 +15,7 @@ import { NAV_GROUPS, SETTINGS } from "./_components/nav-model";
 import { getDashboardOverview, schoolDate } from "@/lib/dashboard/overview";
 import { dueItems } from "@/lib/dashboard/alerts";
 import { AlertsPopover } from "./_components/alerts-popover";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const actor = await requirePage("/dashboard");
@@ -52,15 +53,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
         href="#dashboard-main"
         className="bg-brand text-brand-ink focus-visible:ring-brand-ink/50 sr-only fixed top-3 left-3 z-[60] rounded-lg px-3 py-2 text-sm font-semibold shadow-popover focus:not-sr-only focus-visible:ring-3 focus-visible:outline-none"
       >
-        Skip to main content
+        <span className="contents"><TranslatedText>Skip to main content</TranslatedText></span>
       </a>
       <TopBar
         school={{
-          name: school.name,
+          name: school.displayName,
           address: school.address ?? null,
           logoId: school.logoId,
         }}
-        today={formatBs(today, "YYYY MMMM DD, dddd")}
+        today={
+          school.language === "ne"
+            ? formatBsNepali(today, "YYYY MMMM DD, dddd")
+            : formatBs(today, "YYYY MMMM DD, dddd")
+        }
         years={years.map((year) => ({
           id: year.id,
           nameBS: year.nameBS,

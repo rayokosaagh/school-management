@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 export type StatusTone = "ok" | "warn" | "bad" | "brand" | "neutral";
 
@@ -23,7 +24,7 @@ export function StatusDot({
   return (
     <span className={cn("text-ink-2 inline-flex items-center gap-1.5 text-xs whitespace-nowrap", className)}>
       <span aria-hidden="true" className={cn("size-[7px] shrink-0 rounded-full", DOT[tone])} />
-      {children}
+      {typeof children === "string" ? <TranslatedText>{children}</TranslatedText> : children}
     </span>
   );
 }

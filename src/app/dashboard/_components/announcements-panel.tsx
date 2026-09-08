@@ -11,6 +11,7 @@ import type { AnnouncementCard } from "@/lib/announcements/announcements";
 import { AUDIENCE_LABEL } from "@/lib/announcements/visibility";
 import { formatBs } from "@/lib/date/bs";
 import { cn, focusRing } from "@/lib/utils";
+import { TranslatedText, useLanguage } from "@/components/i18n/language-provider";
 import {
   readAllAnnouncements, readAnnouncement, type AnnouncementState,
 } from "../actions";
@@ -29,7 +30,7 @@ function MarkRead({ item }: { item: AnnouncementCard }) {
       <input type="hidden" name="announcementId" value={item.id} />
       <Button type="submit" variant="outline" size="xs" disabled={pending}>
         <Check data-icon="inline-start" aria-hidden="true" />
-        {pending ? "Marking…" : "Mark as read"}
+        <TranslatedText>{pending ? "Marking…" : "Mark as read"}</TranslatedText>
         <span className="sr-only"> — {item.title}</span>
       </Button>
     </form>
@@ -41,7 +42,7 @@ function MarkAllRead({ count }: { count: number }) {
   return (
     <form action={action}>
       <Button type="submit" variant="ghost" size="xs" disabled={pending}>
-        {pending ? "Marking…" : `Mark all ${count} as read`}
+        <TranslatedText>{pending ? "Marking…" : `Mark all ${count} as read`}</TranslatedText>
       </Button>
     </form>
   );
@@ -77,11 +78,11 @@ function Notice({ item }: { item: AnnouncementCard }) {
             <span className={cn("break-words text-sm", item.read ? "font-medium" : "font-semibold")}>
               {item.title}
             </span>
-            {item.read ? null : <span className="sr-only">(unread)</span>}
+            {item.read ? null : <span className="sr-only"><TranslatedText>(unread)</TranslatedText></span>}
           </span>
           <span className="text-ink-3 mt-1 block text-xs">
             {AUDIENCE_LABEL[item.audience]} · {formatBs(item.createdAt, "DD MMM YYYY")}
-            {item.author ? ` · ${item.author}` : ""}
+            <TranslatedText>{item.author ? ` · ${item.author}` : ""}</TranslatedText>
           </span>
         </span>
         <ChevronDown
@@ -93,8 +94,8 @@ function Notice({ item }: { item: AnnouncementCard }) {
         <div className="border-line mt-3 border-t pt-3">
           <p className="text-ink-2 text-sm leading-6 whitespace-pre-wrap">{item.body}</p>
           {item.expiresOn ? (
-            <p className="text-ink-3 mt-3 text-xs">
-              Shows until {formatBs(item.expiresOn, "DD MMMM YYYY")}
+            <p className="text-ink-3 mt-3 text-xs"><TranslatedText>
+              Shows until </TranslatedText>{formatBs(item.expiresOn, "DD MMMM YYYY")}
             </p>
           ) : null}
           {item.read ? null : (
@@ -124,6 +125,7 @@ export function AnnouncementsPanel({
   manageable: AnnouncementCard[];
   canPost: boolean;
 }) {
+  const { t } = useLanguage();
   const unread = items.filter((item) => !item.read).length;
 
   // Nothing to read and nothing this reader could do about it.
@@ -134,19 +136,19 @@ export function AnnouncementsPanel({
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            Announcements
+            {t("Announcements")}
             {unread > 0 ? (
               <span className="bg-brand text-brand-ink rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums">
-                {unread} new
+                {unread} {t("new")}
               </span>
             ) : null}
           </h2>
           <p className="text-ink-3 mt-1 text-xs leading-5">
             {items.length === 0
-              ? "Nothing posted yet."
+              ? t("Nothing posted yet.")
               : unread > 0
-                ? "Messages for you and your role."
-                : "You are up to date."}
+                ? t("Messages for you and your role.")
+                : t("You are up to date.")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1">
@@ -154,16 +156,16 @@ export function AnnouncementsPanel({
           {canPost ? (
             <Sheet>
               <SheetTrigger render={<Button variant="outline" size="sm" />}>
-                <Plus data-icon="inline-start" aria-hidden="true" />
+                <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                 New announcement
-              </SheetTrigger>
+              </TranslatedText></SheetTrigger>
               <SheetContent className="overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg">
                 <SheetHeader className="px-6 pt-6">
-                  <SheetTitle>Announcements</SheetTitle>
-                  <SheetDescription>
+                  <SheetTitle><TranslatedText>Announcements</TranslatedText></SheetTitle>
+                  <SheetDescription><TranslatedText>
                     Write a notice for staff to read on their own dashboard. Choose who it is for;
                     only the roles you pick will see it.
-                  </SheetDescription>
+                  </TranslatedText></SheetDescription>
                 </SheetHeader>
                 <div className="space-y-6 px-6 pb-6">
                   <section className="border-line bg-surface-2 rounded-xl border p-4">
@@ -172,7 +174,7 @@ export function AnnouncementsPanel({
                   </section>
                   <section>
                     <h3 className="mb-3 text-sm font-semibold">
-                      Posted{" "}
+                      {t("Posted")}<TranslatedText>{" "}</TranslatedText>
                       <span className="text-ink-3 font-normal">({manageable.length})</span>
                     </h3>
                     <ManageAnnouncements items={manageable} />
@@ -187,9 +189,9 @@ export function AnnouncementsPanel({
       {items.length === 0 ? (
         <div className="bg-surface-2 rounded-lg px-4 py-6 text-center">
           <Megaphone className="text-brand mx-auto mb-3 size-6" aria-hidden="true" />
-          <p className="text-sm font-medium">No announcements yet</p>
+          <p className="text-sm font-medium">{t("No announcements yet")}</p>
           <p className="text-ink-3 mx-auto mt-1 max-w-sm text-xs leading-5">
-            Post one to tell staff about exam week, a holiday, or a deadline.
+            {t("Post one to tell staff about exam week, a holiday, or a deadline.")}
           </p>
         </div>
       ) : (

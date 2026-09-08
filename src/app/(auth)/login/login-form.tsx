@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/ui/login-signup";
+import { TranslatedText, useLanguage } from "@/components/i18n/language-provider";
 
 export function LoginForm({
   schoolName,
@@ -16,6 +17,7 @@ export function LoginForm({
   schoolName: string | null;
   schoolLogoId: number | null;
 }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +43,7 @@ export function LoginForm({
     if (!result || result.error) {
       // One message for both failure modes. Naming which half was wrong would
       // hand back the account list the timing fix in auth.ts removed.
-      setError("Incorrect username or password.");
+      setError(t("Incorrect username or password."));
       return;
     }
 
@@ -62,22 +64,22 @@ export function LoginForm({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={`/api/school-logo?v=${schoolLogoId}`}
-              alt={schoolName ? `${schoolName} logo` : "School logo"}
+              alt={schoolName ? `${schoolName} ${t("logo")}` : t("School logo")}
               className="mx-auto h-28 w-28 rounded-2xl object-contain"
             />
           ) : (
             <Logo className="mx-auto h-28 w-28" />
           )}
-          <h1 className="text-3xl font-semibold">{schoolName ?? "Welcome back"}</h1>
+          <h1 className="text-3xl font-semibold">{schoolName ?? t("Welcome back")}</h1>
           <p className="text-muted-foreground">
-            Sign in to access students, teachers and classes.
+            {t("Sign in to access students, teachers and classes.")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-6">
             <div>
-              <Label htmlFor="identifier">Username or email</Label>
+              <Label htmlFor="identifier"><TranslatedText>Username or email</TranslatedText></Label>
               <div className="relative mt-2.5">
                 <Input
                   id="identifier"
@@ -100,7 +102,7 @@ export function LoginForm({
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password"><TranslatedText>Password</TranslatedText></Label>
               <div className="relative mt-2.5">
                 <Input
                   id="password"
@@ -120,7 +122,7 @@ export function LoginForm({
                   className="text-muted-foreground/80 hover:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-md transition-[color,box-shadow] outline-none focus:z-10 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                   type="button"
                   onClick={toggleVisibility}
-                  aria-label={isVisible ? "Hide password" : "Show password"}
+                  aria-label={t(isVisible ? "Hide password" : "Show password")}
                   aria-pressed={isVisible}
                   aria-controls="password"
                 >
@@ -144,7 +146,7 @@ export function LoginForm({
           )}
 
           <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
+            {t(pending ? "Signing in…" : "Sign in")}
             {!pending && <ArrowRight className="h-4 w-4" />}
           </Button>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { useToastedActionState } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -58,7 +60,7 @@ export function HonoursWeightsForm({ weights }: { weights: Weights }) {
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending || !balanced}>
-          {pending ? "Saving…" : "Save weighting"}
+          <TranslatedText>{pending ? "Saving…" : "Save weighting"}</TranslatedText>
         </Button>
         <p
           className={
@@ -68,15 +70,15 @@ export function HonoursWeightsForm({ weights }: { weights: Weights }) {
           }
           aria-live="polite"
         >
-          {balanced ? "Adds up to 100." : `Adds up to ${sum}; it must be 100.`}
+          <TranslatedText>{balanced ? "Adds up to 100." : `Adds up to ${sum}; it must be 100.`}</TranslatedText>
         </p>
         {state.error ? <p className="text-destructive text-sm">{state.error}</p> : null}
       </div>
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         A student needs a published exam result to be ranked. When they have no
         roll call yet, the attendance weight is left out for them rather than
         counted as absent.
-      </p>
+      </TranslatedText></p>
     </form>
   );
 }

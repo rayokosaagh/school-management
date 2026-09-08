@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { Printer, WalletCards, X } from "lucide-react";
 import Link from "next/link";
 import { useId, useState } from "react";
@@ -94,9 +96,9 @@ function NoteForm({ enrollmentId, note }: { enrollmentId: number; note: string |
   return (
     <form action={action} className="grid gap-2">
       <input type="hidden" name="enrollmentId" value={enrollmentId} />
-      <label htmlFor={`${id}-note`} className="sr-only">
+      <label htmlFor={`${id}-note`} className="sr-only"><TranslatedText>
         Office note
-      </label>
+      </TranslatedText></label>
       <Input
         id={`${id}-note`}
         name="body"
@@ -106,7 +108,7 @@ function NoteForm({ enrollmentId, note }: { enrollmentId: number; note: string |
       />
       <div className="flex justify-end">
         <Button type="submit" variant="outline" size="xs" disabled={pending}>
-          {pending ? "Saving…" : note ? "Update note" : "Add note"}
+          <TranslatedText>{pending ? "Saving…" : note ? "Update note" : "Add note"}</TranslatedText>
         </Button>
       </div>
     </form>
@@ -171,9 +173,9 @@ export function PupilPane({
         <>
           {canCollect ? (
             <Button size="sm" onClick={() => onCollect(null)}>
-              <WalletCards data-icon="inline-start" aria-hidden="true" />
+              <WalletCards data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Record payment
-            </Button>
+            </TranslatedText></Button>
           ) : null}
           {onClose ? (
             <Button
@@ -197,11 +199,11 @@ export function PupilPane({
           </span>
         </div>
         <p className="text-ink-3 mt-1.5 text-xs">
-          {summary.charged === 0
+          <TranslatedText>{summary.charged === 0
             ? "Nothing has been charged yet. Set amounts under Setup."
             : summary.owed > 0
               ? `${money(summary.paid)} paid of ${money(summary.charged)} charged.`
-              : `All ${money(summary.charged)} collected.`}
+              : `All ${money(summary.charged)} collected.`}</TranslatedText>
         </p>
       </DetailPane.Section>
 
@@ -213,7 +215,7 @@ export function PupilPane({
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{row.name}</p>
                   <p className="text-ink-3 text-xs tabular-nums">
-                    {money(row.paid)} of {money(row.charged)}
+                    {money(row.paid)}<TranslatedText> of </TranslatedText>{money(row.charged)}
                   </p>
                 </div>
                 <Tone status={row.status} />
@@ -237,7 +239,7 @@ export function PupilPane({
       {bills.length > 0 ? (
         <DetailPane.Section label={feeType === null ? "Bills" : `Bills · ${feeType}`}>
           {shownBills.length === 0 ? (
-            <p className="text-ink-3 text-sm">Nothing billed for {feeType} yet.</p>
+            <p className="text-ink-3 text-sm"><TranslatedText>Nothing billed for </TranslatedText>{feeType}<TranslatedText> yet.</TranslatedText></p>
           ) : (
           <ul className="divide-line divide-y">
             {shownBills.map((bill) => (
@@ -255,10 +257,10 @@ export function PupilPane({
                     {bill.periodMonth > 0
                       ? BS_MONTHS[bill.periodMonth - 1]
                       : bill.feeTypes.join(" + ") || "One-off charge"}
-                    {bill.dueOn ? ` · due ${formatBs(bill.dueOn, "YYYY-MM-DD")}` : ""}
+                    <TranslatedText>{bill.dueOn ? ` · due ${formatBs(bill.dueOn, "YYYY-MM-DD")}` : ""}</TranslatedText>
                   </p>
                   <p className="text-ink-3 text-xs tabular-nums">
-                    {money(bill.paid)} of {money(bill.charged)}
+                    {money(bill.paid)}<TranslatedText> of </TranslatedText>{money(bill.charged)}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -271,9 +273,9 @@ export function PupilPane({
                     <Tone status={bill.status} />
                   )}
                   {bill.owed > 0 ? (
-                    <Button size="xs" variant="outline" onClick={() => onCollect(bill.id)}>
+                    <Button size="xs" variant="outline" onClick={() => onCollect(bill.id)}><TranslatedText>
                       Collect
-                    </Button>
+                    </TranslatedText></Button>
                   ) : null}
                 </div>
               </li>
@@ -285,9 +287,9 @@ export function PupilPane({
               could disagree with it. */}
           {hiddenBills > 0 ? (
             <p className="text-ink-3 mt-3 text-xs leading-5">
-              {hiddenBills} other {hiddenBills === 1 ? "bill is" : "bills are"} hidden by the{" "}
-              {feeType} filter. Choose <span className="font-medium">All fees</span> above the list
-              to see {hiddenBills === 1 ? "it" : "them"}.
+              {hiddenBills}<TranslatedText> other </TranslatedText><TranslatedText>{hiddenBills === 1 ? "bill is" : "bills are"}</TranslatedText><TranslatedText> hidden by the</TranslatedText><TranslatedText>{" "}</TranslatedText>
+              {feeType}<TranslatedText> filter. Choose </TranslatedText><span className="font-medium"><TranslatedText>All fees</TranslatedText></span><TranslatedText> above the list
+              to see </TranslatedText><TranslatedText>{hiddenBills === 1 ? "it" : "them"}</TranslatedText>.
             </p>
           ) : null}
         </DetailPane.Section>
@@ -299,7 +301,7 @@ export function PupilPane({
 
       <DetailPane.Section label="Payments">
         {payments.length === 0 ? (
-          <p className="text-ink-3 text-sm">Nothing received yet.</p>
+          <p className="text-ink-3 text-sm"><TranslatedText>Nothing received yet.</TranslatedText></p>
         ) : (
           <>
             <ul className="divide-line divide-y">
@@ -326,10 +328,10 @@ export function PupilPane({
                       <span className="font-semibold tabular-nums">{money(payment.amount)}</span>
                     </div>
                     <p className="text-ink-3 text-xs">
-                      {formatBs(payment.paidOn, "YYYY-MM-DD")} ·{" "}
-                      {payment.method === "CASH" ? "Cash" : "Bank transfer"}
-                      {payment.paidByName ? ` · from ${payment.paidByName}` : ""}
-                      {payment.paidByPhone ? ` ${payment.paidByPhone}` : ""}
+                      {formatBs(payment.paidOn, "YYYY-MM-DD")} ·<TranslatedText>{" "}</TranslatedText>
+                      <TranslatedText>{payment.method === "CASH" ? "Cash" : "Bank transfer"}</TranslatedText>
+                      <TranslatedText>{payment.paidByName ? ` · from ${payment.paidByName}` : ""}</TranslatedText>
+                      <TranslatedText>{payment.paidByPhone ? ` ${payment.paidByPhone}` : ""}</TranslatedText>
                     </p>
                   </div>
                 </li>
@@ -339,7 +341,7 @@ export function PupilPane({
             {payments.length > 1 ? (
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <Button type="button" variant="ghost" size="xs" onClick={toggleAll}>
-                  {picked.length === payments.length ? "Clear all" : "Select all"}
+                  <TranslatedText>{picked.length === payments.length ? "Clear all" : "Select all"}</TranslatedText>
                 </Button>
                 {/* A real <button> while there is nothing to combine. Rendered
                     as a disabled link it kept its href, and `aria-disabled`
@@ -347,9 +349,9 @@ export function PupilPane({
                     dead but would have gone to an empty statement. */}
                 {picked.length < 2 ? (
                   <Button size="xs" variant="outline" disabled>
-                    <Printer data-icon="inline-start" aria-hidden="true" />
+                    <Printer data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                     Pick 2 to combine
-                  </Button>
+                  </TranslatedText></Button>
                 ) : (
                   <Button
                     size="xs"
@@ -361,9 +363,9 @@ export function PupilPane({
                       />
                     }
                   >
-                    <Printer data-icon="inline-start" aria-hidden="true" />
-                    Print {picked.length} as one sheet
-                  </Button>
+                    <Printer data-icon="inline-start" aria-hidden="true" /><TranslatedText>
+                    Print </TranslatedText>{picked.length}<TranslatedText> as one sheet
+                  </TranslatedText></Button>
                 )}
               </div>
             ) : null}

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 /// The aside shell: identity block, action row, then labelled sections.
 export function DetailPane({
@@ -43,7 +44,7 @@ export function DetailPane({
 function Section({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={cn("border-line border-b px-5 py-3.5 last:border-b-0", className)}>
-      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase">{label}</h2>
+      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>{label}</TranslatedText></h2>
       {children}
     </section>
   );
@@ -55,7 +56,7 @@ function Facts({ items }: { items: { label: string; value: React.ReactNode; mono
     <dl className="grid grid-cols-2 gap-x-3.5 gap-y-2.5">
       {items.map((f) => (
         <div key={f.label} className="min-w-0">
-          <dt className="text-ink-3 text-[11.5px]">{f.label}</dt>
+          <dt className="text-ink-3 text-[11.5px]"><TranslatedText>{f.label}</TranslatedText></dt>
           <dd className={cn("mt-px truncate font-medium", f.mono && "font-mono tabular-nums")}>{f.value}</dd>
         </div>
       ))}

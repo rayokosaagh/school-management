@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
@@ -28,8 +30,11 @@ import { Plus } from "lucide-react";
 import { AddExamForm, ExamsView, type ExamRow } from "./exam-forms";
 import { MarksGrid } from "./marks-grid";
 
-// Exam, then section, then subject. The exam is the tab strip; the two
-// narrower choices sit in the toolbar beside it.
+// Exam, then section, then subject. Two register strips, outer then inner:
+// the exam term, and under it the section being marked for it — the same
+// section strip Attendance and Students navigate by, so a class is picked the
+// same way on every page. Only the subject, which is local state rather than
+// a navigation, stays in the toolbar.
 
 type Term = { id: number; name: string; isPublished: boolean; marks: number };
 type Section = { id: number; name: string; grade: { name: string } };
@@ -86,6 +91,7 @@ export function ExamsWorkspace({
 }) {
   const router = useRouter();
   const baseId = useId();
+  const sectionBaseId = useId();
   const panelId = `${baseId}-panel`;
   // Tab, section and view changes all re-fetch every subject's marks sheet
   // for the section (see page.tsx), so this is a real wait, not a formality —
@@ -121,7 +127,27 @@ export function ExamsWorkspace({
     empty: t.marks === 0,
   }));
 
+  const sectionTabs: RegisterTab[] = sections.map((s) => ({
+    id: String(s.id),
+    code: sectionCode(s.grade.name, s.name),
+    label: `${s.grade.name} ${s.name}`,
+  }));
+
   const term = terms.find((t) => t.id === examId) ?? null;
+
+  // Manage lists the exams themselves, which belong to no section — there the
+  // strip would be a control with nothing to steer.
+  const showSections = view !== "exams";
+
+  // The panel is the tabpanel for both strips at once, so its accessible name
+  // is both tabs — "First Terminal" and "Class 1 A". aria-labelledby takes a
+  // list of ids, which is what makes one panel under two strips readable.
+  const panelLabelledBy = [
+    registerTabId(baseId, String(examId ?? "")),
+    showSections ? registerTabId(sectionBaseId, String(sectionId ?? "")) : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <PageFrame
@@ -144,15 +170,15 @@ export function ExamsWorkspace({
           />
           <Sheet>
             <SheetTrigger render={<Button size="sm" />}>
-              <Plus data-icon="inline-start" aria-hidden="true" />
+              <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               New exam
-            </SheetTrigger>
+            </TranslatedText></SheetTrigger>
             <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
               <SheetHeader>
-                <SheetTitle>Add an exam</SheetTitle>
-                <SheetDescription>
+                <SheetTitle><TranslatedText>Add an exam</TranslatedText></SheetTitle>
+                <SheetDescription><TranslatedText>
                   First Terminal, Second Terminal, Final — in the order they are sat.
-                </SheetDescription>
+                </TranslatedText></SheetDescription>
               </SheetHeader>
               <div className="px-4 pb-6">
                 <AddExamForm academicYearId={academicYearId} />
@@ -173,20 +199,27 @@ export function ExamsWorkspace({
         />
       </PageFrame.Tabs>
 
+      {/* Set down from the exam strip rather than stacked flush against it,
+          the gap the Fees page puts under its class tabs: the exam says which
+          sitting, this says whose marks, and two strips touching read as one
+          crowded row. */}
+      {showSections ? (
+        <PageFrame.Tabs className="mt-3">
+          <RegisterTabs
+            tabs={sectionTabs}
+            value={String(sectionId ?? "")}
+            // No `subject` here: go() only carries exam, section and view, so a
+            // subject passed in was silently dropped. The subject is local state,
+            // and the derivation above resets it when the section changes.
+            onChange={(id) => go({ section: Number(id) })}
+            ariaLabel="Sections"
+            baseId={sectionBaseId}
+            panelId={panelId}
+          />
+        </PageFrame.Tabs>
+      ) : null}
+
       <PageFrame.Toolbar>
-        <FieldSelect
-          aria-label="Section"
-          value={sectionId ? String(sectionId) : ""}
-          // No `subject` here: go() only carries exam, section and view, so a
-          // subject passed in was silently dropped. The subject is local state,
-          // and the derivation above resets it when the section changes.
-          onValueChange={(next) => go({ section: Number(next) })}
-          className="h-8 w-48 shrink-0"
-          options={sections.map((s) => ({
-            value: String(s.id),
-            label: `${sectionCode(s.grade.name, s.name)} · ${s.grade.name} ${s.name}`,
-          }))}
-        />
         {view === "marks" ? (
           <FieldSelect
             aria-label="Subject"
@@ -213,9 +246,9 @@ export function ExamsWorkspace({
               variant="outline"
               size="sm"
             >
-              <Download data-icon="inline-start" aria-hidden="true" />
+              <Download data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               CSV
-            </Button>
+            </TranslatedText></Button>
             <Button
               render={
                 <Link
@@ -225,18 +258,18 @@ export function ExamsWorkspace({
               nativeButton={false}
               size="sm"
             >
-              <Printer data-icon="inline-start" aria-hidden="true" />
+              <Printer data-icon="inline-start" aria-hidden="true" /><TranslatedText>
               Print marksheets
-            </Button>
+            </TranslatedText></Button>
           </>
         ) : (
           <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-            {term?.isPublished ? "Published · unpublish to edit" : "Draft"}
+            <TranslatedText>{term?.isPublished ? "Published · unpublish to edit" : "Draft"}</TranslatedText>
           </span>
         )}
       </PageFrame.Toolbar>
 
-      <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, String(examId ?? ""))}>
+      <PageFrame.Body id={panelId} labelledBy={panelLabelledBy}>
         <div
           aria-busy={isPending}
           className={cn(
@@ -251,8 +284,8 @@ export function ExamsWorkspace({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-ink-3 border-line border-b text-left text-xs">
-                    <th className="py-2 pr-3 font-medium">Roll</th>
-                    <th className="py-2 pr-3 font-medium">Name</th>
+                    <th className="py-2 pr-3 font-medium"><TranslatedText>Roll</TranslatedText></th>
+                    <th className="py-2 pr-3 font-medium"><TranslatedText>Name</TranslatedText></th>
                     {ledger.offerings.map((o) => (
                       <th key={o.id} className="relative py-2 pr-3 pl-3 font-medium whitespace-nowrap">
                         {/* The subject's own colour, same as the timetable and
@@ -265,9 +298,9 @@ export function ExamsWorkspace({
                         {o.subject}
                       </th>
                     ))}
-                    <th className="py-2 pr-3 font-medium">Total</th>
-                    <th className="py-2 pr-3 font-medium">GPA</th>
-                    <th className="py-2 font-medium">Pos.</th>
+                    <th className="py-2 pr-3 font-medium"><TranslatedText>Total</TranslatedText></th>
+                    <th className="py-2 pr-3 font-medium"><TranslatedText>GPA</TranslatedText></th>
+                    <th className="py-2 font-medium"><TranslatedText>Pos.</TranslatedText></th>
                   </tr>
                 </thead>
                 <tbody>

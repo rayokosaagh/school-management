@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { ArrowRight, BookOpen, House } from "lucide-react";
 
@@ -14,20 +15,20 @@ export default function NotFound() {
           </span>
         </div>
         <div className="px-6 py-8 text-center sm:px-10 sm:py-10">
-          <p className="text-brand-text text-[11px] font-semibold uppercase tracking-[0.16em]">A page out of place</p>
-          <h1 id="not-found-title" className="mt-3">We couldn’t find this page.</h1>
-          <p className="text-ink-3 mx-auto mt-3 max-w-sm text-sm leading-6">
+          <p className="text-brand-text text-[11px] font-semibold uppercase tracking-[0.16em]"><TranslatedText>A page out of place</TranslatedText></p>
+          <h1 id="not-found-title" className="mt-3"><TranslatedText>We couldn’t find this page.</TranslatedText></h1>
+          <p className="text-ink-3 mx-auto mt-3 max-w-sm text-sm leading-6"><TranslatedText>
             The link may be outdated, or the address may have been typed incorrectly. Let’s get you back to your school workspace.
-          </p>
+          </TranslatedText></p>
           <Link
             href="/"
             className="bg-brand text-brand-ink mt-6 inline-flex min-h-11 items-center justify-center gap-2.5 rounded-lg px-5 py-3 text-sm font-semibold transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
           >
-            <House className="size-4" aria-hidden="true" />
+            <House className="size-4" aria-hidden="true" /><TranslatedText>
             Back to home
-            <ArrowRight className="size-4" aria-hidden="true" />
+            </TranslatedText><ArrowRight className="size-4" aria-hidden="true" />
           </Link>
-          <p className="text-ink-3 mt-5 text-xs leading-5">If you followed a link from the school, let your administrator know.</p>
+          <p className="text-ink-3 mt-5 text-xs leading-5"><TranslatedText>If you followed a link from the school, let your administrator know.</TranslatedText></p>
         </div>
       </section>
     </main>

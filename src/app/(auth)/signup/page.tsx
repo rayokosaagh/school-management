@@ -4,6 +4,7 @@ import { Logo } from "@/components/ui/login-signup";
 import { isSignupOpen } from "@/lib/auth/registration";
 import { getLetterhead } from "@/lib/registry/school";
 import { SignupForm } from "./signup-form";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 // Rendered per request: whether sign-up is open depends on the database, and a
 // prerendered page would freeze that answer at build time.
@@ -22,24 +23,22 @@ export default async function SignupPage() {
         <Logo className="mx-auto h-16 w-16" />
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold">
-            {school.configured ? school.name : "School Management"}
+            {school.configured ? school.displayName : <TranslatedText>School Management</TranslatedText>}
           </h1>
           <p className="text-muted-foreground">
-            Sign-up is closed.
+            <TranslatedText>Sign-up is closed.</TranslatedText>
           </p>
         </div>
 
         <div className="bg-tint-amber text-tint-amber-fg flex items-start gap-2.5 rounded-xl px-4 py-3 text-left text-sm">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p>
-            This system holds student records, so accounts are not self-served.
-            Ask someone who already has one to add you from{" "}
-            <span className="font-medium">Settings</span>.
+            <TranslatedText>This system holds student records, so accounts are created by an administrator in Settings.</TranslatedText>
           </p>
         </div>
 
         <Link href="/login" className="inline-block text-sm underline">
-          Back to sign in
+          <TranslatedText>Back to sign in</TranslatedText>
         </Link>
       </div>
     </div>

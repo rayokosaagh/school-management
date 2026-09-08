@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -178,13 +179,13 @@ export default async function SettingsPage({
         {canManageRegistry ? (
           <SectionCard icon={CalendarPlus} tint="rose" title="Academic year transition"
             description="Prepare next year's classes and student placements, then choose when to activate it.">
-            <p className="text-ink-2 mb-4 text-sm">
+            <p className="text-ink-2 mb-4 text-sm"><TranslatedText>
               Review promotions before applying changes. Previous-year records stay intact;
               fee prices and service registrations need a separate setup for the new year.
-            </p>
-            <Button render={<Link href="/dashboard/settings/academic-years" />} nativeButton={false}>
+            </TranslatedText></p>
+            <Button render={<Link href="/dashboard/settings/academic-years" />} nativeButton={false}><TranslatedText>
               Prepare next academic year
-            </Button>
+            </TranslatedText></Button>
           </SectionCard>
         ) : null}
         <SectionCard
@@ -211,9 +212,9 @@ export default async function SettingsPage({
           description="How you sign in."
         >
           <dl className="mb-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Username</dt>
+            <dt className="text-muted-foreground"><TranslatedText>Username</TranslatedText></dt>
             <dd className="font-medium">{user.username}</dd>
-            <dt className="text-muted-foreground">Member since</dt>
+            <dt className="text-muted-foreground"><TranslatedText>Member since</TranslatedText></dt>
             <dd className="font-medium">
               {user.createdAt.toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -237,8 +238,8 @@ export default async function SettingsPage({
         <SectionCard icon={ShieldCheck} tint="blue" title="Accountability & operational checks"
           description="Review recorded changes and reconcile the ledger before a year transition.">
           <div className="flex flex-wrap gap-3">
-            <Button render={<Link href="/dashboard/settings/activity" />} nativeButton={false}>View activity history</Button>
-            <Button variant="secondary" render={<Link href="/dashboard/settings/readiness" />} nativeButton={false}>Run operational checks</Button>
+            <Button render={<Link href="/dashboard/settings/activity" />} nativeButton={false}><TranslatedText>View activity history</TranslatedText></Button>
+            <Button variant="secondary" render={<Link href="/dashboard/settings/readiness" />} nativeButton={false}><TranslatedText>Run operational checks</TranslatedText></Button>
           </div>
         </SectionCard>
         <SectionCard icon={Trash2} tint="rose" title="Delete an academic year"

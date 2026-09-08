@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { TINT_CLASSES, type Tint } from "@/components/ui/page-shell";
 import { cn } from "@/lib/utils";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 /// An empty screen is an invitation to act: one icon, one sentence, one
 /// action. `tint` defaults to the brand colour but a page should pass its own
@@ -26,8 +27,8 @@ export function EmptyState({
       <span className={cn("grid size-11 place-items-center rounded-xl", TINT_CLASSES[tint])}>
         <Icon className="size-5" aria-hidden="true" />
       </span>
-      <p className="mt-1 text-sm font-medium">{title}</p>
-      {description ? <p className="text-ink-3 max-w-sm text-sm">{description}</p> : null}
+      <p className="mt-1 text-sm font-medium"><TranslatedText>{title}</TranslatedText></p>
+      {description ? <p className="text-ink-3 max-w-sm text-sm"><TranslatedText>{description}</TranslatedText></p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );

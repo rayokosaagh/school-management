@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useToastedActionState } from "@/components/ui/toast";
 import { AtSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,7 @@ export function EmailForm({ currentEmail }: { currentEmail: string | null }) {
   return (
     <form action={formAction} className="max-w-sm space-y-4">
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email"><TranslatedText>Email</TranslatedText></Label>
         <div className="relative mt-2.5">
           <Input
             id="email"
@@ -33,9 +35,9 @@ export function EmailForm({ currentEmail }: { currentEmail: string | null }) {
           </div>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
-          {currentEmail
+          <TranslatedText>{currentEmail
             ? "You can sign in with either your username or this address."
-            : "Add an address to sign in with it as well as your username."}
+            : "Add an address to sign in with it as well as your username."}</TranslatedText>
         </p>
       </div>
 
@@ -55,7 +57,7 @@ export function EmailForm({ currentEmail }: { currentEmail: string | null }) {
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save email"}
+          <TranslatedText>{pending ? "Saving…" : "Save email"}</TranslatedText>
         </Button>
         {pending && (
           <MorphingSquare

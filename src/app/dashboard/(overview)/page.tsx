@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { requirePage } from "@/lib/auth/guard";
@@ -26,10 +27,10 @@ export default async function DashboardHome({
     return (
       <section className="bg-surface border-line mx-auto max-w-3xl rounded-2xl border p-8 sm:p-12">
         <CalendarDays className="text-brand mb-6 size-9" aria-hidden="true" />
-        <p className="text-brand-text text-xs font-semibold uppercase tracking-widest">Your overview</p>
-        <h1 className="mt-2">Welcome, {actor.username}.</h1>
-        <p className="text-ink-3 mt-3 max-w-lg text-sm leading-6">An academic year needs to be selected before your overview is ready. {canSetup ? "Set up the school year to get started." : "Ask your administrator to select the school’s current academic year."}</p>
-        {canSetup ? <Link className="bg-brand text-brand-ink mt-6 inline-flex rounded-lg px-4 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface" href="/dashboard/classes">Set up academic year</Link> : null}
+        <p className="text-brand-text text-xs font-semibold uppercase tracking-widest"><TranslatedText>Your overview</TranslatedText></p>
+        <h1 className="mt-2"><TranslatedText>Welcome, </TranslatedText>{actor.username}.</h1>
+        <p className="text-ink-3 mt-3 max-w-lg text-sm leading-6"><TranslatedText>An academic year needs to be selected before your overview is ready. </TranslatedText><TranslatedText>{canSetup ? "Set up the school year to get started." : "Ask your administrator to select the school’s current academic year."}</TranslatedText></p>
+        {canSetup ? <Link className="bg-brand text-brand-ink mt-6 inline-flex rounded-lg px-4 py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface" href="/dashboard/classes"><TranslatedText>Set up academic year</TranslatedText></Link> : null}
       </section>
     );
   }

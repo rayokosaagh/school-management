@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import type { SectionHonours } from "@/lib/honours/honours";
 import { Podium } from "./podium";
 import { RankedList } from "./ranked-list";
@@ -20,17 +21,17 @@ export function SectionCard({ section, query = "" }: { section: SectionHonours; 
           {section.gradeName} {section.sectionName}
         </h2>
         <p className="text-ink-3 text-[12.5px]">
-          {ranked} of {section.students.length} ranked
-          {section.classTeacher ? ` · ${section.classTeacher}` : ""}
+          {ranked}<TranslatedText> of </TranslatedText>{section.students.length}<TranslatedText> ranked
+          </TranslatedText><TranslatedText>{section.classTeacher ? ` · ${section.classTeacher}` : ""}</TranslatedText>
         </p>
       </header>
 
       {section.students.length === 0 ? (
-        <p className="text-ink-3 text-sm">Nobody is enrolled here.</p>
+        <p className="text-ink-3 text-sm"><TranslatedText>Nobody is enrolled here.</TranslatedText></p>
       ) : ranked === 0 ? (
-        <p className="text-ink-3 mb-3 text-sm">
+        <p className="text-ink-3 mb-3 text-sm"><TranslatedText>
           No published exam covers this section yet, so nobody can be placed.
-        </p>
+        </TranslatedText></p>
       ) : (
         <div className="mx-auto mb-5 max-w-md">
           <Podium students={section.students} />

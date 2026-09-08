@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useEffect } from "react";
 import Link from "next/link";
 import { RotateCw, TriangleAlert } from "lucide-react";
@@ -43,19 +45,19 @@ export default function DashboardError({
             action={
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <Button onClick={reset}>
-                  <RotateCw data-icon="inline-start" aria-hidden="true" />
+                  <RotateCw data-icon="inline-start" aria-hidden="true" /><TranslatedText>
                   Try again
-                </Button>
-                <Button variant="outline" render={<Link href="/dashboard" />} nativeButton={false}>
+                </TranslatedText></Button>
+                <Button variant="outline" render={<Link href="/dashboard" />} nativeButton={false}><TranslatedText>
                   Back to overview
-                </Button>
+                </TranslatedText></Button>
               </div>
             }
           />
           {/* Quote this to whoever looks at the logs — in production it is the
               only part of the failure that reaches the screen. */}
           {error.digest ? (
-            <p className="text-ink-3 mt-1 text-center font-mono text-xs">Reference {error.digest}</p>
+            <p className="text-ink-3 mt-1 text-center font-mono text-xs"><TranslatedText>Reference </TranslatedText>{error.digest}</p>
           ) : null}
         </div>
       </div>

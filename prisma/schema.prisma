@@ -670,6 +670,8 @@ model SchoolProfile {
   address          String?
   phone            String?
   email            String?
+  /// School-wide interface language, stored as a short BCP 47 language code.
+  language         String   @default("en")
   logoId           Int?     @unique
   /// Which weekdays the school runs, Sunday = 0. Saturday is the weekly holiday
   /// in Nepal, but enough schools differ for this to be a setting.

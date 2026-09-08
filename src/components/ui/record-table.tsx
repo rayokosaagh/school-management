@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldSelect } from "@/components/ui/select";
+import { TranslatedText, useLanguage, useTranslatedChildren } from "@/components/i18n/language-provider";
 
 // A list of record cards with an in-card detail overlay, after the 21st.dev
 // server-management-table. Generic over the row type so every page shares one
@@ -55,6 +56,7 @@ const TONES: Record<Tone, string> = {
 };
 
 export function StatusPill({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
+  const translatedChildren = useTranslatedChildren(children);
   return (
     <span
       className={cn(
@@ -62,7 +64,7 @@ export function StatusPill({ tone = "neutral", children }: { tone?: Tone; childr
         TONES[tone],
       )}
     >
-      {children}
+      {translatedChildren}
     </span>
   );
 }
@@ -121,6 +123,7 @@ export function RecordTable<T>({
   /// belongs to the table as a whole rather than to any one row.
   footer?: ReactNode;
 }) {
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [chosen, setChosen] = useState<Record<string, string>>({});
   const [openKey, setOpenKey] = useState<string | number | null>(null);
@@ -196,7 +199,7 @@ export function RecordTable<T>({
         <div className="flex min-w-0 items-start gap-3">
           {icon ? <IconTile icon={icon} tint={tint} /> : null}
           <div className="min-w-0">
-          <h2 className="font-semibold">{title}</h2>
+          <h2 className="font-semibold">{t(title)}</h2>
           {subtitle ? (
             <p className="text-muted-foreground text-sm">
               {filtered.length !== rows.length
@@ -244,11 +247,11 @@ export function RecordTable<T>({
           <div className="grid flex-1 grid-cols-12 gap-3">
           {columns.map((c) => (
             <div key={c.key} style={{ gridColumn: `span ${spanFor(c)}` }}>
-              {c.header}
+               {t(c.header)}
             </div>
           ))}
           </div>
-          {rowActions ? <div className="w-24 shrink-0 text-right">Actions</div> : null}
+          {rowActions ? <div className="w-24 shrink-0 text-right">{t("Actions")}</div> : null}
         </div>
 
         {filtered.length === 0 ? (
@@ -257,8 +260,8 @@ export function RecordTable<T>({
               {query
                 ? `Nothing matches “${query}”.`
                 : active.length > 0
-                  ? "Nothing matches those filters."
-                  : empty}
+                  ? t("Nothing matches those filters.")
+                  : t(empty)}
             </p>
             {(query || active.length > 0) && rows.length > 0 ? (
               <Button
@@ -270,9 +273,9 @@ export function RecordTable<T>({
                   setQuery("");
                   setChosen({});
                 }}
-              >
+              ><TranslatedText>
                 Clear filters
-              </Button>
+              </TranslatedText></Button>
             ) : null}
           </div>
         ) : (

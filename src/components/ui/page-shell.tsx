@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { TranslatedText } from "@/components/i18n/language-provider";
 
 // The tinted icon tile that heads every page and card. Tint is chosen per
 // section so the eye can tell them apart while scrolling, not for decoration.
@@ -58,7 +59,7 @@ export function PageHeader({
     <header className="flex items-center gap-4">
       <IconTile icon={icon} tint={tint} size="lg" />
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight"><TranslatedText>{title}</TranslatedText></h1>
         {shown.length > 0 ? (
           <p className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
             {shown.map((item, i) => (
@@ -96,9 +97,11 @@ export function SectionCard({
       <div className="mb-5 flex items-start gap-3">
         <IconTile icon={icon} tint={tint} />
         <div className="min-w-0 flex-1">
-          <h2 className="font-semibold">{title}</h2>
+          <h2 className="font-semibold"><TranslatedText>{title}</TranslatedText></h2>
           {description ? (
-            <p className="text-muted-foreground mt-0.5 text-sm">{description}</p>
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              {typeof description === "string" ? <TranslatedText>{description}</TranslatedText> : description}
+            </p>
           ) : null}
         </div>
         {actions}

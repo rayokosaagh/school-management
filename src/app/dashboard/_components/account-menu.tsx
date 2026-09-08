@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { applyTheme, currentTheme } from "@/lib/theme/theme";
 import { MOBILE_IDS, SETTINGS, visibleGroups } from "./nav-model";
+import { useLanguage } from "@/components/i18n/language-provider";
 
 export function AccountMenu({
   username,
@@ -26,6 +27,7 @@ export function AccountMenu({
   roleLabel: string;
   allowed: string[];
 }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -51,7 +53,7 @@ export function AccountMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label={`Account menu: ${username}, ${roleLabel}`}
+          aria-label={`${t("Account menu")}: ${username}, ${t(roleLabel)}`}
           // Only earns its place on narrow screens, where it is the sole way to
           // reach the rail items the bottom bar cannot fit. From `shell` up the
           // rail shows Settings and the top bar has its own theme toggle and
@@ -63,7 +65,7 @@ export function AccountMenu({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="flex flex-col">
             <span className="truncate font-medium">{username}</span>
-            <span className="text-ink-3 text-xs font-normal">{roleLabel}</span>
+            <span className="text-ink-3 text-xs font-normal">{t(roleLabel)}</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {overflow.length > 0 ? (
@@ -77,7 +79,7 @@ export function AccountMenu({
                       render={<Link href={item.href} />}
                     >
                       <Icon className="size-4" aria-hidden="true" />
-                      {item.label}
+                      {t(item.label)}
                     </DropdownMenuItem>
                   );
                 })}
@@ -88,18 +90,18 @@ export function AccountMenu({
           {allowed.includes(SETTINGS.id) ? (
             <DropdownMenuItem render={<Link href={SETTINGS.href} />}>
               <SETTINGS.icon className="size-4" aria-hidden="true" />
-              Settings
+              {t("Settings")}
             </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem onClick={toggleTheme}>
             <Sun className="size-4 dark:hidden" aria-hidden="true" />
             <Moon className="hidden size-4 dark:block" aria-hidden="true" />
-            Switch theme
+            {t("Switch theme")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={logOut} disabled={signingOut}>
             <LogOut className="size-4" aria-hidden="true" />
-            {signingOut ? "Signing out…" : "Sign out"}
+            {t(signingOut ? "Signing out…" : "Sign out")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -107,13 +109,13 @@ export function AccountMenu({
         type="button"
         onClick={logOut}
         disabled={signingOut}
-        aria-label={signingOut ? "Signing out" : "Sign out"}
-        title="Sign out"
+        aria-label={t(signingOut ? "Signing out" : "Sign out")}
+        title={t("Sign out")}
         className="text-ink-2 hover:bg-page focus-visible:ring-ring/50 inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors focus-visible:ring-3 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
       >
         <LogOut className="size-4" aria-hidden="true" />
         <span className="hidden shell:inline">
-          {signingOut ? "Signing out..." : "Sign out"}
+          {t(signingOut ? "Signing out…" : "Sign out")}
         </span>
       </button>
     </>

@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { ClipboardList, Search } from "lucide-react";
 import { startTransition, useId, useMemo, useOptimistic, useState } from "react";
@@ -184,7 +186,7 @@ export function TeachingWorkspace({
         header: "Practical",
         meta: { width: "96px" } satisfies ColumnMeta,
         cell: ({ row }) => (
-          <span className="text-ink-2">{row.original.hasPractical ? "Yes" : "—"}</span>
+          <span className="text-ink-2"><TranslatedText>{row.original.hasPractical ? "Yes" : "—"}</TranslatedText></span>
         ),
       },
       {
@@ -269,16 +271,17 @@ export function TeachingWorkspace({
             ...staff.map((person) => ({ value: String(person.id), label: person.fullName })),
           ]}
         />
-        {teacherFilter !== ALL ? <Button variant="ghost" size="sm" onClick={() => setTeacherFilter(ALL)}>Clear teacher filter</Button> : null}
+        {teacherFilter !== ALL ? <Button variant="ghost" size="sm" onClick={() => setTeacherFilter(ALL)}><TranslatedText>Clear teacher filter</TranslatedText></Button> : null}
         {currentSection ? (
-          <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-            Class teacher: {currentSection.classTeacher ?? "not set"}
+          <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap"><TranslatedText>
+            Class teacher:</TranslatedText><TranslatedText>{" "}</TranslatedText>
+          {currentSection.classTeacher ?? "not set"}
           </span>
         ) : null}
         <span className="flex-1" />
         <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {visible.length} subject{visible.length === 1 ? "" : "s"}
-          {unassigned > 0 ? ` · ${unassigned} unassigned` : ""}
+          {visible.length}<TranslatedText> subject</TranslatedText><TranslatedText>{visible.length === 1 ? "" : "s"}</TranslatedText>
+          <TranslatedText>{unassigned > 0 ? ` · ${unassigned} unassigned` : ""}</TranslatedText>
         </span>
       </PageFrame.Toolbar>
 

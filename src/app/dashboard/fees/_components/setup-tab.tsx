@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { CalendarDays, Layers, Send } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +44,7 @@ function BillingPeriod({ title, plans }: { title: string; plans: BillingSlice[] 
                   ))}
                 </dl>
               </div>
-              {plans.length > 1 ? <p className="text-sm font-semibold tabular-nums">{money(plan.total)}<span className="text-ink-3 ml-1 text-xs font-normal">{plan.monthly ? "/ month" : "/ year"}</span></p> : null}
+              {plans.length > 1 ? <p className="text-sm font-semibold tabular-nums">{money(plan.total)}<span className="text-ink-3 ml-1 text-xs font-normal"><TranslatedText>{plan.monthly ? "/ month" : "/ year"}</TranslatedText></span></p> : null}
             </div>
             <div className="border-line border-t pt-4">
               <IssueForm structureId={plan.structureId} issued={plan.issued} monthly={plan.monthly} months={plan.months} />
@@ -91,7 +93,7 @@ function IssueEveryClass({ academicYearId, yearLabel, structures }: {
           top margin to. That left the column's box 8px below the visible
           field, and `items-end` dutifully aligned the button to the box. */}
       <div className="w-full sm:w-56">
-        <Label htmlFor={`${id}-period`} className="mb-2">Billing period</Label>
+        <Label htmlFor={`${id}-period`} className="mb-2"><TranslatedText>Billing period</TranslatedText></Label>
         <FieldSelect
           id={`${id}-period`}
           aria-label="Billing period for every class"
@@ -118,14 +120,14 @@ function IssueEveryClass({ academicYearId, yearLabel, structures }: {
         // still have to be somewhere a hesitating clerk can find them.
         title={`Bills every class with a plan for ${yearLabel}, whatever the grade filter shows. Classes already billed for the period are skipped and existing bills are untouched.`}
       >
-        <Send data-icon="inline-start" aria-hidden="true" />{pending ? "Issuing…" : "Issue for every class"}
+        <Send data-icon="inline-start" aria-hidden="true" /><TranslatedText>{pending ? "Issuing…" : "Issue for every class"}</TranslatedText>
       </Button>
       <p className="text-ink-3 w-full text-right text-xs leading-5" role="status">
-        {!started
+        <TranslatedText>{!started
           ? "Billing opens when the selected month begins."
           : waiting > 0
             ? `${waiting} class${waiting === 1 ? "" : "es"} not yet billed for ${periodName}. Already billed classes are skipped.`
-            : `Every class with a plan has already been billed for ${periodName}.`}
+            : `Every class with a plan has already been billed for ${periodName}.`}</TranslatedText>
       </p>
       {state.error ? <p role="alert" className="text-bad w-full text-right text-sm">{state.error}</p> : null}
     </form>
@@ -139,23 +141,23 @@ function GradeCard({ group }: { group: GradeBilling }) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-base font-semibold">{group.grade.name}</h3>
-            <Badge variant="outline">Class billing</Badge>
+            <Badge variant="outline"><TranslatedText>Class billing</TranslatedText></Badge>
           </div>
-          <p className="text-ink-3 mt-1 text-sm">Admission and yearly charges stay separate from monthly fees.</p>
+          <p className="text-ink-3 mt-1 text-sm"><TranslatedText>Admission and yearly charges stay separate from monthly fees.</TranslatedText></p>
         </div>
         <dl className="flex flex-wrap gap-x-8 gap-y-4">
           {group.yearly.length > 0 ? (
             <div>
-              <dt className="text-ink-3 text-xs">Admission / yearly</dt>
+              <dt className="text-ink-3 text-xs"><TranslatedText>Admission / yearly</TranslatedText></dt>
               <dd className="font-display mt-1 text-xl font-semibold tabular-nums">{money(group.yearlyTotal)}</dd>
-              <p className="text-ink-3 mt-1 text-xs">per pupil / year</p>
+              <p className="text-ink-3 mt-1 text-xs"><TranslatedText>per pupil / year</TranslatedText></p>
             </div>
           ) : null}
           {group.monthly.length > 0 ? (
             <div>
-              <dt className="text-ink-3 text-xs">Monthly fees</dt>
+              <dt className="text-ink-3 text-xs"><TranslatedText>Monthly fees</TranslatedText></dt>
               <dd className="font-display mt-1 text-xl font-semibold tabular-nums">{money(group.monthlyTotal)}</dd>
-              <p className="text-ink-3 mt-1 text-xs">per pupil / month</p>
+              <p className="text-ink-3 mt-1 text-xs"><TranslatedText>per pupil / month</TranslatedText></p>
             </div>
           ) : null}
         </dl>
@@ -233,7 +235,7 @@ export function SetupTab({ academicYearId, yearLabel, grades, heads, structures,
         />
         <div className="space-y-5 p-5 sm:p-7">
           {groups.length ? <div className="space-y-5">{groups.map(group => <GradeCard key={group.grade.id} group={group} />)}</div> : (
-            <EmptyState icon={Layers} tint="rose" title={structures.length ? "No plans for this grade" : "No bills ready yet"} description="Set and save class amounts in Class pricing, then return here to issue bills." action={<Button variant="outline" onClick={() => setView("pricing")}>Open class pricing</Button>} />
+            <EmptyState icon={Layers} tint="rose" title={structures.length ? "No plans for this grade" : "No bills ready yet"} description="Set and save class amounts in Class pricing, then return here to issue bills." action={<Button variant="outline" onClick={() => setView("pricing")}><TranslatedText>Open class pricing</TranslatedText></Button>} />
           )}
         </div>
       </StepPanel>

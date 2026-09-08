@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +44,7 @@ export function NameFields({
   return (
     <>
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}firstName`}>First name</Label>
+        <Label htmlFor={`${idPrefix}firstName`}><TranslatedText>First name</TranslatedText></Label>
         <Input
           id={`${idPrefix}firstName`}
           name="firstName"
@@ -54,9 +56,9 @@ export function NameFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}middleName`}>
-          Middle name{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
+        <Label htmlFor={`${idPrefix}middleName`}><TranslatedText>
+          Middle name</TranslatedText><TranslatedText>{" "}</TranslatedText>
+          <span className="text-muted-foreground font-normal"><TranslatedText>(optional)</TranslatedText></span>
         </Label>
         <Input
           id={`${idPrefix}middleName`}
@@ -68,7 +70,7 @@ export function NameFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}lastName`}>Last name</Label>
+        <Label htmlFor={`${idPrefix}lastName`}><TranslatedText>Last name</TranslatedText></Label>
         <Input
           id={`${idPrefix}lastName`}
           name="lastName"
@@ -80,9 +82,9 @@ export function NameFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={`${idPrefix}fullNameNp`}>
-          Name in Nepali{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
+        <Label htmlFor={`${idPrefix}fullNameNp`}><TranslatedText>
+          Name in Nepali</TranslatedText><TranslatedText>{" "}</TranslatedText>
+          <span className="text-muted-foreground font-normal"><TranslatedText>(optional)</TranslatedText></span>
         </Label>
         <div className="flex gap-2">
           <Input
@@ -113,11 +115,11 @@ export function NameFields({
           ) : null}
         </div>
         <p className="text-muted-foreground text-xs">
-          {touched
+          <TranslatedText>{touched
             ? "Edited by hand — no longer follows the English name."
             : english
               ? "Suggested from the English spelling. Correct it if it is wrong."
-              : "Fills in as you type the English name."}
+              : "Fills in as you type the English name."}</TranslatedText>
         </p>
       </div>
     </>

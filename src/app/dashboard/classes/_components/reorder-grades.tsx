@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useEffect, useState, useTransition } from "react";
 import { Reorder, useDragControls, useReducedMotion } from "motion/react";
 import { GripVertical } from "lucide-react";
@@ -58,7 +60,7 @@ function GradeRowItem({
       </span>
       <span className="flex-1 truncate font-medium">{grade.name}</span>
       <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-        {grade.sectionCount} section{grade.sectionCount === 1 ? "" : "s"}
+        {grade.sectionCount}<TranslatedText> section</TranslatedText><TranslatedText>{grade.sectionCount === 1 ? "" : "s"}</TranslatedText>
       </span>
     </Reorder.Item>
   );
@@ -105,10 +107,10 @@ function ReorderGradesBody({
 
   return (
     <div className="space-y-4">
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         Drag a row by its handle, or focus the handle and press Alt+Up /
         Alt+Down. The numbers on the left are the order that will be saved.
-      </p>
+      </TranslatedText></p>
       <Reorder.Group
         as="ul"
         axis="y"
@@ -132,11 +134,11 @@ function ReorderGradesBody({
       </Reorder.Group>
       {state.error ? <p className="text-destructive text-sm">{state.error}</p> : null}
       <div className="flex items-center justify-end gap-2 border-t pt-4">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={pending}><TranslatedText>
           Cancel
-        </Button>
+        </TranslatedText></Button>
         <Button type="button" onClick={save} disabled={pending || order.length === 0}>
-          {pending ? "Saving…" : "Save order"}
+          <TranslatedText>{pending ? "Saving…" : "Save order"}</TranslatedText>
         </Button>
       </div>
     </div>

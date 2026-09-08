@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { Eye, EyeOff, UserPlus, Users } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
@@ -71,29 +73,29 @@ export function AccountEditor({
       <div>
         <p className="text-sm font-medium">
           {account.username}
-          {isSelf ? <span className="text-muted-foreground font-normal"> · you</span> : null}
+          {isSelf ? <span className="text-muted-foreground font-normal"><TranslatedText> · you</TranslatedText></span> : null}
         </p>
         <p className="text-muted-foreground text-xs">
-          {account.email ?? "no email"} · added {account.createdLabel}
+          {account.email ?? "no email"}<TranslatedText> · added </TranslatedText>{account.createdLabel}
         </p>
       </div>
 
       {stranded(account) ? (
-        <p className="text-tint-amber-fg bg-tint-amber rounded-lg px-3 py-2 text-xs">
+        <p className="text-tint-amber-fg bg-tint-amber rounded-lg px-3 py-2 text-xs"><TranslatedText>
           A teacher account with no staff record can reach nothing. Link one, or
           change the role.
-        </p>
+        </TranslatedText></p>
       ) : null}
       {account.email ? null : (
-        <p className="text-tint-amber-fg bg-tint-amber rounded-lg px-3 py-2 text-xs">
+        <p className="text-tint-amber-fg bg-tint-amber rounded-lg px-3 py-2 text-xs"><TranslatedText>
           No email on this account, so there is no way to reach whoever uses it
           if they lose the password.
-        </p>
+        </TranslatedText></p>
       )}
 
       <form action={roleAction} className="space-y-2">
         <input type="hidden" name="userId" value={account.id} />
-        <Label htmlFor={`role-${account.id}`}>Role</Label>
+        <Label htmlFor={`role-${account.id}`}><TranslatedText>Role</TranslatedText></Label>
         <div className="flex items-center gap-2">
           <FieldSelect
             id={`role-${account.id}`}
@@ -102,9 +104,9 @@ export function AccountEditor({
             options={ROLE_OPTIONS}
             className="h-9 w-full min-w-0 rounded-lg"
           />
-          <Button type="submit" variant="outline" size="sm" disabled={changingRole}>
+          <Button type="submit" variant="outline" size="sm" disabled={changingRole}><TranslatedText>
             Save
-          </Button>
+          </TranslatedText></Button>
         </div>
         <p className="text-muted-foreground text-xs">
           {ROLE_DESCRIPTION[account.role as keyof typeof ROLE_DESCRIPTION]}
@@ -113,7 +115,7 @@ export function AccountEditor({
 
       <form action={linkAction} className="space-y-2">
         <input type="hidden" name="userId" value={account.id} />
-        <Label htmlFor={`staff-${account.id}`}>Staff record</Label>
+        <Label htmlFor={`staff-${account.id}`}><TranslatedText>Staff record</TranslatedText></Label>
         <div className="flex items-center gap-2">
           <FieldSelect
             id={`staff-${account.id}`}
@@ -127,9 +129,9 @@ export function AccountEditor({
                 .map((s) => ({ value: String(s.id), label: s.fullName })),
             ]}
           />
-          <Button type="submit" variant="outline" size="sm" disabled={linking}>
+          <Button type="submit" variant="outline" size="sm" disabled={linking}><TranslatedText>
             Save
-          </Button>
+          </TranslatedText></Button>
         </div>
       </form>
 
@@ -137,9 +139,9 @@ export function AccountEditor({
       {delState.error ? <p className="text-destructive text-sm">{delState.error}</p> : null}
 
       {isSelf ? (
-        <p className="text-muted-foreground border-t pt-4 text-xs">
+        <p className="text-muted-foreground border-t pt-4 text-xs"><TranslatedText>
           You cannot remove the account you are signed in as.
-        </p>
+        </TranslatedText></p>
       ) : (
         <form action={delAction} className="border-t pt-4">
           <input type="hidden" name="userId" value={account.id} />
@@ -179,15 +181,15 @@ export function Accounts({
     >
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="new-username">Username</Label>
+          <Label htmlFor="new-username"><TranslatedText>Username</TranslatedText></Label>
           <Input id="new-username" name="username" placeholder="Username" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-email">Email</Label>
+          <Label htmlFor="new-email"><TranslatedText>Email</TranslatedText></Label>
           <Input id="new-email" name="email" type="email" placeholder="Email address" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-password">Password</Label>
+          <Label htmlFor="new-password"><TranslatedText>Password</TranslatedText></Label>
           <div className="flex gap-2">
             <Input
               id="new-password"
@@ -208,7 +210,7 @@ export function Accounts({
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="new-role">Role</Label>
+          <Label htmlFor="new-role"><TranslatedText>Role</TranslatedText></Label>
           <FieldSelect
             id="new-role"
             name="role"
@@ -218,10 +220,10 @@ export function Accounts({
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="new-staff">
-            Staff record{" "}
+          <Label htmlFor="new-staff"><TranslatedText>
+            Staff record</TranslatedText><TranslatedText>{" "}</TranslatedText>
             <span className="text-muted-foreground font-normal">
-              {role === "TEACHER" ? "(required for teachers)" : "(optional)"}
+              <TranslatedText>{role === "TEACHER" ? "(required for teachers)" : "(optional)"}</TranslatedText>
             </span>
           </Label>
           <FieldSelect
@@ -245,23 +247,23 @@ export function Accounts({
 
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={adding}>
-          {adding ? "Creating…" : "Create account"}
+          <TranslatedText>{adding ? "Creating…" : "Create account"}</TranslatedText>
         </Button>
-        <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+        <Button type="button" variant="ghost" onClick={() => setOpen(false)}><TranslatedText>
           Cancel
-        </Button>
+        </TranslatedText></Button>
         {addState.error ? <p className="text-destructive text-sm">{addState.error}</p> : null}
       </div>
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         Tell the person their password directly and ask them to change it. There
         is no email delivery, and no password reset yet.
-      </p>
+      </TranslatedText></p>
     </form>
   ) : (
     <Button type="button" variant="outline" onClick={() => setOpen(true)}>
-      <UserPlus />
+      <UserPlus /><TranslatedText>
       Add an account
-    </Button>
+    </TranslatedText></Button>
   );
 
   return (
@@ -290,7 +292,7 @@ export function Accounts({
               <p className="truncate font-medium">
                 {a.username}
                 {a.id === currentUserId ? (
-                  <span className="text-muted-foreground font-normal"> · you</span>
+                  <span className="text-muted-foreground font-normal"><TranslatedText> · you</TranslatedText></span>
                 ) : null}
               </p>
               <p className="text-muted-foreground truncate text-xs">{a.email ?? "no email"}</p>
@@ -315,9 +317,9 @@ export function Accounts({
             a.staffName ? (
               <span className="truncate">{a.staffName}</span>
             ) : stranded(a) ? (
-              <StatusPill tone="warning">Reaches nothing</StatusPill>
+              <StatusPill tone="warning"><TranslatedText>Reaches nothing</TranslatedText></StatusPill>
             ) : (
-              <span className="text-muted-foreground">Not linked</span>
+              <span className="text-muted-foreground"><TranslatedText>Not linked</TranslatedText></span>
             ),
         },
         {
@@ -334,9 +336,9 @@ export function Accounts({
         },
       ]}
       rowActions={(a, openRow) => (
-        <Button type="button" variant="outline" size="sm" onClick={openRow}>
+        <Button type="button" variant="outline" size="sm" onClick={openRow}><TranslatedText>
           Edit
-        </Button>
+        </TranslatedText></Button>
       )}
       detailTitle={(a) => `Account · ${a.username}`}
       renderDetail={(a) => (

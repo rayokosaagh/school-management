@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { normalizeLanguage, type Language } from "@/lib/i18n/translations";
 
 // One row, id 1. Printed documents need a letterhead, and a school has exactly
 // one identity — so this is a settings record, not a table of schools.
@@ -10,6 +11,7 @@ export type SchoolInput = {
   address?: string | null;
   phone?: string | null;
   email?: string | null;
+  language?: Language;
 };
 
 export type SchoolLogo = {
@@ -34,6 +36,7 @@ export function saveSchool(
     address: input.address?.trim() || null,
     phone: input.phone?.trim() || null,
     email: input.email?.trim() || null,
+    language: normalizeLanguage(input.language),
   };
 
   return prisma.$transaction(async (tx) => {
@@ -70,12 +73,16 @@ export function saveSchool(
 /// a blank masthead before anyone has filled the settings in.
 export async function getLetterhead() {
   const school = await getSchool();
+  const language = normalizeLanguage(school?.language);
+  const name = school?.name ?? "School name not set";
   return {
-    name: school?.name ?? "School name not set",
+    name,
     nameNp: school?.nameNp ?? null,
+    displayName: language === "ne" && school?.nameNp ? school.nameNp : name,
     address: school?.address ?? null,
     phone: school?.phone ?? null,
     email: school?.email ?? null,
+    language,
     logoId: school?.logoId ?? null,
     configured: Boolean(school?.name),
   };

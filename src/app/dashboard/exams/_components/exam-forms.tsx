@@ -1,5 +1,7 @@
 "use client";
 
+import { TranslatedText } from "@/components/i18n/language-provider";
+
 import { useState } from "react";
 import { PlusCircle } from "lucide-react";
 import { useToastedActionState } from "@/components/ui/toast";
@@ -52,7 +54,7 @@ export function AddExamForm({ academicYearId }: { academicYearId: number }) {
       <input type="hidden" name="academicYearId" value={academicYearId} />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="exam-name">Exam name</Label>
+          <Label htmlFor="exam-name"><TranslatedText>Exam name</TranslatedText></Label>
           <Input id="exam-name" name="name" placeholder="Exam name" required />
         </div>
         <BsDateField id="exam-start" name="startsOn" label="Starts on" help="Optional" />
@@ -61,7 +63,7 @@ export function AddExamForm({ academicYearId }: { academicYearId: number }) {
       <div className="flex items-center gap-3">
         <Button type="submit" variant="action" size="xl" disabled={pending}>
           <PlusCircle />
-          {pending ? "Adding…" : "Add exam"}
+          <TranslatedText>{pending ? "Adding…" : "Add exam"}</TranslatedText>
         </Button>
         <Status state={state} />
       </div>
@@ -84,7 +86,7 @@ function ExamDetail({ row, onDone }: { row: ExamRow; onDone: () => void }) {
         <input type="hidden" name="examTermId" value={row.id} />
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor={`en-${row.id}`}>Exam name</Label>
+            <Label htmlFor={`en-${row.id}`}><TranslatedText>Exam name</TranslatedText></Label>
             <Input id={`en-${row.id}`} name="name" defaultValue={row.name} required />
           </div>
           <BsDateField
@@ -104,7 +106,7 @@ function ExamDetail({ row, onDone }: { row: ExamRow; onDone: () => void }) {
         </div>
         <div className="flex items-center gap-3">
           <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save changes"}
+            <TranslatedText>{saving ? "Saving…" : "Save changes"}</TranslatedText>
           </Button>
           <Status state={editState} />
         </div>
@@ -112,22 +114,22 @@ function ExamDetail({ row, onDone }: { row: ExamRow; onDone: () => void }) {
 
       <div className="space-y-2 border-t pt-4">
         <p className="text-sm font-medium">
-          {row.isPublished ? "Published" : "Draft"}
+          <TranslatedText>{row.isPublished ? "Published" : "Draft"}</TranslatedText>
         </p>
         <form action={publishAction} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="examTermId" value={row.id} />
           <input type="hidden" name="publish" value={row.isPublished ? "0" : "1"} />
           <Button type="submit" variant="outline" disabled={publishing}>
-            {row.isPublished ? "Unpublish" : "Publish results"}
+            <TranslatedText>{row.isPublished ? "Unpublish" : "Publish results"}</TranslatedText>
           </Button>
           <span className="text-muted-foreground text-xs">
-            {row.marks} mark{row.marks === 1 ? "" : "s"} recorded
-          </span>
+            {row.marks}<TranslatedText> mark</TranslatedText><TranslatedText>{row.marks === 1 ? "" : "s"}</TranslatedText><TranslatedText> recorded
+          </TranslatedText></span>
         </form>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-xs"><TranslatedText>
           Publishing locks the marks so a result cannot change after it has been
           shown to anyone. Unpublish to correct one.
-        </p>
+        </TranslatedText></p>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t pt-4">
@@ -135,14 +137,14 @@ function ExamDetail({ row, onDone }: { row: ExamRow; onDone: () => void }) {
           <input type="hidden" name="examTermId" value={row.id} />
           <ConfirmSubmit label="Delete exam" confirmLabel="Delete?" pending={deleting} />
         </form>
-        <Button type="button" variant="ghost" onClick={onDone}>
+        <Button type="button" variant="ghost" onClick={onDone}><TranslatedText>
           Close
-        </Button>
+        </TranslatedText></Button>
         <Status state={delState} />
       </div>
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-xs"><TranslatedText>
         Refused while any marks are recorded — that is a term of work, not a typo.
-      </p>
+      </TranslatedText></p>
     </div>
   );
 }
@@ -196,7 +198,7 @@ export function ExamsView({ rows }: { rows: ExamRow[] }) {
           span: 2,
           render: (r) => (
             <StatusPill tone={r.isPublished ? "positive" : "neutral"}>
-              {r.isPublished ? "Published" : "Draft"}
+              <TranslatedText>{r.isPublished ? "Published" : "Draft"}</TranslatedText>
             </StatusPill>
           ),
         },

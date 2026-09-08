@@ -1,8 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Mirrors ExamsWorkspace's default "Marks" view: exam-term tabs, a
-// section/subject toolbar, then MarksGrid's roll/name/theory/practical/total/
-// grade/absent table (see exams-workspace.tsx / marks-grid.tsx).
+// Mirrors ExamsWorkspace's default "Marks" view: exam-term tabs, the section
+// strip under them, a subject toolbar, then MarksGrid's roll/name/theory/
+// practical/total/grade/absent table (see exams-workspace.tsx / marks-grid.tsx).
 export default function ExamsLoading() {
   return (
     <div className="flex h-full flex-col" role="status" aria-busy="true" aria-label="Loading exams">
@@ -11,8 +11,8 @@ export default function ExamsLoading() {
         <div className="flex gap-2"><Skeleton className="h-8 w-44" /><Skeleton className="h-8 w-28" /></div>
       </div>
       <div className="border-line flex gap-1 border-b pb-0">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[34px] w-28 rounded-t-lg rounded-b-none" />)}</div>
+      <div className="border-line mt-3 flex gap-1 border-b pb-0">{Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className="h-[34px] w-24 rounded-t-lg rounded-b-none" />)}</div>
       <div className="flex items-center gap-2 py-3">
-        <Skeleton className="h-8 w-48" />
         <Skeleton className="h-8 w-52" />
         <span className="flex-1" />
         <Skeleton className="h-4 w-16" />

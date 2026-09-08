@@ -9,6 +9,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
 import { ThemeBootstrap } from "@/components/ui/theme-bootstrap";
 import { getLetterhead } from "@/lib/registry/school";
+import { LanguageProvider } from "@/components/i18n/language-provider";
 
 const display = Bricolage_Grotesque({
   variable: "--font-display-face",
@@ -42,21 +43,27 @@ const mono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const school = await getLetterhead();
   return {
-    title: school.configured ? school.name : "School Management",
-    description: "Students, staff, classes, subjects, attendance and exams.",
+    title: school.configured ? school.displayName : "School Management",
+    description:
+      school.language === "ne"
+        ? "विद्यार्थी, कर्मचारी, कक्षा, विषय, हाजिरी र परीक्षाको व्यवस्थापन।"
+        : "Students, staff, classes, subjects, attendance and exams.",
   };
 }
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const school = await getLetterhead();
   return (
     <html
-      lang="en"
+      lang={school.language}
       suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${devanagari.variable} ${mono.variable} h-full`}
       >
       <body className="flex min-h-full flex-col">
         <ThemeBootstrap />
-        <ToastProvider>{children}</ToastProvider>
+        <LanguageProvider language={school.language}>
+          <ToastProvider>{children}</ToastProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

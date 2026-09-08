@@ -15,6 +15,7 @@ import { useTransition } from "react";
 import { IconTile, type Tint } from "@/components/ui/page-shell";
 import { FieldSelect } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/components/i18n/language-provider";
 
 // The group ids live in a plain module rather than here: this file is a
 // client component, and a value it exports reaches a server component as a
@@ -49,14 +50,15 @@ export type SettingsGroup = {
 };
 
 function GroupBlurb({ group, size }: { group: SettingsGroup; size: "sm" | "md" }) {
+  const { t } = useLanguage();
   return (
     <>
       <IconTile icon={GROUP_ICONS[group.id]} tint={group.tint} size={size} />
       <span className="min-w-0">
         <span className={cn("block", size === "sm" ? "text-sm font-medium" : "text-base font-semibold")}>
-          {group.label}
+          {t(group.label)}
         </span>
-        <span className="text-ink-3 mt-0.5 block text-xs leading-snug">{group.description}</span>
+        <span className="text-ink-3 mt-0.5 block text-xs leading-snug">{t(group.description)}</span>
       </span>
     </>
   );
@@ -73,6 +75,7 @@ export function SettingsWorkspace({
   view: SettingsGroupId;
   groups: SettingsGroup[];
 }) {
+  const { t } = useLanguage();
   const router = useRouter();
   const [isPending, startNavigation] = useTransition();
   const reduce = useReducedMotion();
@@ -90,24 +93,24 @@ export function SettingsWorkspace({
           costs nothing on the vertical axis a phone doesn't have. */}
       <div className="bg-surface border-line rounded-[10px] border p-2 shadow-panel shell:hidden">
         <p className="text-ink-3 mb-1 px-1 text-[11px] font-medium tracking-[0.1em] uppercase">
-          Settings area
+          {t("Settings area")}
         </p>
         <FieldSelect
-          aria-label="Settings section"
+          aria-label={t("Settings section")}
           className="w-full"
           value={active.id}
           onValueChange={(next) => next && switchGroup(next as SettingsGroupId)}
           disabled={isPending}
-          options={groups.map((g) => ({ value: g.id, label: g.label }))}
+          options={groups.map((g) => ({ value: g.id, label: t(g.label) }))}
         />
       </div>
 
       <nav
-        aria-label="Settings sections"
+        aria-label={t("Settings sections")}
         className="bg-surface border-line hidden shrink-0 rounded-[10px] border p-2 shadow-panel shell:block shell:w-72"
       >
         <p className="text-ink-3 px-2 py-1.5 text-[11px] font-medium tracking-[0.1em] uppercase">
-          Settings areas
+          {t("Settings areas")}
         </p>
         <ul className="flex flex-col gap-1">
           {groups.map((group) => {

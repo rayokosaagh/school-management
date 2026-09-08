@@ -1,3 +1,4 @@
+import { TranslatedText } from "@/components/i18n/language-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // The fallback for the whole `dashboard` segment, and deliberately generic.
@@ -17,7 +18,7 @@ const TAB_WIDTHS = ["w-[152px]", "w-[152px]", "w-[188px]", "w-[188px]", "w-[124p
 export default function DashboardLoading() {
   return (
     <div className="flex h-full min-h-0 flex-col" role="status" aria-busy="true" aria-label="Loading">
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only"><TranslatedText>Loading…</TranslatedText></span>
 
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-3">
         <div className="flex min-w-0 items-center gap-3">
