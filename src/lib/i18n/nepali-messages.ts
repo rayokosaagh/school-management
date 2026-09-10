@@ -15,6 +15,7 @@ export const NEPALI_ACTION_MESSAGES: Record<string, string> = {
   "That sheet is malformed.": "यो पाना मान्य छैन।",
   "Unknown attendance status.": "हाजिरी स्थिति चिनिएन।",
   "Nobody is enrolled in that section.": "उक्त सेक्सनमा कोही भर्ना छैनन्।",
+  "Couldn't reach the server. Your marks are still on the sheet — try saving again.": "सर्भरसम्म पुग्न सकिएन। तपाईंका हाजिरी चिह्न पानामै छन् — फेरि सेभ गर्नुहोस्।",
   "Current year updated.": "हालको वर्ष अद्यावधिक भयो।",
   "Give the grade a name.": "कक्षा तहको नाम लेख्नुहोस्।",
   "Order must be a whole number.": "क्रम पूर्ण सङ्ख्या हुनुपर्छ।",

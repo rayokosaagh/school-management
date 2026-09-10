@@ -118,7 +118,17 @@ export async function saveAttendance(
     await saveSheet({ sectionId, date, entries });
   } catch (e) {
     if (e instanceof AttendanceError) return { error: e.message };
-    throw e;
+    // A dropped connection or a slow database is the failure a phone in a
+    // classroom actually meets. Rethrowing sends it to the segment's error
+    // boundary, which remounts the sheet and discards every mark made since
+    // the last save. Returning it keeps the sheet mounted with the marks
+    // intact, so "try again" is one press of the same button — and saveSheet
+    // replaces the whole day, so a second submit is safe. Logged first: the
+    // message below deliberately claims nothing about the cause.
+    console.error(e);
+    return {
+      error: "Couldn't reach the server. Your marks are still on the sheet — try saving again.",
+    };
   }
 
   revalidatePath(PATH);
