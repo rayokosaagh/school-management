@@ -128,7 +128,7 @@ export function AttendanceSheet({
       <input type="hidden" name="date" value={date} />
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <label className="text-ink-2 flex cursor-pointer items-center gap-2 text-[12.5px]">
+        <label className="text-ink-2 flex cursor-pointer items-center gap-2 text-label">
           <Checkbox
             checked={allSelected}
             indeterminate={selected.size > 0 && !allSelected}
@@ -140,7 +140,7 @@ export function AttendanceSheet({
           Select all
         </TranslatedText></label>
         <span className="flex-1" />
-        <div className="text-ink-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
+        <div className="text-ink-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-label">
           {STATUSES.map((s) => (
             <span key={s.value} className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", s.dot)} aria-hidden="true" />
@@ -157,10 +157,10 @@ export function AttendanceSheet({
           role="status"
           className="border-brand/30 bg-brand-tint flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2"
         >
-          <span className="text-brand-text text-[12.5px] font-medium">
+          <span className="text-brand-text text-label font-medium">
             {selected.size}<TranslatedText> selected
           </TranslatedText></span>
-          <span className="text-ink-3 text-[12.5px]"><TranslatedText>Mark them</TranslatedText></span>
+          <span className="text-ink-3 text-label"><TranslatedText>Mark them</TranslatedText></span>
           {STATUSES.map((s) => (
             <Button
               key={s.value}
@@ -203,7 +203,7 @@ export function AttendanceSheet({
                   aria-label={`Select ${row.fullName}`}
                   className="shrink-0"
                 />
-                <span className="text-ink-3 w-8 shrink-0 font-mono text-[12px] tabular-nums">
+                <span className="text-ink-3 w-8 shrink-0 font-mono text-xs tabular-nums">
                   {row.rollNo}
                 </span>
                 <PersonName en={row.fullName} np={row.fullNameNp} className="flex-1 text-sm font-normal" />
@@ -224,7 +224,7 @@ export function AttendanceSheet({
                         key={s.value}
                         title={s.label}
                         className={cn(
-                          "relative inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-[6px] px-2.5 text-[12.5px] font-medium transition-colors",
+                          "relative inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-[6px] px-2 sm:px-2.5 text-label font-medium transition-colors",
                           "has-[:focus-visible]:ring-brand/40 has-[:focus-visible]:ring-2",
                           active ? s.on : "text-ink-3 hover:text-ink",
                         )}
@@ -239,7 +239,7 @@ export function AttendanceSheet({
                           className="sr-only"
                         />
                         <Icon className="size-3.5" aria-hidden="true" />
-                        <span aria-hidden="true">{s.short}</span>
+                        <span aria-hidden="true" className="hidden sm:inline">{s.short}</span>
                       </label>
                     );
                   })}
