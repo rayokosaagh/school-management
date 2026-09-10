@@ -116,11 +116,13 @@ export default async function SettingsPage({
       description: "Identity used on the dashboard header and every printed marksheet.",
       tint: "violet",
       content: (
+        // No description: the group header directly above already says
+        // where these details are used, and the form's own footnote says it a
+        // third time with the sign-in page added. One sentence, not four.
         <SectionCard
           icon={Building2}
           tint="violet"
           title="School details"
-          description="Used on the dashboard header and every printed marksheet."
         >
           <SchoolForm school={school} />
         </SectionCard>

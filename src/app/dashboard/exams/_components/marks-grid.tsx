@@ -125,30 +125,41 @@ export function MarksGrid({
                   <td className="py-1.5 pr-3">
                     <PersonName en={row.fullName} np={row.fullNameNp} />
                   </td>
-                  <td className="py-1.5 pr-3">
-                    <Input
-                      name={`theory-${row.studentId}`}
-                      value={d.absent ? "" : d.theory}
-                      onChange={(e) => set(row.studentId, { theory: e.target.value })}
-                      disabled={locked || d.absent}
-                      inputMode="numeric"
-                      aria-label={`Theory marks for ${row.fullName}`}
-                      aria-invalid={over}
-                      className="h-8"
-                    />
-                  </td>
-                  {scheme.hasPractical ? (
-                    <td className="py-1.5 pr-3">
+                  <td className="py-1.5 pr-3 tabular-nums">
+                    {/* A published sheet is the finished record, so its marks
+                        are shown as text. As disabled inputs they rendered in
+                        placeholder grey, and a complete sheet read as empty. */}
+                    {locked ? (
+                      d.absent || d.theory === "" ? <span className="text-muted-foreground">—</span> : d.theory
+                    ) : (
                       <Input
-                        name={`practical-${row.studentId}`}
-                        value={d.absent ? "" : d.practical}
-                        onChange={(e) => set(row.studentId, { practical: e.target.value })}
-                        disabled={locked || d.absent}
+                        name={`theory-${row.studentId}`}
+                        value={d.absent ? "" : d.theory}
+                        onChange={(e) => set(row.studentId, { theory: e.target.value })}
+                        disabled={d.absent}
                         inputMode="numeric"
-                        aria-label={`Practical marks for ${row.fullName}`}
+                        aria-label={`Theory marks for ${row.fullName}`}
                         aria-invalid={over}
                         className="h-8"
                       />
+                    )}
+                  </td>
+                  {scheme.hasPractical ? (
+                    <td className="py-1.5 pr-3 tabular-nums">
+                      {locked ? (
+                        d.absent || d.practical === "" ? <span className="text-muted-foreground">—</span> : d.practical
+                      ) : (
+                        <Input
+                          name={`practical-${row.studentId}`}
+                          value={d.absent ? "" : d.practical}
+                          onChange={(e) => set(row.studentId, { practical: e.target.value })}
+                          disabled={d.absent}
+                          inputMode="numeric"
+                          aria-label={`Practical marks for ${row.fullName}`}
+                          aria-invalid={over}
+                          className="h-8"
+                        />
+                      )}
                     </td>
                   ) : null}
                   <td className="py-1.5 pr-3 tabular-nums">
@@ -165,8 +176,8 @@ export function MarksGrid({
                       <span
                         className={
                           result.passed === false
-                            ? "font-medium text-red-700 dark:text-red-400"
-                            : "font-medium text-emerald-700 dark:text-emerald-400"
+                            ? "font-medium text-bad"
+                            : "font-medium text-ok"
                         }
                       >
                         {result.grade.letter}

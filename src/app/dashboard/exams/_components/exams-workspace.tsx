@@ -121,11 +121,14 @@ export function ExamsWorkspace({
     startNavigation(() => router.replace(`?${q.toString()}`, { scroll: false }));
   }
 
+  // No count on a term tab. Elsewhere a tab's number is "how many rows you
+  // will see"; here the only figure to hand was the raw number of marks
+  // stored, and "First Terminal 1866" told nobody anything. The tab still
+  // greys out when a term has no marks at all, which is the useful part.
   const tabs: RegisterTab[] = terms.map((t) => ({
     id: String(t.id),
     code: designationCode(t.name),
     label: t.name,
-    count: t.marks,
     empty: t.marks === 0,
   }));
 
@@ -157,7 +160,7 @@ export function ExamsWorkspace({
       tint="amber"
       eyebrow="Assessment"
       title="Exams"
-      meta={`${terms.length} exam${terms.length === 1 ? "" : "s"} · ${yearLabel}`}
+      meta={`${terms.length} exam${terms.length === 1 ? "" : "s"} in ${yearLabel}`}
       actions={
         <div className="flex items-center gap-2">
           <Segmented
@@ -215,6 +218,7 @@ export function ExamsWorkspace({
             // and the derivation above resets it when the section changes.
             onChange={(id) => go({ section: Number(id) })}
             ariaLabel="Sections"
+            collapseBelow="sm"
             baseId={sectionBaseId}
             panelId={panelId}
           />
@@ -265,7 +269,7 @@ export function ExamsWorkspace({
             </TranslatedText></Button>
           </>
         ) : (
-          <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+          <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
             <TranslatedText>{term?.isPublished ? "Published · unpublish to edit" : "Draft"}</TranslatedText>
           </span>
         )}

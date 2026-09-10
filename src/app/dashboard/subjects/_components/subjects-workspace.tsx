@@ -119,7 +119,7 @@ export function SubjectsWorkspace({
         header: "Offered in",
         enableSorting: false,
         cell: ({ row }) => (
-          <span className="text-ink-2 font-mono text-[12px]">
+          <span className="text-ink-2 font-mono text-xs">
             {row.original.gradeNames && row.original.gradeNames.length > 0
               ? shortGradeList(row.original.gradeNames)
               : "—"}
@@ -129,7 +129,10 @@ export function SubjectsWorkspace({
       {
         id: "count",
         accessorKey: "offerings",
-        header: "Grades",
+        // Counts offerings, one per section — Compulsory Math in every section
+        // reads 24 against the ten grades listed beside it, so "Grades" was
+        // the wrong word for the column.
+        header: "Sections",
         meta: { numeric: true, mono: true, width: "88px" } satisfies ColumnMeta,
       },
     ],
@@ -195,7 +198,7 @@ export function SubjectsWorkspace({
       tint="amber"
       eyebrow="Timetable"
       title="Subjects"
-      meta={`${subjects.length} subjects · ${offerings.length} taught · ${yearLabel}`}
+      meta={`${subjects.length} subjects, taught across ${offerings.length} grade offerings in ${yearLabel}`}
       actions={
         <div className="flex items-center gap-2">
           <Segmented
@@ -276,7 +279,7 @@ export function SubjectsWorkspace({
           />
         ) : null}
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
           <TranslatedText>{view === "curriculum"
             ? `${visibleOfferings.length} taught`
             : `${visibleSubjects.length} subject${visibleSubjects.length === 1 ? "" : "s"}`}</TranslatedText>
