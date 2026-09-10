@@ -13,6 +13,8 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Columns3, Rows3 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { ScrollEdges } from "@/components/ui/scroll-edges";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -41,7 +43,17 @@ function fromRowControl(target: EventTarget | null) {
   return target instanceof HTMLElement && target.closest(ROW_CONTROL) !== null;
 }
 
-export type ColumnMeta = { numeric?: boolean; mono?: boolean; width?: string };
+export type ColumnMeta = {
+  numeric?: boolean;
+  mono?: boolean;
+  width?: string;
+  /// Drop the column below this breakpoint. A phone cannot show seven columns,
+  /// and left to the scroller it hid whichever came last — on Fees that was
+  /// the money. Each table says which columns it can spare; what is hidden
+  /// here is still in the row's pane, and is never confused with a column the
+  /// person hid themselves.
+  hideBelow?: "sm" | "md";
+};
 
 type EmptyProps = React.ComponentProps<typeof EmptyState>;
 
@@ -111,10 +123,21 @@ export function DataTable<T>({
   // by `getCanHide()`, so there would be no way back otherwise).
   const hideableIds = useMemo(() => hideableColumnIds(columns), [columns]);
 
-  const columnVisibility = useMemo<VisibilityState>(
-    () => Object.fromEntries(prefs.hidden.filter((h) => hideableIds.has(h)).map((h) => [h, false])),
-    [prefs.hidden, hideableIds],
-  );
+  // Tailwind's own sm/md. The server snapshot is "wide", so every column is
+  // in the HTML and a phone trims after hydration rather than the reverse.
+  const atSm = useMediaQuery("(min-width: 640px)");
+  const atMd = useMediaQuery("(min-width: 768px)");
+  const columnVisibility = useMemo<VisibilityState>(() => {
+    const hidden: VisibilityState = Object.fromEntries(
+      prefs.hidden.filter((h) => hideableIds.has(h)).map((h) => [h, false]),
+    );
+    for (const column of columns) {
+      const below = (column.meta as ColumnMeta | undefined)?.hideBelow;
+      if (!column.id || !below) continue;
+      if ((below === "sm" && !atSm) || (below === "md" && !atMd)) hidden[column.id] = false;
+    }
+    return hidden;
+  }, [prefs.hidden, hideableIds, columns, atSm, atMd]);
 
   // Clamp at render (no effect, per react-hooks/set-state-in-effect): if a
   // parent shrinks `rows` while the user is on a later page, `pageIndex`
@@ -187,13 +210,18 @@ export function DataTable<T>({
   // the plain table semantics and gets no roles at all.
   const grid = onSelect != null;
 
+  // The scroll container, for the edge fades a wide table shows on a phone.
+  const scroller = useRef<HTMLDivElement>(null);
+
   if (total === 0) return <EmptyState {...empty} />;
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
       {/* The table's own container is the scrollport, so `sticky top-0` on the
-          header has something to stick to. */}
-      <Table role={grid ? "grid" : undefined} containerClassName="min-h-0 flex-1 overflow-auto">
+          header has something to stick to. The wrapper is `relative` for the
+          fades, which sit at the table's edges rather than the pager's. */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+      <Table role={grid ? "grid" : undefined} containerRef={scroller} containerClassName="min-h-0 flex-1 overflow-auto">
         <TableHeader className="bg-surface-2 sticky top-0 z-[1]">
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} role={grid ? "row" : undefined} className="hover:bg-transparent">
@@ -219,7 +247,7 @@ export function DataTable<T>({
                     aria-sort={sort === "asc" ? "ascending" : sort === "desc" ? "descending" : undefined}
                     style={meta.width ? { width: meta.width } : undefined}
                     className={cn(
-                      "text-ink-3 h-9 px-2.5 text-[11.5px] font-medium tracking-[0.04em] uppercase whitespace-nowrap",
+                      "text-ink-3 h-9 px-2.5 text-caption font-medium tracking-[0.04em] uppercase whitespace-nowrap",
                       meta.numeric && "text-right",
                     )}
                   >
@@ -347,8 +375,10 @@ export function DataTable<T>({
           })}
         </TableBody>
       </Table>
+      <ScrollEdges scrollerRef={scroller} />
+      </div>
 
-      <div className="text-ink-3 flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-[12.5px]">
+      <div className="text-ink-3 flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 text-label">
         <span>
           {t("Showing")} <b className="text-ink font-mono font-medium">{from}–{to}</b> {t("of")}<TranslatedText>{" "}</TranslatedText>
           <b className="text-ink font-mono font-medium">{total}</b>

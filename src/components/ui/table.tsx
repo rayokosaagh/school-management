@@ -7,15 +7,20 @@ import { cn } from "@/lib/utils"
 function Table({
   className,
   containerClassName,
+  containerRef,
   ...props
 }: React.ComponentProps<"table"> & {
   /** Classes for the scroll container around the table. Give it its own
    *  overflow and a definite height to make it the scrollport a
    *  `sticky top-0` header sticks to. */
   containerClassName?: string
+  /** The scroll container itself, for anything that has to watch it scroll —
+   *  the edge fades a wide table shows on a narrow screen, for one. */
+  containerRef?: React.Ref<HTMLDivElement>
 }) {
   return (
     <div
+      ref={containerRef}
       data-slot="table-container"
       className={cn("relative w-full overflow-x-auto", containerClassName)}
     >

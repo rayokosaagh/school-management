@@ -5,6 +5,8 @@ import { TINT_CLASSES, type Tint } from "@/components/ui/page-shell";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
+import { useRef } from "react";
+import { ScrollEdges } from "@/components/ui/scroll-edges";
 import { TranslatedText, useLanguage } from "@/components/i18n/language-provider";
 
 /// Mirrors the `split` breakpoint declared in `globals.css`. Kept here so the
@@ -27,7 +29,6 @@ const SPLIT_QUERY = "(min-width: 74rem)";
 export function PageFrame({
   icon,
   tint = "violet",
-  eyebrow,
   breadcrumb,
   title,
   subtitle,
@@ -38,7 +39,9 @@ export function PageFrame({
 }: {
   icon?: React.ReactNode;
   tint?: Tint;
-  eyebrow: string;
+  /// No longer drawn — see the header below. Still accepted so the pages that
+  /// pass one keep compiling; it can be removed from them at leisure.
+  eyebrow?: string;
   /// A trail above the header. Replaces the eyebrow when given — one line
   /// reading "Finance" and another reading "Finance › Fees" is the same fact
   /// twice. Optional, so every page that does not pass one is unchanged.
@@ -56,7 +59,7 @@ export function PageFrame({
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
       {breadcrumb ? (
-        <nav aria-label={t("Breadcrumb")} className="text-ink-3 pb-2 text-[12.5px]">
+        <nav aria-label={t("Breadcrumb")} className="text-ink-3 pb-2 text-label">
           {breadcrumb}
         </nav>
       ) : null}
@@ -82,17 +85,21 @@ export function PageFrame({
             </span>
           ) : null}
           <div className="min-w-0">
-            {breadcrumb ? null : (
-              <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase">{t(eyebrow)}</p>
-            )}
-            <h1 className={cn("flex flex-wrap items-baseline gap-x-2.5", breadcrumb ? null : "mt-0.5")}>
-              {t(title)}
-              {meta ? <span className="text-ink-3 font-mono text-[13px] font-normal tracking-normal">{typeof meta === "string" ? t(meta) : meta}</span> : null}
-            </h1>
-            {subtitle ? <p className="text-ink-3 mt-1 text-sm leading-6">{typeof subtitle === "string" ? t(subtitle) : subtitle}</p> : null}
+            {/* No eyebrow. The rail already names the section, and a tracked-out
+                capital label over every title was decoration with nothing to
+                say. The meta line is a sentence in the body face under the
+                title, not a monospace fragment beside it — the mono face is for
+                data in tables, and "246 enrolled · 2083" is not data, it is a
+                caption. */}
+            <h1 className={breadcrumb ? undefined : "mt-0.5"}>{t(title)}</h1>
+            {meta ? <p className="text-ink-3 mt-1 text-sm leading-6">{typeof meta === "string" ? t(meta) : meta}</p> : null}
+            {subtitle ? <p className={cn("text-ink-3 text-sm leading-6", meta ? "mt-0.5" : "mt-1")}>{typeof subtitle === "string" ? t(subtitle) : subtitle}</p> : null}
           </div>
         </div>
-        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+        {/* Wraps, so a third or fourth action drops to a new line on a phone
+            instead of the last one — usually the page's primary button —
+            being clipped at the screen edge. */}
+        {actions ? <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">{actions}</div> : null}
       </div>
       {children}
     </div>
@@ -104,9 +111,14 @@ function Tabs({ children, className }: { children: React.ReactNode; className?: 
 }
 
 function Toolbar({ children, className }: { children: React.ReactNode; className?: string }) {
+  // The scrollbar is hidden, so the fades are the only sign the row goes on.
+  const scroller = useRef<HTMLDivElement>(null);
   return (
-    <div className={cn("flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
-      {children}
+    <div className="relative">
+      <div ref={scroller} className={cn("flex items-center gap-2 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden", className)}>
+        {children}
+      </div>
+      <ScrollEdges scrollerRef={scroller} />
     </div>
   );
 }

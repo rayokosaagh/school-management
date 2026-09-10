@@ -44,6 +44,11 @@ export function YearStep({
   const [createError, setCreateError] = useState<string | null>(null);
 
   return (
+    // Two columns from `xl`: the form at the width it always had, and the
+    // preview of what the transition would do beside it, where the eye lands as
+    // the options change. It used to sit under the form with the right half of
+    // the screen empty. Narrower screens keep the single flow.
+    <div className="space-y-6 xl:grid xl:grid-cols-[minmax(0,42rem)_minmax(0,1fr)] xl:items-start xl:gap-x-8 xl:gap-y-6 xl:space-y-0">
     <div className="max-w-2xl space-y-6">
       <Callout icon={Info} tint="blue">
         <p className="font-medium"><TranslatedText>Prepare first. Activate when the school is ready.</TranslatedText></p>
@@ -115,7 +120,7 @@ export function YearStep({
       </section>
 
       <section className="space-y-3">
-        <p className="text-ink-3 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+        <p className="text-ink-3 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
           What to copy
         </TranslatedText></p>
         <p className="text-ink-2 text-sm"><TranslatedText>
@@ -165,6 +170,8 @@ export function YearStep({
       {/* Every toggle above re-previews the plan, so the numbers here go
           stale the instant one changes — dimmed rather than hidden, since
           the old plan is still the best guess until the new one lands. */}
+    </div>
+      <aside aria-label="Preview" className="xl:sticky xl:top-4 xl:row-span-2">
       <div aria-busy={pending} className={cn("space-y-3 transition-opacity", pending && "opacity-60")}>
         {plan && plan.blockers.length > 0 ? (
           <Callout icon={AlertTriangle} tint="rose">
@@ -184,12 +191,15 @@ export function YearStep({
           </TranslatedText></Callout>
         ) : null}
       </div>
+      </aside>
+      <div className="max-w-2xl">
 
       {/* Step 2 renders only when plan is set — without this check a stale or
           in-flight preview would strand the operator on a blank panel. */}
       <Button disabled={targetYearId === null || pending || creating || !plan} onClick={onContinue}><TranslatedText>
         Continue to students
       </TranslatedText></Button>
+      </div>
     </div>
   );
 }

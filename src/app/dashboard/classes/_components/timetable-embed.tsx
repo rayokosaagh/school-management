@@ -1,6 +1,7 @@
 "use client";
 
 import { TranslatedText } from "@/components/i18n/language-provider";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 // The Timetable view, embedded inside Classes rather than owning its own
 // route. Two shapes:
@@ -128,7 +129,15 @@ export function TimetableEditView({
   const params = useSearchParams();
 
   const reduce = useReducedMotion();
-  const [view, setView] = useState<SubView>(bell.length === 0 ? "day" : "week");
+  // The week grid is the right default on a screen that can show a week. On a
+  // phone it shows a day and a half with every subject truncated, so there the
+  // default is the day view, which already exists. `chosen` is only what the
+  // person pressed; the default is derived so it follows the screen until
+  // they do. The query is min-width so the server's `true` means "wide" —
+  // the week grid is the branch that belongs in the HTML.
+  const wide = useMediaQuery("(min-width: 640px)");
+  const [chosen, setChosen] = useState<SubView | null>(null);
+  const view: SubView = chosen ?? (bell.length === 0 || !wide ? "day" : "week");
   const [selectedCell, setSelectedCell] = useState<CellAddress | null>(null);
   const [room, setRoom] = useState("");
   /// The cell most recently written. The nonce makes a repeat write to the same
@@ -269,7 +278,7 @@ export function TimetableEditView({
         <Segmented
           ariaLabel="Timetable view"
           value={view}
-          onChange={setView}
+          onChange={setChosen}
           options={[
             { value: "week" as const, label: "Week" },
             { value: "teacher" as const, label: "By teacher" },
@@ -306,7 +315,7 @@ export function TimetableEditView({
             title="Set the school day first"
             description="A timetable is built from the school's periods, so those come before the grid."
             action={
-              <Button type="button" size="sm" onClick={() => setView("day")}><TranslatedText>
+              <Button type="button" size="sm" onClick={() => setChosen("day")}><TranslatedText>
                 Set the school day
               </TranslatedText></Button>
             }
@@ -327,7 +336,7 @@ export function TimetableEditView({
             />
             <ClashBanner clashes={clashes} />
             <span className="flex-1" />
-            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+            <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
               {teacherWeek.length}<TranslatedText> period</TranslatedText><TranslatedText>{teacherWeek.length === 1 ? "" : "s"}</TranslatedText>
             </span>
           </PageFrame.Toolbar>
@@ -441,11 +450,11 @@ export function TeacherWeekView({
   return (
     <>
       <PageFrame.Toolbar>
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap"><TranslatedText>
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap"><TranslatedText>
           Your week · read-only
         </TranslatedText></span>
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
           {teacherWeek.length}<TranslatedText> period</TranslatedText><TranslatedText>{teacherWeek.length === 1 ? "" : "s"}</TranslatedText>
         </span>
       </PageFrame.Toolbar>

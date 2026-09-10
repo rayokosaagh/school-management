@@ -71,7 +71,8 @@ export function BalancesTab({
         id: "section",
         accessorKey: "section",
         header: "Class",
-        meta: { width: "140px" } satisfies ColumnMeta,
+        // On a phone the money matters more than the class; it is in the pane.
+        meta: { width: "140px", hideBelow: "sm" } satisfies ColumnMeta,
         cell: ({ getValue }) => <span className="text-ink-2">{String(getValue())}</span>,
       },
       // The money columns sort on the same figures they show, so ordering by
@@ -80,7 +81,7 @@ export function BalancesTab({
         id: "billed",
         accessorFn: (row) => scopeToFeeType(row, feeType).billed,
         header: "Charged",
-        meta: { numeric: true, width: "120px" } satisfies ColumnMeta,
+        meta: { numeric: true, width: "120px", hideBelow: "md" } satisfies ColumnMeta,
         cell: ({ row }) => {
           const scoped = scopeToFeeType(row.original, feeType);
           return scoped.hasBill ? (
@@ -99,7 +100,7 @@ export function BalancesTab({
         id: "paid",
         accessorFn: (row) => scopeToFeeType(row, feeType).paid,
         header: "Paid",
-        meta: { numeric: true, width: "120px" } satisfies ColumnMeta,
+        meta: { numeric: true, width: "120px", hideBelow: "md" } satisfies ColumnMeta,
         cell: ({ row }) => {
           const scoped = scopeToFeeType(row.original, feeType);
           return scoped.hasBill ? (

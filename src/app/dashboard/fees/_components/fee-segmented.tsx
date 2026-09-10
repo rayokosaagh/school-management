@@ -3,6 +3,8 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useId } from "react";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { FieldSelect } from "@/components/ui/select";
 
 /// The Fees page's view switches, with the sliding thumb the register tabs
 /// have.
@@ -26,18 +28,38 @@ export function FeeSegmented<T extends string>({
   onChange,
   options,
   ariaLabel,
+  collapseBelow,
   className,
 }: {
   value: T;
   onChange: (next: T) => void;
   options: FeeSegmentedOption<T>[];
   ariaLabel: string;
+  /** Render as a select below this width — for the second strip on a page,
+   *  which on a phone cost a third of the screen. See `RegisterTabs`. */
+  collapseBelow?: "sm";
   className?: string;
 }) {
   const reduce = useReducedMotion();
   // Per instance, so two strips on one page cannot share a thumb and shoot it
   // across the screen when the other one changes.
   const thumbId = useId();
+  const wide = useMediaQuery("(min-width: 640px)");
+
+  if (collapseBelow && !wide) {
+    return (
+      <FieldSelect
+        aria-label={ariaLabel}
+        value={value}
+        onValueChange={(next) => { if (next) onChange(next as T); }}
+        options={options.map((option) => ({
+          value: option.value,
+          label: option.count === undefined ? option.label : `${option.label} (${option.count})`,
+        }))}
+        className={cn("h-8 w-full", className)}
+      />
+    );
+  }
 
   return (
     <div
@@ -71,7 +93,7 @@ export function FeeSegmented<T extends string>({
               onChange(next.value);
             }}
             className={cn(
-              "focus-visible:ring-brand/40 relative inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              "focus-visible:ring-brand/40 relative inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-label whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
               active ? "text-ink font-semibold" : "text-ink-3 hover:text-ink",
             )}
           >
@@ -89,7 +111,7 @@ export function FeeSegmented<T extends string>({
             {option.count !== undefined ? (
               <span
                 className={cn(
-                  "relative rounded px-1 font-mono text-[11px] tabular-nums",
+                  "relative rounded px-1 font-mono text-caption tabular-nums",
                   active ? "bg-brand-tint text-brand-text" : "text-ink-3",
                 )}
               >

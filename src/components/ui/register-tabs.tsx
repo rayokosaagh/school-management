@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/lib/use-media-query";
+import { FieldSelect } from "@/components/ui/select";
 
 /// A stable, per-character fingerprint of a string: 4 hex digits per UTF-16
 /// code unit, concatenated. Fixed width per unit makes this injective — the
@@ -66,6 +68,7 @@ export function RegisterTabs({
   ariaLabel,
   baseId: baseIdProp,
   panelId,
+  collapseBelow,
   className,
 }: {
   tabs: RegisterTab[];
@@ -77,11 +80,16 @@ export function RegisterTabs({
   baseId?: string;
   /** The id of the `PageFrame.Body` this strip drives, if there is one. */
   panelId?: string;
+  /** Render as a select below this width. For a *secondary* strip only — a
+   *  page's first strip is its navigation and stays a strip; the second one
+   *  stacked under it is what cost a phone a third of its screen. */
+  collapseBelow?: "sm";
   className?: string;
 }) {
   const reduce = useReducedMotion();
   const generatedId = useId();
   const baseId = baseIdProp ?? generatedId;
+  const wide = useMediaQuery("(min-width: 640px)");
 
   const scroller = useRef<HTMLDivElement>(null);
   const [canScroll, setCanScroll] = useState({ left: false, right: false });
@@ -131,6 +139,21 @@ export function RegisterTabs({
     e.preventDefault();
     onChange(tabs[next].id);
     (e.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next])?.focus();
+  }
+
+  if (collapseBelow && !wide) {
+    return (
+      <FieldSelect
+        aria-label={ariaLabel}
+        value={value}
+        onValueChange={(next) => { if (next) onChange(next); }}
+        options={tabs.map((tab) => ({
+          value: tab.id,
+          label: tab.count === undefined ? tab.label : `${tab.label} (${tab.count})`,
+        }))}
+        className={cn("h-8 w-full", className)}
+      />
+    );
   }
 
   return (
@@ -206,7 +229,7 @@ export function RegisterTabs({
               ) : null}
               <span
                 className={cn(
-                  "border-line bg-page text-ink-3 rounded px-1.5 py-px font-mono text-[10.5px] tracking-[0.04em]",
+                  "border-line bg-page text-ink-3 rounded px-1.5 py-px font-mono text-caption tracking-[0.04em]",
                   selected && "bg-brand-tint text-brand-text border-brand-tint-2",
                 )}
               >
@@ -214,7 +237,7 @@ export function RegisterTabs({
               </span>
               {tab.label}
               {tab.count == null ? null : (
-                <span className={cn("font-mono text-[11.5px] tabular-nums", tab.empty ? "text-warn" : selected ? "text-ink-2" : "text-ink-3")}>
+                <span className={cn("font-mono text-caption tabular-nums", tab.empty ? "text-warn" : selected ? "text-ink-2" : "text-ink-3")}>
                   {tab.count}
                 </span>
               )}
