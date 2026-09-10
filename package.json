@@ -9,11 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma skills sync || exit 0",
-    "test": "vitest run",
-    "test:integration": "node scripts/test-integration.cjs",
     "db:backup": "node scripts/db-recovery.cjs backup",
     "db:restore-drill": "node scripts/db-recovery.cjs restore-drill",
-    "test:watch": "vitest",
     "smoke": "node scripts/ui-smoke.cjs"
   },
   "dependencies": {
@@ -47,7 +44,6 @@
     "eslint-config-next": "16.3.3",
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^4.1.11"
+    "typescript": "^5"
   }
 }
