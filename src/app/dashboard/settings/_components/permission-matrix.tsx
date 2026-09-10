@@ -52,7 +52,7 @@ function Cell({
         className={[
           "focus-visible:ring-ring/50 grid size-9 place-items-center rounded-lg border transition-colors focus-visible:ring-3 focus-visible:outline-none",
           allowed
-            ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+            ? "border-ok/30 bg-ok-tint text-ok"
             : "border-border bg-muted text-muted-foreground",
           pending ? "opacity-50" : "hover:brightness-95",
           // A dot marks a cell the school has moved away from the default.

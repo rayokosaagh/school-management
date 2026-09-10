@@ -27,13 +27,13 @@ const ToastContext = createContext<((tone: ToastTone, message: string) => void) 
 
 const STYLES: Record<ToastTone, { ring: string; icon: typeof Info; tint: string }> = {
   success: {
-    ring: "ring-emerald-500/25",
-    tint: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+    ring: "ring-ok/25",
+    tint: "bg-ok-tint text-ok",
     icon: CheckCircle2,
   },
   error: {
-    ring: "ring-red-500/25",
-    tint: "bg-red-500/10 text-red-700 dark:text-red-400",
+    ring: "ring-bad/25",
+    tint: "bg-bad-tint text-bad",
     icon: AlertTriangle,
   },
   info: {

@@ -49,7 +49,7 @@ export function EmailForm({ currentEmail }: { currentEmail: string | null }) {
           </p>
         )}
         {state.success && (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+          <p className="text-sm text-ok">
             {state.success}
           </p>
         )}

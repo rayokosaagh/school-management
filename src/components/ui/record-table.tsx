@@ -49,9 +49,9 @@ export type Tone = "positive" | "warning" | "critical" | "neutral";
 
 const TONES: Record<Tone, string> = {
   positive:
-    "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400",
-  warning: "bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400",
-  critical: "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400",
+    "bg-ok-tint border-ok/30 text-ok",
+  warning: "bg-warn-tint border-warn/30 text-warn",
+  critical: "bg-bad-tint border-bad/30 text-bad",
   neutral: "bg-muted border-border text-muted-foreground",
 };
 
@@ -243,7 +243,7 @@ export function RecordTable<T>({
 
       <div className="px-5 pb-5">
         {/* Column headers only make sense once the row grid is active. */}
-        <div className="text-muted-foreground bg-rail mb-2 hidden items-center gap-3 rounded-lg px-4 py-2 text-[11px] font-medium tracking-wider uppercase md:flex">
+        <div className="text-muted-foreground bg-rail mb-2 hidden items-center gap-3 rounded-lg px-4 py-2 text-caption font-medium tracking-wider uppercase md:flex">
           <div className="grid flex-1 grid-cols-12 gap-3">
           {columns.map((c) => (
             <div key={c.key} style={{ gridColumn: `span ${spanFor(c)}` }}>
@@ -396,7 +396,7 @@ export function RecordTable<T>({
                             )}
                             style={{ gridColumn: `span ${spanFor(c)}` }}
                           >
-                            <span className="text-muted-foreground mr-2 text-[11px] tracking-wider uppercase md:hidden">
+                            <span className="text-muted-foreground mr-2 text-caption tracking-wider uppercase md:hidden">
                               {c.header}
                             </span>
                             {c.render(row)}
