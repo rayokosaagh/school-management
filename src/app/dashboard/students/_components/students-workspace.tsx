@@ -167,7 +167,7 @@ export function StudentsWorkspace({
       accessorKey: "rollNo",
       header: "Roll",
       enableHiding: false,
-      meta: { numeric: true, mono: true, width: "64px" } satisfies ColumnMeta,
+      meta: { numeric: true, mono: true, width: "64px", hideBelow: "sm" } satisfies ColumnMeta,
     };
 
     const recordIdColumn: ColumnDef<StudentRow, unknown> = {
@@ -180,7 +180,7 @@ export function StudentsWorkspace({
           : Number.MAX_SAFE_INTEGER,
       header: "ID",
       enableHiding: false,
-      meta: { mono: true, width: "96px" } satisfies ColumnMeta,
+      meta: { mono: true, width: "96px", hideBelow: "md" } satisfies ColumnMeta,
       cell: ({ row }) => (
         <span className="text-ink-3">{studentCode(row.original.admissionNo)}</span>
       ),
@@ -196,17 +196,23 @@ export function StudentsWorkspace({
         cell: ({ row }) => <PersonName en={row.original.fullName} np={row.original.fullNameNp} />,
       },
       { id: "section", accessorKey: "sectionLabel", header: "Class", cell: ({ getValue }) => <span className="text-ink-2">{String(getValue())}</span> },
-      { id: "dob", accessorKey: "dobLabel", header: "Born (BS)", meta: { mono: true } satisfies ColumnMeta },
-      { id: "guardian", accessorKey: "guardianLabel", header: "Guardian", cell: ({ row }) => {
+      // What a phone keeps: name, class, status. Everything else is in the pane.
+      { id: "dob", accessorKey: "dobLabel", header: "Born (BS)", meta: { mono: true, hideBelow: "md" } satisfies ColumnMeta },
+      { id: "guardian", accessorKey: "guardianLabel", header: "Guardian", meta: { hideBelow: "sm" } satisfies ColumnMeta, cell: ({ row }) => {
         const g = row.original.guardians.find((x) => x.isPrimary) ?? row.original.guardians[0];
         return g ? <>{g.fullName} <span className="text-ink-3">· {g.relation[0]}{g.relation.slice(1).toLowerCase()}</span></> : <span className="text-ink-3">—</span>;
       } },
-      { id: "strip", header: "Last 14 days", enableSorting: false, cell: ({ row }) => <AttendanceStrip days={row.original.strip} percent={stripPercent(row.original.strip)} /> },
+      { id: "strip", header: "Last 14 days", enableSorting: false, meta: { hideBelow: "sm" } satisfies ColumnMeta, cell: ({ row }) => <AttendanceStrip days={row.original.strip} percent={stripPercent(row.original.strip)} /> },
       { id: "status", accessorKey: "status", header: "Status", cell: ({ getValue }) => { const s = String(getValue()); return <StatusDot tone={STATUS_TONE[s] ?? "neutral"}>{STATUS_LABEL[s] ?? s}</StatusDot>; } },
     ];
   }, [tab]);
 
   const currentTabLabel = tabs.find((t) => t.id === tab)?.label ?? "All sections";
+  // The toolbar count only speaks when a search has narrowed the tab — then
+  // "Matching 4/225" says something the strip cannot. Without one it was the
+  // tab's own number repeated beside it.
+  const inTab = tabs.find((t) => t.id === tab)?.count ?? visible.length;
+  const narrowed = query.trim() !== "";
   const exportHref = tab === ALL ? "/api/export/students" : `/api/export/students?section=${tab}`;
 
   const rankedCount =
@@ -219,7 +225,10 @@ export function StudentsWorkspace({
       tint="green"
       eyebrow="People"
       title="Students"
-      meta={`${rows.length} enrolled · ${yearLabel}`}
+      // Both numbers, because the table below defaults to active pupils and
+      // the header used to say "246" over a list of 225 with nothing to explain
+      // the gap but a dropdown.
+      meta={`${rows.filter((r) => r.status === "ACTIVE").length} active of ${rows.length} enrolled in ${yearLabel}`}
       actions={
         <>
           <Segmented
@@ -232,9 +241,11 @@ export function StudentsWorkspace({
             ]}
           />
           <Button variant="outline" nativeButton={false} render={<a href={exportHref} download />}>
-            <Download data-icon="inline-start" aria-hidden="true" /><TranslatedText>
-            Export CSV
-          </TranslatedText></Button>
+            <Download data-icon="inline-start" aria-hidden="true" />
+            {/* Icon-only on a phone: the label is what pushed "Admit student"
+                off the edge. Still read out in full by a screen reader. */}
+            <span className="sr-only sm:not-sr-only"><TranslatedText>Export CSV</TranslatedText></span>
+          </Button>
           <Sheet open={addOpen} onOpenChange={setAddOpen}>
             <SheetTrigger render={<Button />}>
               <Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>
@@ -283,7 +294,12 @@ export function StudentsWorkspace({
             </label>
             <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "")} options={[{ value: "ACTIVE", label: "Status: Active" }, { value: "LEFT", label: "Status: Left" }, { value: "GRADUATED", label: "Status: Graduated" }, { value: "", label: "Status: Any" }]} className="h-8 w-44 shrink-0" />
             <span className="flex-1" />
-            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} <TranslatedText>{visible.length === 1 ? "student" : "students"}</TranslatedText><TranslatedText>{selectedRow ? " · 1 selected" : ""}</TranslatedText></span>
+            {narrowed || selectedRow ? (
+              <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
+                {narrowed ? <><TranslatedText>Matching</TranslatedText> {visible.length}/{inTab}</> : null}
+                <TranslatedText>{selectedRow ? (narrowed ? " · 1 selected" : "1 selected") : ""}</TranslatedText>
+              </span>
+            ) : null}
           </PageFrame.Toolbar>
 
           {notice ? (

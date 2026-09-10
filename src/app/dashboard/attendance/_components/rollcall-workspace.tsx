@@ -163,7 +163,7 @@ export function RollCallWorkspace({
       tint="green"
       eyebrow="Daily"
       title="Roll call"
-      meta={`${dateLabel} · ${yearLabel}`}
+      meta={`${dateLabel}, academic year ${yearLabel}`}
       actions={
         <>
           <Segmented
@@ -205,7 +205,7 @@ export function RollCallWorkspace({
               ]}
               ariaLabel="Statistics period"
             />
-            <span className="text-ink-3 text-[12.5px]">
+            <span className="text-ink-3 text-label">
               {statsPeriod === "monthly" ? monthLabel : `Academic year ${yearLabel}`}
             </span>
           </PageFrame.Toolbar>
@@ -286,13 +286,13 @@ export function RollCallWorkspace({
             <ChevronRight />
           </Button>
         </div>
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
           <TranslatedText>{sheet?.taken
             ? `Taken${sheet.takenBy ? ` by ${personLabel(sheet.takenBy, sheet.takenByNp)}` : ""} · saving replaces it`
             : "Not taken yet · everyone starts present"}</TranslatedText>
         </span>
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
           <TranslatedText>{stillToMark === 0
             ? "All sections marked"
             : `${stillToMark} section${stillToMark === 1 ? "" : "s"} still to mark`}</TranslatedText>
@@ -306,7 +306,7 @@ export function RollCallWorkspace({
               <div className="border-line flex items-center justify-between gap-2 border-b px-4 py-3">
                 <div>
                   <p className="font-medium">{monthLabel}</p>
-                  <p className="text-ink-3 text-[11.5px]">
+                  <p className="text-ink-3 text-caption">
                     {daysTaken}<TranslatedText> day</TranslatedText><TranslatedText>{daysTaken === 1 ? "" : "s"}</TranslatedText><TranslatedText> recorded
                   </TranslatedText></p>
                 </div>
@@ -332,7 +332,7 @@ export function RollCallWorkspace({
                       className="flex items-baseline justify-between gap-3 px-4 py-2"
                     >
                       <PersonName en={row.fullName} np={row.fullNameNp} className="text-sm font-normal" />
-                      <span className="text-ink-3 shrink-0 font-mono text-[12px]">
+                      <span className="text-ink-3 shrink-0 font-mono text-xs">
                         {row.present}/{row.present + row.absent + row.late + row.leave} ·<TranslatedText>{" "}</TranslatedText>
                         {row.percent}%
                       </span>

@@ -94,10 +94,10 @@ export function HonoursWorkspace({ honours }: { honours: Honours }) {
           />
         </label>
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+        <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
           {ranked}<TranslatedText> ranked
         </TranslatedText></span>
-        <span className="text-ink-3 shrink-0 font-mono text-[12px] whitespace-nowrap tabular-nums"><TranslatedText>
+        <span className="text-ink-3 shrink-0 font-mono text-xs whitespace-nowrap tabular-nums"><TranslatedText>
           Exam </TranslatedText>{w.exams}<TranslatedText> · Att </TranslatedText>{w.attendance}<TranslatedText> · Cond </TranslatedText>{w.conduct}<TranslatedText> · Act </TranslatedText>{w.activities}
         </span>
       </PageFrame.Toolbar>

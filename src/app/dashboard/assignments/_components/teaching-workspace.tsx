@@ -146,6 +146,9 @@ export function TeachingWorkspace({
     });
   }, [rows, tab, query, teacherFilter, chosen]);
 
+  // The toolbar count is shown only once a search or a teacher filter has
+  // narrowed the tab; before that it was the tab's own number repeated.
+  const narrowed = query.trim() !== "" || teacherFilter !== ALL;
   const unassigned = visible.filter(
     (r) => (chosen[slotKey(r)] ?? (r.staffId ? String(r.staffId) : "")) === "",
   ).length;
@@ -218,7 +221,7 @@ export function TeachingWorkspace({
       tint="green"
       eyebrow="Timetable"
       title="Teaching"
-      meta={`${rows.length} slots · ${yearLabel}`}
+      meta={`${rows.length} teaching slots in ${yearLabel}`}
       actions={
         <Segmented
           value={showLoad ? "load" : "assignments"}
@@ -275,7 +278,7 @@ export function TeachingWorkspace({
         />
         {teacherFilter !== ALL ? <Button variant="ghost" size="sm" onClick={() => setTeacherFilter(ALL)}><TranslatedText>Clear teacher filter</TranslatedText></Button> : null}
         {currentSection ? (
-          <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap"><TranslatedText>
+          <span className="text-ink-3 shrink-0 text-label whitespace-nowrap"><TranslatedText>
             Class teacher:</TranslatedText><TranslatedText>{" "}</TranslatedText>
           {currentSection.classTeacher
             ? personLabel(currentSection.classTeacher, currentSection.classTeacherNp)
@@ -283,10 +286,12 @@ export function TeachingWorkspace({
           </span>
         ) : null}
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-          {visible.length}<TranslatedText> subject</TranslatedText><TranslatedText>{visible.length === 1 ? "" : "s"}</TranslatedText>
-          <TranslatedText>{unassigned > 0 ? ` · ${unassigned} unassigned` : ""}</TranslatedText>
-        </span>
+        {narrowed || unassigned > 0 ? (
+          <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
+            {narrowed ? <><TranslatedText>Matching</TranslatedText> {visible.length}/{tabs.find((t) => t.id === tab)?.count ?? visible.length}</> : null}
+            <TranslatedText>{unassigned > 0 ? (narrowed ? ` · ${unassigned} unassigned` : `${unassigned} unassigned`) : ""}</TranslatedText>
+          </span>
+        ) : null}
       </PageFrame.Toolbar>
 
         <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, tab)}>

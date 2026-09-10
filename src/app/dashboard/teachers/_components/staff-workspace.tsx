@@ -134,25 +134,32 @@ export function StaffWorkspace({
 
   const columns = useMemo<ColumnDef<StaffRow, unknown>[]>(
     () => [
-      { id: "recordId", accessorFn: (r) => r.id, header: "ID", meta: { mono: true, width: "96px" } satisfies ColumnMeta, cell: ({ row }) => <span className="text-ink-3">{CODE.staff(row.original.id)}</span> },
+      // What a phone keeps: name, designation, status. The rest is in the pane.
+      { id: "recordId", accessorFn: (r) => r.id, header: "ID", meta: { mono: true, width: "96px", hideBelow: "md" } satisfies ColumnMeta, cell: ({ row }) => <span className="text-ink-3">{CODE.staff(row.original.id)}</span> },
       { id: "fullName", accessorKey: "fullName", header: "Name", enableHiding: false, cell: ({ row }) => <PersonName en={row.original.fullName} np={row.original.fullNameNp} /> },
       { id: "designation", accessorKey: "designation", header: "Designation" },
-      { id: "phone", accessorKey: "phone", header: "Phone", meta: { mono: true } satisfies ColumnMeta },
+      { id: "phone", accessorKey: "phone", header: "Phone", meta: { mono: true, hideBelow: "sm" } satisfies ColumnMeta },
       // `assignments` counts subject-in-a-class pairings, not subjects: a
       // teacher taking one subject across fourteen classes has fourteen. It
       // read as "28 subjects" for somebody who teaches exactly one.
       // Sorted on sections first, classes as the tie-break — an explicit
       // comparator rather than folding the pair into one number.
-      { id: "load", accessorFn: (r) => [r.sectionsLed, r.assignments], header: "Load",
+      { id: "load", accessorFn: (r) => [r.sectionsLed, r.assignments], header: "Load", meta: { hideBelow: "sm" } satisfies ColumnMeta,
         sortingFn: (a, b) => a.original.sectionsLed - b.original.sectionsLed || a.original.assignments - b.original.assignments,
         cell: ({ row }) => (
         <span className="text-ink-2">{row.original.sectionsLed} <TranslatedText>{row.original.sectionsLed === 1 ? "section" : "sections"}</TranslatedText> · {row.original.assignments} <TranslatedText>{row.original.assignments === 1 ? "class" : "classes"}</TranslatedText></span>
       ) },
-      { id: "joined", accessorKey: "joinedOnBs", header: "Joined (BS)", meta: { mono: true } satisfies ColumnMeta },
+      { id: "joined", accessorKey: "joinedOnBs", header: "Joined (BS)", meta: { mono: true, hideBelow: "md" } satisfies ColumnMeta },
       { id: "status", accessorFn: (r) => (r.isActive ? 1 : 0), header: "Status", cell: ({ row }) => <StaffStatus isActive={row.original.isActive} /> },
     ],
     [],
   );
+
+  // The toolbar count only speaks when it can differ from the tab: a search
+  // narrows *within* a tab, so "Matching 4/15" says something the strip cannot.
+  // Without a search it was the tab's own number repeated an inch to the right.
+  const inTab = tabs.find((t) => t.id === tab)?.count ?? visible.length;
+  const narrowed = query.trim() !== "";
 
   return (
     <PageFrame
@@ -160,7 +167,7 @@ export function StaffWorkspace({
       tint="amber"
       eyebrow="People"
       title="Staff"
-      meta={`${rows.length} on record · ${rows.filter((r) => r.isActive).length} active`}
+      meta={`${rows.filter((r) => r.isActive).length} active of ${rows.length} on record`}
       actions={
         <Sheet open={addOpen} onOpenChange={setAddOpen}>
           <SheetTrigger render={<Button />}><Plus data-icon="inline-start" aria-hidden="true" /><TranslatedText>Add staff</TranslatedText></SheetTrigger>
@@ -182,7 +189,12 @@ export function StaffWorkspace({
         </label>
         <FieldSelect aria-label="Status" value={status} onValueChange={(v) => setStatus(v ?? "all")} options={[{ value: "active", label: "Status: Active" }, { value: "inactive", label: "Status: Inactive" }, { value: "all", label: "Status: Any" }]} className="h-8 w-44 shrink-0" />
         <span className="flex-1" />
-        <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">{visible.length} <TranslatedText>{visible.length === 1 ? "person" : "people"}</TranslatedText><TranslatedText>{selectedRow ? " · 1 selected" : ""}</TranslatedText></span>
+        {narrowed || selectedRow ? (
+          <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
+            {narrowed ? <><TranslatedText>Matching</TranslatedText> {visible.length}/{inTab}</> : null}
+            <TranslatedText>{selectedRow ? (narrowed ? " · 1 selected" : "1 selected") : ""}</TranslatedText>
+          </span>
+        ) : null}
       </PageFrame.Toolbar>
 
       <PageFrame.Split

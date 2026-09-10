@@ -239,7 +239,7 @@ export function ClassesWorkspace({
       tint="violet"
       eyebrow="Structure"
       title="Classes"
-      meta={`${grades.length} grades · ${sections.length} sections · ${yearLabel}`}
+      meta={`${sections.length} sections across ${grades.length} grades in ${yearLabel}`}
       actions={
         <div className="flex items-center gap-2">
           {viewOptions.length > 1 ? (
@@ -360,9 +360,13 @@ export function ClassesWorkspace({
               Reorder grades
             </TranslatedText></Button>
             <span className="flex-1" />
-            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
-              {visible.length}<TranslatedText> section</TranslatedText><TranslatedText>{visible.length === 1 ? "" : "s"}</TranslatedText>
-            </span>
+            {/* Only when a search has narrowed the tab — otherwise this was the
+                tab's own count repeated beside it. */}
+            {query.trim() !== "" ? (
+              <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
+                <TranslatedText>Matching</TranslatedText> {visible.length}/{tabs.find((t) => t.id === tab)?.count ?? visible.length}
+              </span>
+            ) : null}
           </PageFrame.Toolbar>
 
           <PageFrame.Body id={panelId} labelledBy={registerTabId(baseId, tab)}>
