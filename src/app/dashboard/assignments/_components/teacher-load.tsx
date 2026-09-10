@@ -2,7 +2,7 @@
 
 import { TranslatedText } from "@/components/i18n/language-provider";
 
-import { ArrowRight, BookOpen, ChevronDown, Search, Users } from "lucide-react";
+import { BookOpen, ChevronDown, Search, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,15 +74,14 @@ export function TeacherLoadView({ rows, staff, chosen, onManage }: {
             {formerHolders.length === 1 ? formerHolders[0].fullName : `${formerHolders.length} deactivated staff`}.
           </p>
           <Button size="sm" variant="outline" onClick={() => setFilter("former")}><TranslatedText>
-            Show </TranslatedText><TranslatedText>{formerHolders.length === 1 ? "card" : "cards"}</TranslatedText> <ArrowRight data-icon="inline-end" aria-hidden="true" />
-          </Button>
+            Show </TranslatedText><TranslatedText>{formerHolders.length === 1 ? "card" : "cards"}</TranslatedText>           </Button>
         </div>
       ) : null}
 
       {unassigned > 0 ? (
         <div className="border-warn/25 bg-warn/5 mx-4 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3">
           <p className="text-ink-2 text-sm"><span className="text-warn font-semibold">{unassigned}<TranslatedText> unassigned slot</TranslatedText><TranslatedText>{unassigned === 1 ? "" : "s"}</TranslatedText></span><TranslatedText> still need a teacher.</TranslatedText></p>
-          <Button size="sm" variant="outline" onClick={() => onManage("unassigned")}><TranslatedText>Review slots </TranslatedText><ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
+          <Button size="sm" variant="outline" onClick={() => onManage("unassigned")}><TranslatedText>Review slots </TranslatedText></Button>
         </div>
       ) : null}
 
@@ -142,7 +141,7 @@ function TeacherCard({ person, maxLoad, onManage }: {
       )}
     >
       {!person.isActive && count > 0 ? (
-        <p className="bg-warn/5 text-warn border-warn/25 border-b px-4 py-1.5 text-[11px] font-medium"><TranslatedText>
+        <p className="bg-warn/5 text-warn border-warn/25 border-b px-4 py-1.5 text-caption font-medium"><TranslatedText>
           Deactivated, still holding </TranslatedText>{count}<TranslatedText> class</TranslatedText><TranslatedText>{count === 1 ? "" : "es"}</TranslatedText>
         </p>
       ) : null}
@@ -160,14 +159,14 @@ function TeacherCard({ person, maxLoad, onManage }: {
               {count ? ` · ${person.subjects.length} subject${person.subjects.length === 1 ? "" : "s"} · ${person.classCount} class${person.classCount === 1 ? "" : "es"}` : null}
             </p>
           </div>
-          <div className="text-right"><p className="font-display text-2xl font-semibold tabular-nums">{count}</p><p className="text-ink-3 text-[10px]"><TranslatedText>assignments</TranslatedText></p></div>
+          <div className="text-right"><p className="font-display text-2xl font-semibold tabular-nums">{count}</p><p className="text-ink-3 text-caption"><TranslatedText>assignments</TranslatedText></p></div>
         </div>
         <div className="bg-surface-2 mt-4 flex h-2 gap-px overflow-hidden rounded-full" role="img" aria-label={`${count} assignments; largest staff load is ${maxLoad}.`}>
           {person.subjects.map((subject) => <span key={subject.name} style={{ width: `${subject.rows.length / maxLoad * 100}%`, background: `var(--subject-${subject.tone})` }} title={`${subject.name}: ${subject.rows.length} assignments`} />)}
         </div>
         {count ? (
           <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5">
-            {person.subjects.map((subject) => <li key={subject.name} className="text-ink-2 inline-flex items-center gap-1.5 text-xs"><span className="size-1.5 shrink-0 rounded-full" style={{ background: `var(--subject-${subject.tone})` }} aria-hidden="true" />{subject.name}<span className="text-ink-3 font-mono text-[10px]">{subject.rows.length}</span></li>)}
+            {person.subjects.map((subject) => <li key={subject.name} className="text-ink-2 inline-flex items-center gap-1.5 text-xs"><span className="size-1.5 shrink-0 rounded-full" style={{ background: `var(--subject-${subject.tone})` }} aria-hidden="true" />{subject.name}<span className="text-ink-3 font-mono text-caption">{subject.rows.length}</span></li>)}
           </ul>
         ) : <p className="text-ink-3 mt-3 text-xs"><TranslatedText>No teaching assignments for this academic year.</TranslatedText></p>}
       </div>
@@ -180,7 +179,7 @@ function TeacherCard({ person, maxLoad, onManage }: {
             {person.subjects.map((subject) => (
               <div key={subject.name}>
                 <p className="mb-1.5 text-xs font-medium">{subject.name}</p>
-                <div className="flex flex-wrap gap-1.5">{subject.rows.map((row) => <button type="button" key={`${row.sectionId}:${row.offeringId}`} onClick={() => onManage(String(person.id), row.sectionId)} className="border-line bg-surface-2 text-ink-2 hover:bg-brand-tint hover:text-brand-text focus-visible:ring-brand rounded-md border px-2 py-1 text-[11px] transition-colors focus-visible:ring-2 focus-visible:outline-none" aria-label={`Manage ${subject.name} in ${row.sectionLabel} for ${person.fullName}`}>{row.sectionLabel}</button>)}</div>
+                <div className="flex flex-wrap gap-1.5">{subject.rows.map((row) => <button type="button" key={`${row.sectionId}:${row.offeringId}`} onClick={() => onManage(String(person.id), row.sectionId)} className="border-line bg-surface-2 text-ink-2 hover:bg-brand-tint hover:text-brand-text focus-visible:ring-brand rounded-md border px-2 py-1 text-caption transition-colors focus-visible:ring-2 focus-visible:outline-none" aria-label={`Manage ${subject.name} in ${row.sectionLabel} for ${person.fullName}`}>{row.sectionLabel}</button>)}</div>
               </div>
             ))}
           </div>
@@ -188,8 +187,7 @@ function TeacherCard({ person, maxLoad, onManage }: {
       ) : null}
       <div className="border-line flex justify-end border-t px-3 py-2">
         <Button size="sm" variant="ghost" onClick={() => onManage(count ? String(person.id) : "unassigned")} aria-label={count ? `Manage assignments for ${person.fullName}` : `Find unassigned slots for ${person.fullName}`}>
-          <TranslatedText>{count ? "Manage assignments" : "Find unassigned slots"}</TranslatedText><ArrowRight data-icon="inline-end" aria-hidden="true" />
-        </Button>
+          <TranslatedText>{count ? "Manage assignments" : "Find unassigned slots"}</TranslatedText>        </Button>
       </div>
     </li>
   );

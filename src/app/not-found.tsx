@@ -1,6 +1,6 @@
 import { TranslatedText } from "@/components/i18n/language-provider";
 import Link from "next/link";
-import { ArrowRight, BookOpen, House } from "lucide-react";
+import { BookOpen, House } from "lucide-react";
 
 export default function NotFound() {
   return (
@@ -15,7 +15,7 @@ export default function NotFound() {
           </span>
         </div>
         <div className="px-6 py-8 text-center sm:px-10 sm:py-10">
-          <p className="text-brand-text text-[11px] font-semibold uppercase tracking-[0.16em]"><TranslatedText>A page out of place</TranslatedText></p>
+          <p className="text-brand-text text-caption font-semibold uppercase tracking-[0.16em]"><TranslatedText>A page out of place</TranslatedText></p>
           <h1 id="not-found-title" className="mt-3"><TranslatedText>We couldn’t find this page.</TranslatedText></h1>
           <p className="text-ink-3 mx-auto mt-3 max-w-sm text-sm leading-6"><TranslatedText>
             The link may be outdated, or the address may have been typed incorrectly. Let’s get you back to your school workspace.
@@ -26,7 +26,7 @@ export default function NotFound() {
           >
             <House className="size-4" aria-hidden="true" /><TranslatedText>
             Back to home
-            </TranslatedText><ArrowRight className="size-4" aria-hidden="true" />
+            </TranslatedText>
           </Link>
           <p className="text-ink-3 mt-5 text-xs leading-5"><TranslatedText>If you followed a link from the school, let your administrator know.</TranslatedText></p>
         </div>
