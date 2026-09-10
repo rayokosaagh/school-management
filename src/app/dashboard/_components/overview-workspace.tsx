@@ -115,7 +115,7 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
           {a.attendance ? <RollCall overview={o} /> : null}
           {office ? <PersonalActivity overview={o} /> : null}
           {teacher && a.marks ? <MarksToEnter gaps={insights.marks} /> : null}
-          {teacher && a.attendance ? <PupilsToWatch pupils={insights.watch} /> : null}
+          {a.attendance ? <PupilsToWatch pupils={insights.watch} ownClasses={teacher} /> : null}
           {a.records || a.attendance || a.marks ? <Classes overview={o} /> : null}
           {!teacher && (a.registry || a.manageExams) ? <Attention overview={o} /> : null}
         </div>

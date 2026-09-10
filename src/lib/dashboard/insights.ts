@@ -70,7 +70,7 @@ export async function getRoleInsights(
 
   const [marks, watch, money] = await Promise.all([
     teacher && access.marks ? marksStillToEnter(actor.staffId!, academicYearId, sectionIds) : [],
-    teacher && access.attendance ? pupilsToWatch(academicYearId, sectionIds, day) : [],
+    access.attendance ? pupilsToWatch(academicYearId, sectionIds, day) : [],
     !teacher && access.fees ? moneyToday(academicYearId, day) : null,
   ]);
 

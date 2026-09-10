@@ -75,7 +75,7 @@ export function Schedule({ periods, schoolDay, canTimetable }: {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="break-words text-sm font-semibold">{period.subject}</p>
-                  {period.isCurrent ? <span className="bg-brand text-brand-ink rounded-full px-2 py-0.5 text-[10px] font-semibold"><TranslatedText>Now</TranslatedText></span> : null}
+                  {period.isCurrent ? <span className="bg-brand text-brand-ink rounded-full px-2 py-0.5 text-caption font-semibold"><TranslatedText>Now</TranslatedText></span> : null}
                 </div>
                 <p className="text-ink-3 mt-1 break-words text-xs">{period.classSection} · {period.periodName}</p>
                 {period.room ? <p className="text-ink-3 mt-2 flex items-center gap-1 text-xs"><MapPin className="size-3 shrink-0" aria-hidden="true" />{period.room}</p> : null}
@@ -147,8 +147,8 @@ export function Classes({ overview }: { overview: DashboardOverview }) {
               </div>
               {overview.access.records ? <p className="text-ink-3 mt-1 text-xs">{section.students}<TranslatedText> student</TranslatedText><TranslatedText>{section.students === 1 ? "" : "s"}</TranslatedText></p> : null}
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {section.isClassTeacher ? <span className="bg-brand-tint text-brand-text rounded px-1.5 py-0.5 text-[10px] font-medium"><TranslatedText>Class teacher</TranslatedText></span> : null}
-                {overview.access.attendance && overview.schoolDay ? <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", section.attendanceTaken ? "bg-ok-tint text-ok" : "bg-warn-tint text-warn")}><TranslatedText>{section.attendanceTaken ? "Roll call saved" : "Roll call pending"}</TranslatedText></span> : null}
+                {section.isClassTeacher ? <span className="bg-brand-tint text-brand-text rounded px-1.5 py-0.5 text-caption font-medium"><TranslatedText>Class teacher</TranslatedText></span> : null}
+                {overview.access.attendance && overview.schoolDay ? <span className={cn("rounded px-1.5 py-0.5 text-caption font-medium", section.attendanceTaken ? "bg-ok-tint text-ok" : "bg-warn-tint text-warn")}><TranslatedText>{section.attendanceTaken ? "Roll call saved" : "Roll call pending"}</TranslatedText></span> : null}
               </div>
             </>;
             const className = "bg-surface-2 border-line min-w-0 rounded-lg border p-3.5";
@@ -181,7 +181,7 @@ export function AttendanceTrend({ trend, teacher }: { trend: TrendDay[]; teacher
           </div>;
         })}
       </div>
-      {trend.length > 0 ? <div className="text-ink-3 mt-2 flex justify-between gap-2 text-[10px]"><span>{formatBs(trend[0].date, "MMM DD")}</span><span>{formatBs(trend[trend.length - 1].date, "MMM DD")}</span></div> : null}
+      {trend.length > 0 ? <div className="text-ink-3 mt-2 flex justify-between gap-2 text-caption"><span>{formatBs(trend[0].date, "MMM DD")}</span><span>{formatBs(trend[trend.length - 1].date, "MMM DD")}</span></div> : null}
       <p className="text-ink-3 mt-3 text-xs leading-5"><TranslatedText>Empty columns mean no register was saved. A baseline means 0% present.</TranslatedText></p>
       <details className="border-line mt-4 border-t pt-3">
         <summary className={cn("text-brand w-fit cursor-pointer rounded text-xs font-medium", focus)}><TranslatedText>Daily attendance details</TranslatedText></summary>
@@ -278,17 +278,39 @@ export function MarksToEnter({ gaps }: { gaps: MarksGap[] }) {
 /// Names, not a number: "4 pupils are often away" is a statistic, and the
 /// point of putting it on a class teacher's dashboard is that they can picture
 /// the child and ask after them.
-export function PupilsToWatch({ pupils }: { pupils: WatchedPupil[] }) {
+///
+/// `ownClasses` only changes the wording. A class teacher is being shown their
+/// own sections and an office reader the whole school, and "your classes" is
+/// wrong for the second — it reads as a scope the page is not actually using.
+export function PupilsToWatch({
+  pupils,
+  ownClasses,
+}: {
+  pupils: WatchedPupil[];
+  ownClasses: boolean;
+}) {
   return (
     <Panel
       title="Pupils to watch"
-      description="Three or more absences in your classes over the last fortnight"
+      description={
+        ownClasses
+          ? "Three or more absences in your classes over the last fortnight"
+          : "Three or more absences across the school over the last fortnight"
+      }
       action={<TextLink href="/dashboard/attendance"><TranslatedText>Open roll call</TranslatedText></TextLink>}
     >
       {pupils.length === 0 ? (
-        <Quiet icon={<CheckCircle2 className="size-6" aria-hidden="true" />} title="Nobody is slipping"><TranslatedText>
-          No pupil in your classes has missed three days in the last fortnight.
-        </TranslatedText></Quiet>
+        <Quiet icon={<CheckCircle2 className="size-6" aria-hidden="true" />} title="Nobody is slipping">
+          {ownClasses ? (
+            <TranslatedText>
+              No pupil in your classes has missed three days in the last fortnight.
+            </TranslatedText>
+          ) : (
+            <TranslatedText>
+              No pupil has missed three days in the last fortnight.
+            </TranslatedText>
+          )}
+        </Quiet>
       ) : (
         <ul className="divide-line divide-y">
           {pupils.map((pupil) => (
