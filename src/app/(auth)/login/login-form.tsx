@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { ArrowRight, AtSign, Eye, EyeOff, Lock } from "lucide-react";
+import { AtSign, Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,7 +65,13 @@ export function LoginForm({
             <img
               src={`/api/school-logo?v=${schoolLogoId}`}
               alt={schoolName ? `${schoolName} ${t("logo")}` : t("School logo")}
-              className="mx-auto h-28 w-28 rounded-2xl object-contain"
+              // A school's logo is drawn for paper — dark ink on a light ground —
+              // and the dark theme puts it straight onto near-black, where the
+              // name under the crest vanishes. The light plate is the same
+              // treatment `BrandMark` already gives it in the top bar; it is
+              // only added in the dark theme because on the light page the
+              // logo is already on the ground it was drawn for.
+              className="mx-auto h-28 w-28 rounded-2xl object-contain dark:bg-white/90 dark:p-2"
             />
           ) : (
             <Logo className="mx-auto h-28 w-28" />
@@ -147,7 +153,6 @@ export function LoginForm({
 
           <Button type="submit" className="w-full" disabled={pending}>
             {t(pending ? "Signing in…" : "Sign in")}
-            {!pending && <ArrowRight className="h-4 w-4" />}
           </Button>
 
         </form>
