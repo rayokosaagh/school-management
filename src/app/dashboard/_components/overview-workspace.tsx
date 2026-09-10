@@ -29,6 +29,14 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
   const { language, t } = useLanguage();
   const teacher = actor.role === "TEACHER";
   const office = actor.role === "OFFICE";
+  // Each fact gets one home on this page, and which home depends on the role.
+  // An administrator reads the school as numbers, so the "at a glance" row is
+  // theirs alone and the hero's focus card — the same number in words — stays
+  // off. Office and teaching staff have no number row, so for them the focus
+  // card is the headline. Roll call itself is never restated: the panel is
+  // where the work is, the hero button is the way in, and the toolbox below
+  // does not repeat whatever the hero button already offers.
+  const admin = actor.role === "ADMIN";
   const { access: a, counts: c } = o;
   // One reading of roll call for the hero line, the tile and the button below.
   const roll = rollCallStanding(o);
@@ -46,6 +54,14 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
     : teacher && a.timetable ? { label: "View my timetable", href: "/dashboard/classes?view=timetable" }
     : office && a.fees ? { label: "Open fee collections", href: "/dashboard/fees" }
     : actions[0];
+  // The toolbox minus the hero's primary action, compared by route so a deep
+  // link into one section still counts as "attendance". With a single tool
+  // there is nothing to trim: hiding it would leave the box claiming the
+  // account has no tools at all.
+  const route = (href: string) => href.split("?")[0];
+  const shortcuts = actions.length > 1 && primary
+    ? actions.filter((action) => route(action.href) !== route(primary.href))
+    : actions;
   const metrics = [
     ...(a.records ? [{ label: teacher ? "My students" : "Students enrolled", value: c.students, note: teacher ? "Across your assigned classes" : `Academic year ${yearLabel}`, icon: GraduationCap }] : []),
     ...(a.records || a.attendance || a.marks ? [{ label: teacher ? "My classes" : "Class sections", value: c.sections, note: teacher ? "Classes you teach or lead" : `${c.grades} grades this year`, icon: Layers3 }] : []),
@@ -61,10 +77,7 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
         <p role="status" className="text-warn bg-warn-tint border-warn/30 rounded-lg border px-3 py-2 text-sm">{notice}</p>
       ) : null}
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-ink-3 text-[11px] font-medium uppercase tracking-[0.16em]">{t(teacher ? "My workspace" : office ? "Office workspace" : "School workspace")}</p>
-          <h1 className="mt-1">{t("Overview")}</h1>
-        </div>
+        <h1>{t("Overview")}</h1>
         <span className="bg-surface border-line text-ink-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs">
           <ShieldCheck className="text-brand size-3.5" aria-hidden="true" />{t(ROLE_LABEL[actor.role])}
           <span className="text-line-strong" aria-hidden="true">/</span>{yearLabel}<TranslatedText> BS
@@ -81,11 +94,11 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">{t(teacher ? "Your classes, your students, and a little more room to focus on teaching." : office ? "Keep the school day moving. Your registers, records, and daily tasks are all here." : "A clear picture of your school, with the details that need your attention.")}</p>
             {primary ? <Link href={primary.href} className="mt-5 inline-flex min-h-10 items-center gap-3 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-[var(--brand-deep)] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-deep">{t(primary.label)}<ArrowRight className="size-4" aria-hidden="true" /></Link> : null}
           </div>
-          <div className="w-full rounded-xl border border-white/15 bg-white/[0.06] p-4 lg:w-64 lg:shrink-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/65">{t(roll.due ? "Today’s focus" : "A quieter day")}</p>
+          {!admin ? <div className="w-full rounded-xl border border-white/15 bg-white/[0.06] p-4 lg:w-64 lg:shrink-0">
+            <p className="text-caption font-semibold uppercase tracking-[0.16em] text-white/65">{t(roll.due ? "Today’s focus" : "A quieter day")}</p>
             <p className="mt-2 text-lg font-semibold"><TranslatedText>{!roll.due ? "No roll call due" : missing > 0 ? `${missing} ${missing === 1 ? "class needs" : "classes need"} roll call` : teacher ? "Make time for your classes" : "Ready for the day"}</TranslatedText></p>
             <p className="mt-1 text-xs leading-5 text-white/70"><TranslatedText>{!roll.due ? "Today is a non-working day or outside the selected academic year. You can still review your records." : missing > 0 ? "Start with the attendance registers still waiting to be marked." : "Use your shortcuts below to pick up where you left off."}</TranslatedText></p>
-          </div>
+          </div> : null}
         </div>
       </section>
 
@@ -98,12 +111,12 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
         </div>
       ) : null}
 
-      {metrics.length ? <section aria-label={t("At a glance")} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {admin && metrics.length ? <section aria-label={t("At a glance")} className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {metrics.map(({ label, value, note, icon: Icon }) => (
           <div key={label} className="bg-surface border-line rounded-xl border p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2"><p className="text-ink-2 text-xs font-medium">{t(label)}</p><Icon className="text-brand size-4" aria-hidden="true" /></div>
             <p className="font-display mt-3 text-[30px] font-semibold leading-none tracking-tight tabular-nums">{value.toLocaleString("en-US")}</p>
-            <p className="text-ink-3 mt-2 text-[11px] leading-4">{t(note)}</p>
+            <p className="text-ink-3 mt-2 text-caption leading-4">{t(note)}</p>
           </div>
         ))}
       </section> : null}
@@ -116,14 +129,14 @@ export function OverviewWorkspace({ actor, yearLabel, overview: o, periods, insi
           {office ? <PersonalActivity overview={o} /> : null}
           {teacher && a.marks ? <MarksToEnter gaps={insights.marks} /> : null}
           {a.attendance ? <PupilsToWatch pupils={insights.watch} ownClasses={teacher} /> : null}
-          {a.records || a.attendance || a.marks ? <Classes overview={o} /> : null}
+          {!admin && (a.records || a.attendance || a.marks) ? <Classes overview={o} /> : null}
           {!teacher && (a.registry || a.manageExams) ? <Attention overview={o} /> : null}
         </div>
         <aside aria-label={t("Your tools and insights")} className="min-w-0 space-y-5">
           <section className="bg-surface border-line rounded-xl border">
             <div className="border-line border-b px-5 py-4"><h2 className="text-sm font-semibold">{t("Quick access")}</h2><p className="text-ink-3 mt-1 text-xs">{t("Your everyday tools, one step away.")}</p></div>
             <div className="space-y-1 p-4">
-              {actions.length ? actions.map(({ icon: Icon, ...action }) => (
+              {shortcuts.length ? shortcuts.map(({ icon: Icon, ...action }) => (
                 <Link key={action.href} href={action.href} className={cn("group hover:bg-surface-2 flex min-h-16 items-center gap-3 rounded-lg px-2 py-3 transition-colors", focusRing)}>
                   <span className="bg-brand-tint text-brand-text grid size-9 shrink-0 place-items-center rounded-lg"><Icon className="size-4" aria-hidden="true" /></span>
                   <span className="min-w-0 flex-1"><span className="block text-sm font-medium">{t(action.label)}</span><span className="text-ink-3 mt-0.5 block text-xs">{t(action.detail)}</span></span>
