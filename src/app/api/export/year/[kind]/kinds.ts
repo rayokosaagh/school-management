@@ -1,7 +1,7 @@
 /// The export dispatch table's key space, kept apart from the builders
-/// themselves (and the Prisma/date/csv imports those pull in) purely so this
-/// guard can be unit-tested: importing `route.ts` drags in `next-auth`, which
-/// does not resolve under plain Node/vitest.
+/// themselves and the Prisma/date/csv imports those pull in, so the guard below
+/// can be reasoned about — and imported — without dragging in `next-auth` by
+/// way of `route.ts`.
 export const EXPORT_KINDS = ["register", "attendance", "marks"] as const;
 
 export type ExportKind = (typeof EXPORT_KINDS)[number];
