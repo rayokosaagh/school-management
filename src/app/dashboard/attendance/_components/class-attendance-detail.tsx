@@ -114,7 +114,7 @@ function StudentAttendanceCard({ student, to }: { student: StudentAttendanceStat
         <StudentAvatar photoId={student.photoId} name={student.fullName} className="size-9 rounded-lg text-xs" />
         <div className="min-w-0 flex-1">
           <PersonName en={student.fullName} np={student.fullNameNp} className="text-sm" />
-          <p className="text-ink-3 text-[11.5px]"><TranslatedText>Roll </TranslatedText><span className="font-mono">{student.rollNo}</span> · {student.admissionNo} · {studentStatusLabel(student.status)}</p>
+          <p className="text-ink-3 text-caption"><TranslatedText>Roll </TranslatedText><span className="font-mono">{student.rollNo}</span> · {student.admissionNo} · {studentStatusLabel(student.status)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <StatusDot tone="ok">{student.present}<TranslatedText> present</TranslatedText></StatusDot>
@@ -156,7 +156,7 @@ function StudentAttendanceCard({ student, to }: { student: StudentAttendanceStat
 
       {student.notes.length > 0 ? (
         <div className="border-line mt-3 border-t pt-3">
-          <p className="text-ink-3 mb-1.5 text-[11px] font-medium tracking-[0.08em] uppercase"><TranslatedText>
+          <p className="text-ink-3 mb-1.5 text-caption font-medium tracking-[0.08em] uppercase"><TranslatedText>
             Notes · </TranslatedText>{student.notes.length}
           </p>
           <ul className="space-y-1.5">

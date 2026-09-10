@@ -22,7 +22,7 @@ export function AlertsPopover({ items }: { items: DueItem[] }) {
         ) : null}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-1">
-        <p className="text-ink-3 px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+        <p className="text-ink-3 px-3 pt-2 pb-1 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
           Needs attention
         </TranslatedText></p>
         {n === 0 ? (

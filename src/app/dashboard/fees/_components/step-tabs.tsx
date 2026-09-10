@@ -49,7 +49,7 @@ export function StepTabs<T extends string>({
               onChange(next.value);
             }}
             className={cn(
-              "focus-visible:ring-brand/40 bg-surface relative inline-flex h-9 items-center rounded-lg border px-3.5 text-[13px] whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              "focus-visible:ring-brand/40 bg-surface relative inline-flex h-9 items-center rounded-lg border px-3.5 text-label whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
               active ? "border-transparent font-semibold" : "border-line text-ink-3 hover:text-ink",
             )}
           >

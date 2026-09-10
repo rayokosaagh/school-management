@@ -82,11 +82,11 @@ export function SchoolDayForm({
         <ShapeSection shapes={shapes} dayShapeId={dayShapeId} onSelectShape={onSelectShape} />
 
         <section>
-          <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+          <h2 className="text-ink-3 mb-2.5 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
             Working days
           </TranslatedText></h2>
           <WorkingDaysEditor workingDays={workingDays} />
-          <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
+          <p className="text-ink-3 mt-2 text-label"><TranslatedText>
             Saturday is the weekly holiday in Nepal, so it is off by default.
           </TranslatedText></p>
         </section>
@@ -176,7 +176,7 @@ function ShapeSection({
 
   return (
     <section>
-      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+      <h2 className="text-ink-3 mb-2.5 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
         Day shapes
       </TranslatedText></h2>
 
@@ -191,13 +191,13 @@ function ShapeSection({
               onClick={() => onSelectShape(shape.id)}
               className={
                 active
-                  ? "bg-brand-tint text-brand-text border-brand-tint-2 h-8 rounded-lg border px-3 text-[13px] font-medium"
-                  : "border-line text-ink-3 hover:text-ink h-8 rounded-lg border px-3 text-[13px]"
+                  ? "bg-brand-tint text-brand-text border-brand-tint-2 h-8 rounded-lg border px-3 text-label font-medium"
+                  : "border-line text-ink-3 hover:text-ink h-8 rounded-lg border px-3 text-label"
               }
             >
               {shape.name}
               {shape.isDefault ? (
-                <span className="text-ink-3 ml-1.5 text-[11px] font-normal"><TranslatedText>default</TranslatedText></span>
+                <span className="text-ink-3 ml-1.5 text-caption font-normal"><TranslatedText>default</TranslatedText></span>
               ) : null}
             </button>
           );
@@ -295,7 +295,7 @@ function ShapeSection({
         </div>
       ) : null}
 
-      <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
+      <p className="text-ink-3 mt-2 text-label"><TranslatedText>
         A shape can only be deleted while no weekday runs it, and the default
         shape can never be deleted — every day falls back to it.
       </TranslatedText></p>
@@ -329,8 +329,8 @@ function WorkingDaysEditor({ workingDays }: { workingDays: number[] }) {
             onClick={() => toggleDay(day)}
             className={
               on
-                ? "bg-brand-tint text-brand-text border-brand-tint-2 h-8 rounded-lg border px-3 text-[13px] font-medium"
-                : "border-line text-ink-3 hover:text-ink h-8 rounded-lg border px-3 text-[13px]"
+                ? "bg-brand-tint text-brand-text border-brand-tint-2 h-8 rounded-lg border px-3 text-label font-medium"
+                : "border-line text-ink-3 hover:text-ink h-8 rounded-lg border px-3 text-label"
             }
           >
             {name.slice(0, 3)}
@@ -427,7 +427,7 @@ function BellEditor({
 
   return (
     <section>
-      <h2 className="text-ink-3 mb-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+      <h2 className="text-ink-3 mb-2.5 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
         The school day
       </TranslatedText></h2>
 
@@ -437,7 +437,7 @@ function BellEditor({
             key={row.id ?? `new-${i}`}
             className="border-line bg-surface flex flex-wrap items-center gap-2 rounded-lg border p-2"
           >
-            <span className="text-ink-3 w-6 shrink-0 text-center font-mono text-[11px] tabular-nums">
+            <span className="text-ink-3 w-6 shrink-0 text-center font-mono text-caption tabular-nums">
               {i + 1}
             </span>
             <Input
@@ -520,7 +520,7 @@ function BellEditor({
         </Button>
       </div>
 
-      <p className="text-ink-3 mt-2 text-[12.5px]"><TranslatedText>
+      <p className="text-ink-3 mt-2 text-label"><TranslatedText>
         Times move every lesson in that period with them. Removing a period
         deletes the lessons scheduled in it. An event takes no teacher or
         subject — its label is what shows in the grid.

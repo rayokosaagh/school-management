@@ -176,7 +176,7 @@ export function ExamsView({ rows }: { rows: ExamRow[] }) {
           key: "recordId",
           header: "ID",
           span: 2,
-          render: (r) => <span className="text-ink-3 font-mono text-[12px]">{CODE.exam(r.id)}</span>,
+          render: (r) => <span className="text-ink-3 font-mono text-xs">{CODE.exam(r.id)}</span>,
         },
         { key: "name", header: "Exam", span: 3, render: (r) => <span className="font-medium">{r.name}</span> },
         {

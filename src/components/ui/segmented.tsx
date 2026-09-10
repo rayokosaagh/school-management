@@ -59,7 +59,7 @@ export function Segmented<T extends string>({
               onChange(next.value);
             }}
             className={cn(
-              "focus-visible:ring-brand/40 inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[13px] whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
+              "focus-visible:ring-brand/40 inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-label whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:outline-none",
               active
                 ? "bg-surface text-ink border-line font-semibold shadow-[0_1px_2px_oklch(0_0_0/8%)]"
                 : "text-ink-3 hover:text-ink",
@@ -69,7 +69,7 @@ export function Segmented<T extends string>({
             {option.count !== undefined ? (
               <span
                 className={cn(
-                  "rounded px-1 font-mono text-[11px] tabular-nums",
+                  "rounded px-1 font-mono text-caption tabular-nums",
                   active ? "bg-brand-tint text-brand-text" : "text-ink-3",
                 )}
               >

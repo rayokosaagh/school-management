@@ -92,7 +92,7 @@ export function SettingsWorkspace({
           panel, but every group still has to be one tap away — a dropdown
           costs nothing on the vertical axis a phone doesn't have. */}
       <div className="bg-surface border-line rounded-[10px] border p-2 shadow-panel shell:hidden">
-        <p className="text-ink-3 mb-1 px-1 text-[11px] font-medium tracking-[0.1em] uppercase">
+        <p className="text-ink-3 mb-1 px-1 text-caption font-medium tracking-[0.1em] uppercase">
           {t("Settings area")}
         </p>
         <FieldSelect
@@ -109,7 +109,7 @@ export function SettingsWorkspace({
         aria-label={t("Settings sections")}
         className="bg-surface border-line hidden shrink-0 rounded-[10px] border p-2 shadow-panel shell:block shell:w-72"
       >
-        <p className="text-ink-3 px-2 py-1.5 text-[11px] font-medium tracking-[0.1em] uppercase">
+        <p className="text-ink-3 px-2 py-1.5 text-caption font-medium tracking-[0.1em] uppercase">
           {t("Settings areas")}
         </p>
         <ul className="flex flex-col gap-1">

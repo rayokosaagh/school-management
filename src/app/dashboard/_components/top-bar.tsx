@@ -39,7 +39,7 @@ export function TopBar({
           <p className="font-display truncate text-[15px] leading-tight font-semibold tracking-[-0.01em]">
             {school.name}
           </p>
-          <p className="text-ink-3 truncate text-[11.5px] leading-tight">
+          <p className="text-ink-3 truncate text-caption leading-tight">
             {[school.address, today].filter(Boolean).join(" · ")}
           </p>
         </div>

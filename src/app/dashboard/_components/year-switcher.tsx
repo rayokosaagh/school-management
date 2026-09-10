@@ -95,7 +95,7 @@ export function YearSwitcher({
         </span>
 
         <span className="min-w-0">
-          <span className="text-muted-foreground block text-[10px] leading-none tracking-wider uppercase">
+          <span className="text-muted-foreground block text-caption leading-none tracking-wider uppercase">
             {t("Academic year")}
           </span>
           <FieldSelect
@@ -130,7 +130,7 @@ export function YearSwitcher({
         {/* An activated year can be in the past or future. */}
         {currentId !== null && (yearStatus === "past" || yearStatus === "upcoming") ? (
           <span
-            className="bg-tint-amber text-tint-amber-fg rounded-md px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap"
+            className="bg-tint-amber text-tint-amber-fg rounded-md px-1.5 py-0.5 text-caption font-medium whitespace-nowrap"
             title={t(yearStatus === "upcoming" ? "This academic year has not started yet" : "This academic year has ended")}
           >
             {t(yearStatus === "upcoming" ? "Upcoming year" : "Past year")}

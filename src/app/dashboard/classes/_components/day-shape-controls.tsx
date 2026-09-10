@@ -43,12 +43,12 @@ export function WeekdayShapeBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-ink-3 shrink-0 text-[11px] font-medium tracking-[0.1em] uppercase"><TranslatedText>
+        <span className="text-ink-3 shrink-0 text-caption font-medium tracking-[0.1em] uppercase"><TranslatedText>
           Day shape
         </TranslatedText></span>
         {workingDays.map((day) => (
           <label key={day} className="flex items-center gap-1">
-            <span className="text-ink-3 text-[11px] font-medium">
+            <span className="text-ink-3 text-caption font-medium">
               {DAY_NAMES[day].slice(0, 3)}
             </span>
             <FieldSelect
@@ -61,7 +61,7 @@ export function WeekdayShapeBar({
                 }
               }}
               aria-label={`Day shape for ${DAY_NAMES[day]}`}
-              className="h-7 w-auto min-w-[116px] text-[12.5px]"
+              className="h-7 w-auto min-w-[116px] text-label"
               options={shapes.map((s) => ({ value: String(s.id), label: s.name }))}
             />
           </label>
@@ -142,7 +142,7 @@ function WeekdayShapeDialog({
           <Callout icon={AlertTriangle} tint={destructive ? "rose" : "green"}>
             <p>{describeOrphanedLessons(preview)}</p>
             {preview.sections.length > 0 ? (
-              <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-[13px]">
+              <ul className="mt-1.5 list-disc space-y-0.5 pl-4 text-label">
                 {preview.sections.map((s) => (
                   <li key={s.id}>
                     {s.gradeName} {s.name}

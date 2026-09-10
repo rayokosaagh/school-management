@@ -285,6 +285,23 @@
   --radius-3xl: calc(var(--radius) * 2.25);
   --radius-4xl: calc(var(--radius) * 3);
 
+  /*
+   * The two sizes below body copy, named for what they are used as.
+   *
+   * Body is 13.5px (see `body` below), so Tailwind's own xs (12) and sm (14)
+   * bracket it — and everything the app wanted *between* those was being set by
+   * hand: 145 arbitrary `text-[Npx]` classes across eight different values from
+   * 9px to 13px, several of them half a pixel apart. That is not a scale, it is
+   * each page guessing what "small" means. These two replace all of them.
+   *
+   * `label` is a hair under body, for table cells, chips and form labels.
+   * `caption` is the floor: 11px is as small as text gets, because a bursar's
+   * monitor is whatever the school had, and 9–10px labels were the first thing
+   * to go unread on it. Nothing in the interface is set smaller than this.
+   */
+  --text-label: 12.5px;
+  --text-caption: 11px;
+
   --breakpoint-shell: 54rem;
   --breakpoint-split: 74rem;
 }

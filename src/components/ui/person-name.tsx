@@ -32,7 +32,7 @@ export function PersonName({
         {suffix}
       </span>
       {np ? (
-        <span className="font-devanagari text-ink-3 block truncate text-[11.5px] leading-tight font-normal">
+        <span className="font-devanagari text-ink-3 block truncate text-caption leading-tight font-normal">
           {np}
         </span>
       ) : null}

@@ -138,7 +138,7 @@ export function AnnouncementsPanel({
           <h2 className="flex items-center gap-2 text-sm font-semibold">
             {t("Announcements")}
             {unread > 0 ? (
-              <span className="bg-brand text-brand-ink rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+              <span className="bg-brand text-brand-ink rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums">
                 {unread} {t("new")}
               </span>
             ) : null}

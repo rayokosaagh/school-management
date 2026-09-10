@@ -75,14 +75,14 @@ export function Podium({ students }: { students: HonoursStudent[] }) {
                     np={student.fullNameNp}
                     className="group-hover:underline"
                   />
-                  <span className="text-ink-3 block text-[12px]"><TranslatedText>Roll </TranslatedText>{student.rollNo}</span>
+                  <span className="text-ink-3 block text-xs"><TranslatedText>Roll </TranslatedText>{student.rollNo}</span>
                 </span>
                 <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
                   {student.overall?.toFixed(1)}
                 </span>
               </Link>
             ) : (
-              <span className="text-ink-3 text-[12px]">—</span>
+              <span className="text-ink-3 text-xs">—</span>
             )}
             <span
               className={cn(
@@ -93,7 +93,7 @@ export function Podium({ students }: { students: HonoursStudent[] }) {
             >
               <span
                 className={cn(
-                  "rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-[0.08em] uppercase",
+                  "rounded-full px-2 py-0.5 text-caption font-semibold tracking-[0.08em] uppercase",
                   look.badge,
                 )}
               >

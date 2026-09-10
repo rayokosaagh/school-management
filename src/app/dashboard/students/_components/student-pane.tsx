@@ -123,7 +123,7 @@ export function StudentPane({
           <DetailPane.Section label="Attendance this year">
             <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
               <TranslatedText>{summary.attendance.percent == null ? "—" : `${summary.attendance.percent}%`}</TranslatedText>
-              <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal">
+              <span className="font-body text-ink-3 ml-1.5 text-label font-normal tracking-normal">
                 <TranslatedText>{summary.attendance.recorded === 0 ? "no roll calls yet" : `present · ${summary.attendance.recorded} days recorded`}</TranslatedText>
               </span>
             </p>
@@ -136,7 +136,7 @@ export function StudentPane({
             ) : (
               <ul className="space-y-1.5">
                 {summary.exams.map((e) => (
-                  <li key={e.termId} className="grid grid-cols-[1fr_auto_auto] items-center gap-2.5 text-[12.5px]">
+                  <li key={e.termId} className="grid grid-cols-[1fr_auto_auto] items-center gap-2.5 text-label">
                     <span>
                       {e.name}<TranslatedText>{" "}</TranslatedText>
                       <StatusDot tone={e.isPublished ? "ok" : "neutral"} className="ml-1"><TranslatedText>{e.isPublished ? "Published" : "Draft"}</TranslatedText></StatusDot>
@@ -154,7 +154,7 @@ export function StudentPane({
           {summary.honours ? <HonoursSections studentId={summary.studentId} honours={summary.honours} /> : null}
 
           <DetailPane.Section label="History">
-            <ul className="space-y-1.5 text-[12.5px]">
+            <ul className="space-y-1.5 text-label">
               {summary.history.map((h) => (
                 <li key={`${h.year}-${h.sectionLabel}`}>
                   <span className="text-ink-3 font-mono tabular-nums">{h.enrolledOnBs}</span><TranslatedText>&nbsp;&nbsp;</TranslatedText>{h.year} · {h.sectionLabel}<TranslatedText>, roll </TranslatedText>{h.rollNo}

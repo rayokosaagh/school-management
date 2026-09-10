@@ -96,7 +96,7 @@ export function ServiceRail({
               </span>
               <span
                 className={cn(
-                  "shrink-0 rounded px-1.5 font-mono text-[11px] tabular-nums",
+                  "shrink-0 rounded px-1.5 font-mono text-caption tabular-nums",
                   active ? "bg-brand-tint-2 text-brand-text" : "text-ink-3",
                 )}
               >

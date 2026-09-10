@@ -29,7 +29,7 @@ const EMPTY: ActionState = {};
 function Pillar({ label, value, weight }: { label: string; value: number | null; weight: number }) {
   return (
     <div className="min-w-0">
-      <dt className="text-ink-3 text-[11px] whitespace-nowrap">
+      <dt className="text-ink-3 text-caption whitespace-nowrap">
         {label} <span className="font-mono">×{weight}</span>
       </dt>
       <dd className="mt-px font-mono font-medium tabular-nums">
@@ -84,7 +84,7 @@ export function HonoursSections({
       <DetailPane.Section label="Standing">
         <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
           {honours.position === null ? "—" : ordinal(honours.position)}
-          <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal">
+          <span className="font-body text-ink-3 ml-1.5 text-label font-normal tracking-normal">
             <TranslatedText>{honours.position === null
               ? "awaiting a published result"
               : `of ${honours.classSize} · score ${honours.overall?.toFixed(1)}`}</TranslatedText>
@@ -99,7 +99,7 @@ export function HonoursSections({
       </DetailPane.Section>
 
       <DetailPane.Section label="Conduct this year">
-        <ul className="space-y-1.5 text-[12.5px]">
+        <ul className="space-y-1.5 text-label">
           {honours.conduct.map((c) => (
             <li key={c.id} className="flex items-center gap-2">
               <span className="text-ink-3 font-mono tabular-nums">{c.dateBs}</span>
@@ -160,7 +160,7 @@ export function HonoursSections({
       </DetailPane.Section>
 
       <DetailPane.Section label="Activities this year">
-        <ul className="space-y-1.5 text-[12.5px]">
+        <ul className="space-y-1.5 text-label">
           {honours.activities.map((a) => (
             <li key={a.id} className="flex items-center gap-2">
               <span className="text-ink-3 font-mono tabular-nums">{a.dateBs}</span>

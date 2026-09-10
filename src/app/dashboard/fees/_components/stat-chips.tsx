@@ -39,11 +39,11 @@ function Chip({
     >
       <IconTile icon={icon} tint={tint} size="sm" />
       <div className="min-w-0 leading-tight">
-        <p className="text-ink-3 text-[11px] whitespace-nowrap">{label}</p>
+        <p className="text-ink-3 text-caption whitespace-nowrap">{label}</p>
         <p className="flex items-baseline gap-1.5">
           <span className="text-[15px] font-semibold tabular-nums">{value}</span>
           {hint ? (
-            <span className="text-ink-3 text-[11px] tabular-nums whitespace-nowrap">{hint}</span>
+            <span className="text-ink-3 text-caption tabular-nums whitespace-nowrap">{hint}</span>
           ) : null}
         </p>
       </div>

@@ -20,7 +20,7 @@ export function SectionCard({ section, query = "" }: { section: SectionHonours; 
         >
           {section.gradeName} {section.sectionName}
         </h2>
-        <p className="text-ink-3 text-[12.5px]">
+        <p className="text-ink-3 text-label">
           {ranked}<TranslatedText> of </TranslatedText>{section.students.length}<TranslatedText> ranked
           </TranslatedText><TranslatedText>{section.classTeacher ? ` · ${section.classTeacher}` : ""}</TranslatedText>
         </p>

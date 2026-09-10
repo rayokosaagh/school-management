@@ -258,7 +258,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
         className="bg-tint-green text-tint-green-fg flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium tabular-nums"
       >
         {short}
-        <span className="text-[10px] font-normal">{issued}<TranslatedText> billed</TranslatedText></span>
+        <span className="text-caption font-normal">{issued}<TranslatedText> billed</TranslatedText></span>
       </span>
     );
   }
@@ -269,7 +269,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
         className="text-ink-3 border-line flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-2 py-2 text-xs"
       >
         {short}
-        <span className="text-[10px]"><TranslatedText>Upcoming</TranslatedText></span>
+        <span className="text-caption"><TranslatedText>Upcoming</TranslatedText></span>
       </span>
     );
   }
@@ -286,7 +286,7 @@ function MonthCell({ month, issued, started, pending }: PlanMonth & { pending: b
       className="text-tint-amber-fg border-tint-amber-fg/40 h-auto min-h-14 min-w-0 flex-col gap-1 rounded-lg px-2 py-2 text-xs"
     >
       {short}
-      <span className="text-[10px] font-normal"><TranslatedText>{pending ? "Billing…" : "Bill month"}</TranslatedText></span>
+      <span className="text-caption font-normal"><TranslatedText>{pending ? "Billing…" : "Bill month"}</TranslatedText></span>
     </Button>
   );
 }

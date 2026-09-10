@@ -58,7 +58,7 @@ export function AttendanceStrip({
         />
       ))}
       {percent == null ? null : (
-        <em className="text-ink-3 ml-1.5 font-mono text-[11.5px] not-italic tabular-nums">{percent}%</em>
+        <em className="text-ink-3 ml-1.5 font-mono text-caption not-italic tabular-nums">{percent}%</em>
       )}
     </span>
   );

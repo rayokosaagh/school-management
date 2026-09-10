@@ -163,7 +163,7 @@ export function BsCalendar({
 
         {step === "day" ? (
           <motion.div key="day" {...fade} className="h-56">
-            <div className="text-muted-foreground mb-1 grid grid-cols-7 gap-1 text-center text-[11px]">
+            <div className="text-muted-foreground mb-1 grid grid-cols-7 gap-1 text-center text-caption">
               {WEEKDAYS.map((d) => (
                 <span key={d}>{d}</span>
               ))}

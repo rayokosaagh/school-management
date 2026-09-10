@@ -364,6 +364,7 @@ export function FeesWorkspace({
                 value={activeFeeType}
                 onChange={setFeeType}
                 options={feeTypes}
+                collapseBelow="sm"
               />
             </div>
           ) : null}
@@ -393,7 +394,7 @@ export function FeesWorkspace({
               className="h-8 w-44 shrink-0"
             />
             <span className="flex-1" />
-            <span className="text-ink-3 shrink-0 text-[12.5px] whitespace-nowrap">
+            <span className="text-ink-3 shrink-0 text-label whitespace-nowrap">
               {visibleBalances.length}<TranslatedText> student</TranslatedText><TranslatedText>{visibleBalances.length === 1 ? "" : "s"}</TranslatedText>
             </span>
           </PageFrame.Toolbar>

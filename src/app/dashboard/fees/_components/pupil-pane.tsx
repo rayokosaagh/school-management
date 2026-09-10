@@ -252,7 +252,7 @@ export function PupilPane({
                       also the handle for printing the bill. */}
                   <Link
                     href={`/dashboard/fees/print?invoice=${encodeURIComponent(bill.number)}`}
-                    className="hover:text-brand font-mono text-[12.5px] underline-offset-2 hover:underline"
+                    className="hover:text-brand font-mono text-label underline-offset-2 hover:underline"
                   >
                     {bill.number}
                   </Link>
@@ -324,7 +324,7 @@ export function PupilPane({
                     <div className="flex items-baseline justify-between gap-3">
                       <Link
                         href={`/dashboard/fees/print?receipt=${encodeURIComponent(payment.receiptNo)}`}
-                        className="hover:text-brand font-mono text-[12.5px] underline-offset-2 hover:underline"
+                        className="hover:text-brand font-mono text-label underline-offset-2 hover:underline"
                       >
                         {payment.receiptNo}
                       </Link>

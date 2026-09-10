@@ -138,13 +138,13 @@ export function WeekGrid({
                 {DAY_NAMES[day]}
                 {/* Colour is never the only signal, so today says so. */}
                 {today ? (
-                  <span className="text-brand-text ml-1.5 text-[11px] font-normal"><TranslatedText>today</TranslatedText></span>
+                  <span className="text-brand-text ml-1.5 text-caption font-normal"><TranslatedText>today</TranslatedText></span>
                 ) : null}
               </div>
 
               <div className="flex flex-1 flex-col gap-1 p-1">
                 {column.length === 0 ? (
-                  <p className="text-ink-3 px-2 py-3 text-[12px]"><TranslatedText>No periods today.</TranslatedText></p>
+                  <p className="text-ink-3 px-2 py-3 text-xs"><TranslatedText>No periods today.</TranslatedText></p>
                 ) : null}
 
                 {column.map(({ period, cell }, rowIndex) => {
@@ -169,11 +169,11 @@ export function WeekGrid({
                         key={period.id}
                         role="cell"
                         {...rise}
-                        className="border-line bg-surface-2/60 text-ink-3 flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px]"
+                        className="border-line bg-surface-2/60 text-ink-3 flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs"
                       >
                         <Coffee className="size-3.5 shrink-0" aria-hidden="true" />
                         <span className="min-w-0 flex-1 truncate">{period.name}</span>
-                        <span className="font-mono text-[10.5px] tabular-nums">
+                        <span className="font-mono text-caption tabular-nums">
                           {formatMinute(period.startMinute)}
                         </span>
                       </motion.div>
@@ -189,13 +189,13 @@ export function WeekGrid({
                         key={period.id}
                         role="cell"
                         {...rise}
-                        className="border-brand-tint-2 bg-brand-tint text-brand-text flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-[12px] font-medium"
+                        className="border-brand-tint-2 bg-brand-tint text-brand-text flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs font-medium"
                       >
                         <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />
                         <span className="min-w-0 flex-1 truncate">
                           {period.label || period.name}
                         </span>
-                        <span className="font-mono text-[10.5px] font-normal tabular-nums">
+                        <span className="font-mono text-caption font-normal tabular-nums">
                           {formatMinute(period.startMinute)}
                         </span>
                       </motion.div>
@@ -219,10 +219,10 @@ export function WeekGrid({
                         isSelected && "bg-brand-tint",
                       )}
                     >
-                      <div className="text-ink-3 mb-1 flex items-center gap-1.5 text-[10.5px]">
+                      <div className="text-ink-3 mb-1 flex items-center gap-1.5 text-caption">
                         <span className="text-ink font-medium">{period.name}</span>
                         {isNow ? (
-                          <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-[9px] font-semibold tracking-wide uppercase"><TranslatedText>
+                          <span className="bg-brand text-brand-ink rounded-full px-1.5 py-px text-caption font-semibold tracking-wide uppercase"><TranslatedText>
                             Now
                           </TranslatedText></span>
                         ) : null}
@@ -309,7 +309,7 @@ export function WeekGrid({
                             suffix={
                               <TranslatedText>{cell.room ? ` · ${cell.room}` : ""}</TranslatedText>
                             }
-                            className="text-ink-3 mt-0.5 pl-3 text-[11.5px] font-normal"
+                            className="text-ink-3 mt-0.5 pl-3 text-caption font-normal"
                           />
                         ) : (
                           /* An empty slot reads as a gap in the week, not as a
@@ -404,13 +404,13 @@ export function TeacherWeek({
       <table
         role="grid"
         aria-label="Teacher's week"
-        className="w-full border-separate border-spacing-0 text-[13px]"
+        className="w-full border-separate border-spacing-0 text-label"
       >
         <thead>
           <tr>
             <th
               scope="col"
-              className="bg-surface-2 border-line text-ink-3 sticky top-0 left-0 z-20 w-[100px] border-r border-b px-3 py-2 text-left text-[11px] font-medium tracking-[0.1em] uppercase"
+              className="bg-surface-2 border-line text-ink-3 sticky top-0 left-0 z-20 w-[100px] border-r border-b px-3 py-2 text-left text-caption font-medium tracking-[0.1em] uppercase"
             ><TranslatedText>
               Period
             </TranslatedText></th>
@@ -450,7 +450,7 @@ export function TeacherWeek({
                   )}
                 >
                   <span className="block">{period.name}</span>
-                  <span className="text-ink-3 block font-mono text-[11px] tabular-nums">
+                  <span className="text-ink-3 block font-mono text-caption tabular-nums">
                     {formatMinute(period.startMinute)}
                   </span>
                 </th>
@@ -473,7 +473,7 @@ export function TeacherWeek({
                             style={{ background: `var(--subject-${tone})` }}
                           />
                           <span className="block font-medium">{lesson.subject}</span>
-                          <span className="text-ink-3 block text-[11.5px]">
+                          <span className="text-ink-3 block text-caption">
                             {lesson.classSection}
                             <TranslatedText>{lesson.room ? ` · ${lesson.room}` : ""}</TranslatedText>
                           </span>
@@ -502,7 +502,7 @@ export function ClashBanner({ clashes }: { clashes: Clash[] }) {
   return (
     <div
       role="status"
-      className="border-warn/40 bg-warn-tint text-ink flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[12.5px]"
+      className="border-warn/40 bg-warn-tint text-ink flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-label"
     >
       <AlertTriangle className="text-warn size-3.5 shrink-0" aria-hidden="true" />
       <span className="truncate">
@@ -527,7 +527,7 @@ export function FillMeter({ filled, total }: { filled: number; total: number }) 
 
   return (
     <div className="flex min-w-[136px] shrink-0 items-center gap-2">
-      <span className="text-ink-3 font-mono text-[11.5px] tabular-nums">
+      <span className="text-ink-3 font-mono text-caption tabular-nums">
         {filled}/{total}
       </span>
       <span

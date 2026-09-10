@@ -94,7 +94,7 @@ export function AttendanceMap({
             {WEEKDAY_LABELS.map((label, i) => (
               <span
                 key={i}
-                className="text-muted-foreground flex h-3 items-center text-[9px] leading-none"
+                className="text-muted-foreground flex h-3 items-center text-caption leading-none"
               >
                 {label}
               </span>
@@ -104,7 +104,7 @@ export function AttendanceMap({
           <div className="flex gap-1">
             {weeks.map((week, wi) => (
               <div key={wi} className="flex flex-col gap-1">
-                <span className="text-muted-foreground h-4 text-[9px] leading-none whitespace-nowrap">
+                <span className="text-muted-foreground h-4 text-caption leading-none whitespace-nowrap">
                   {monthLabels[wi] ?? ""}
                 </span>
                 {week.map((cell, di) => {

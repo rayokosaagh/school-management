@@ -17,7 +17,7 @@ import { StaffPhotoForm } from "./photo-form";
 /// The same code badge the register tab strips use, so a class reads the
 /// same here as it does there.
 const CLASS_CHIP =
-  "border-line bg-page text-ink-3 rounded border px-1.5 py-px font-mono text-[10.5px] tracking-[0.04em]";
+  "border-line bg-page text-ink-3 rounded border px-1.5 py-px font-mono text-caption tracking-[0.04em]";
 
 /// Shared with the table so a status reads the same in both places.
 export function StaffStatus({ isActive }: { isActive: boolean }) {
@@ -101,7 +101,7 @@ function ReachBar({
             <li
               key={g.name}
               className={cn(
-                "flex-1 rounded-[3px] py-1 text-center font-mono text-[10px] leading-none tracking-[0.02em] first:rounded-l-md last:rounded-r-md",
+                "flex-1 rounded-[3px] py-1 text-center font-mono text-caption leading-none tracking-[0.02em] first:rounded-l-md last:rounded-r-md",
                 sections
                   ? "bg-brand-tint text-brand-text font-medium"
                   : "bg-surface-2 text-ink-3/45",
@@ -115,7 +115,7 @@ function ReachBar({
           );
         })}
       </ul>
-      <p className="text-ink-3 mt-1 text-[11.5px]">
+      <p className="text-ink-3 mt-1 text-caption">
         {covered}<TranslatedText> of </TranslatedText>{ladder.length}<TranslatedText> grades
         </TranslatedText>{classes.length > covered ? ` · ${classes.length} classes` : null}
       </p>
@@ -209,10 +209,10 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                 ) : (
                   // The year is the section's own heading now, so it is not
                   // repeated against every line.
-                  <ul className="space-y-1 text-[12.5px]">{ledNow.map((s) => <li key={s.id}>{s.label}</li>)}</ul>
+                  <ul className="space-y-1 text-label">{ledNow.map((s) => <li key={s.id}>{s.label}</li>)}</ul>
                 )}
                 <OtherYears count={ledThen.length === 0 ? 0 : 1}>
-                  <ul className="space-y-1 text-[12.5px]">{ledThen.map((s) => <li key={s.id}>{s.label} <span className="text-ink-3">· {s.year}</span></li>)}</ul>
+                  <ul className="space-y-1 text-label">{ledThen.map((s) => <li key={s.id}>{s.label} <span className="text-ink-3">· {s.year}</span></li>)}</ul>
                 </OtherYears>
               </>
             )}
@@ -226,7 +226,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                 ) : null}
                 {loadNow.map((y) => (
                   <div key={y.year}>
-                    <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
+                    <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-caption">
                       <span>{y.year}</span>
                       <span>
                         {y.subjectCount} <TranslatedText>{y.subjectCount === 1 ? "subject" : "subjects"}</TranslatedText> · {y.classCount}<TranslatedText>{" "}</TranslatedText>
@@ -236,7 +236,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                     <ul className="space-y-2.5">
                       {y.subjects.map((s) => (
                         <li key={s.subject}>
-                          <p className="text-[12.5px] font-medium">{s.subject}</p>
+                          <p className="text-label font-medium">{s.subject}</p>
                           {ladder.length > 0 ? (
                             <ReachBar ladder={ladder} classes={s.classes} />
                           ) : (
@@ -259,7 +259,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                 <OtherYears count={loadThen.length}>
                   {loadThen.map((y) => (
                     <div key={y.year}>
-                      <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-[11.5px]">
+                      <p className="text-ink-3 mb-2 flex items-baseline justify-between gap-2 font-mono text-caption">
                         <span>{y.year}</span>
                         <span>
                           {y.subjectCount} <TranslatedText>{y.subjectCount === 1 ? "subject" : "subjects"}</TranslatedText> · {y.classCount}<TranslatedText>{" "}</TranslatedText>
@@ -269,7 +269,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
                       <ul className="space-y-2.5">
                         {y.subjects.map((s) => (
                           <li key={s.subject}>
-                            <p className="text-[12.5px] font-medium">{s.subject}</p>
+                            <p className="text-label font-medium">{s.subject}</p>
                             <ul className="mt-1 flex flex-wrap gap-1">
                               {s.classes.map((c) => (
                                 <li key={c.code} className={CLASS_CHIP}>
@@ -291,7 +291,7 @@ export function StaffPane({ summary, row, onClose, canManageAccounts, yearLabel,
           <DetailPane.Section label="Roll calls">
             <p className="font-display text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">
               {summary.rollCallsTaken}
-              <span className="font-body text-ink-3 ml-1.5 text-[12.5px] font-normal tracking-normal"><TranslatedText>taken in total</TranslatedText></span>
+              <span className="font-body text-ink-3 ml-1.5 text-label font-normal tracking-normal"><TranslatedText>taken in total</TranslatedText></span>
             </p>
           </DetailPane.Section>
         </>

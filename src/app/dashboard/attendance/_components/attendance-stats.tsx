@@ -131,14 +131,14 @@ export function AttendanceStats({
         <Table className="min-w-[820px]">
           <TableHeader className="bg-surface-2">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-ink-3 h-9 pl-4 text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Class</TranslatedText></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Students</TranslatedText></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Days</TranslatedText></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-ok"><TranslatedText>Present</TranslatedText></StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-bad"><TranslatedText>Absent</TranslatedText></StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-warn"><TranslatedText>Late</TranslatedText></StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 text-right text-[11.5px] tracking-[0.04em] uppercase"><StatusLabel tone="bg-brand"><TranslatedText>Leave</TranslatedText></StatusLabel></TableHead>
-              <TableHead className="text-ink-3 h-9 pr-4 text-right text-[11.5px] tracking-[0.04em] uppercase"><TranslatedText>Attendance</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 pl-4 text-caption tracking-[0.04em] uppercase"><TranslatedText>Class</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><TranslatedText>Students</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><TranslatedText>Days</TranslatedText></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><StatusLabel tone="bg-ok"><TranslatedText>Present</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><StatusLabel tone="bg-bad"><TranslatedText>Absent</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><StatusLabel tone="bg-warn"><TranslatedText>Late</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 text-right text-caption tracking-[0.04em] uppercase"><StatusLabel tone="bg-brand"><TranslatedText>Leave</TranslatedText></StatusLabel></TableHead>
+              <TableHead className="text-ink-3 h-9 pr-4 text-right text-caption tracking-[0.04em] uppercase"><TranslatedText>Attendance</TranslatedText></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
